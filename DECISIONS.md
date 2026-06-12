@@ -26,7 +26,13 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 
 ## Fase 1 — Keuzes
 
-(volgt)
+- Gootlijn (eaves) op y = 13 gekozen: spec geeft binnenhoogte 15 [FEIT] = noklijn en spant-onderrand ~11; gevelglas loopt dus y 4→13, dakvlakken 13→15. Geveltoppen (z = 0/90) als glazen driehoeken zonder raster (klein vlak, scheelt instances).
+- Daklichten: 11 piramides per nok (om de 7,5 m, randvakken vrij) = 22, 45° gedraaid zodat de vlakken haaks op de hal-assen staan; licht-emissief wit (echte lichten volgen in fase 4).
+- Spanten: onderrand + 2 dakranden + 7 verticalen per beuk-as (260 staven, InstancedMesh); diagonalen weggelaten — leesbaar vakwerkbeeld binnen het budget.
+- Nieuwe kolommen ook op x = 15 en 45 (niet alleen naast de middenrij): de verdiepingsvloeren van 60 m breed kunnen visueel niet alleen op x = 30 rusten. Paren oud+nieuw op de middenrij conform spec.
+- Patina per kolom-instance 0/90/180/270° gedraaid (werkplan: willekeurige UV-rotatie) — goedkoopste variant zonder extra UV-werk.
+- Entreedeuren (zuidoost/noord/nacht) horen bij de zuidhal-inrichting → fase 3; gevels nu dicht.
+- Vogelvlucht-camera (CONFIG) staat vlak boven het oostelijke dakvlak; CONFIG is wet, dus niet verplaatst — daken/daklichten zijn er goed op te beoordelen.
 
 ## Fase 2 — Keuzes
 

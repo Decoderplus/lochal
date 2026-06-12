@@ -4,12 +4,17 @@
 // tools/verify.js gebruikt.
 import * as THREE from 'three';
 import { bouwStemmingMakerij } from './stemmingmakerij.js';
+import { bouwCasco } from './casco.js';
+import { bouwConstructie } from './constructie.js';
 
-// Welke CONFIG.objects er op dit moment gebouwd zijn (verify toetst deze).
-export const GEBOUWD = ['stemmingMakerij'];
+// Welke benoemde groepen er op dit moment gebouwd zijn (verify toetst deze;
+// casco/constructie hebben geen CONFIG-vak en worden alleen op hal-omvang getoetst).
+export const GEBOUWD = ['stemmingMakerij', 'casco', 'constructie'];
 
 // InstancedMesh-namen die verify moet aantreffen (groeit per fase).
-export const VERPLICHT_INSTANCED = [];
+export const VERPLICHT_INSTANCED = [
+  'gevelRaster', 'daklichten', 'kolommenOud', 'kolommenNieuw', 'spantStaven',
+];
 
 export function bouwWereld(scene) {
   const colliders = [];
@@ -21,6 +26,8 @@ export function bouwWereld(scene) {
   const updates = [];
 
   const delen = [
+    bouwCasco(),
+    bouwConstructie(),
     bouwStemmingMakerij(),
   ];
   for (const d of delen) {
