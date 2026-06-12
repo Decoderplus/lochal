@@ -16,15 +16,23 @@ export class Speler {
     this.hoogte = CONFIG.player.hoogte;
     this.snelheid = CONFIG.player.loopsnelheid;
 
+    // Spawn: uit de wereld (StemmingMakerij, roteert mee met zaalRotatie);
+    // anders terugvallen op de CONFIG-camera.
     const [pos, kijk] = CONFIG.cameras.spelerstart;
-    this.voeten = new THREE.Vector3(pos[0], 0, pos[2]);
+    this.voeten = wereld.spawn
+      ? new THREE.Vector3(wereld.spawn.pos[0], 0, wereld.spawn.pos[2])
+      : new THREE.Vector3(pos[0], 0, pos[2]);
     this.voeten.y = this._grondHoogte(this.voeten.x, this.voeten.z, 99);
     this.vy = 0;
 
     // Kijkrichting bijhouden via Euler (origineel uit de StemmingMakerij)
     this.euler = new THREE.Euler(0, 0, 0, 'YXZ');
-    const dx = kijk[0] - pos[0], dz = kijk[2] - pos[2];
-    this.euler.y = Math.atan2(-dx, -dz);
+    if (wereld.spawn) {
+      this.euler.y = wereld.spawn.yaw;
+    } else {
+      const dx = kijk[0] - pos[0], dz = kijk[2] - pos[2];
+      this.euler.y = Math.atan2(-dx, -dz);
+    }
     camera.quaternion.setFromEuler(this.euler);
 
     this.vergrendeld = false;

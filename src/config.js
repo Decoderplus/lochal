@@ -39,6 +39,9 @@ export const CONFIG = {
     grootDoek:       { gevel: 'zuidwest', breedte: 28, hoogte: 14 },
   },
   player: { hoogte: 1.75, loopsnelheid: 4 },
+  // Rotatie van de StemmingMakerij-wrapper om zijn eigen as (0/90/180/270).
+  // IJkbaar in het spel met debugtoets R; M toont de minikaart.
+  zaalRotatie: 90,
   renderer: { toneMapping: 'ACESFilmic', exposure: 1.0,
               outputColorSpace: 'srgb', shadowMapSize: 1024, maxShadowLights: 1 },
   performance: { maxTris: 200000, maxDrawCalls: 120, minFPS: 30 },

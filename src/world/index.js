@@ -33,12 +33,13 @@ export function bouwWereld(scene) {
   const interactables = [];
   const updates = [];
 
+  const zaal = bouwStemmingMakerij();
   const delen = [
     bouwCasco(),
     bouwConstructie(),
     bouwVerdiepingen(),
     bouwTribunes(),
-    bouwStemmingMakerij(),
+    zaal,
   ];
   for (const d of delen) {
     scene.add(d.groep);
@@ -51,5 +52,10 @@ export function bouwWereld(scene) {
   return {
     colliders, surfaces, interactables,
     update(dt) { for (const u of updates) u(dt); },
+    // ijking StemmingMakerij-referentiekader (debugtoetsen R/M)
+    spawn: zaal.spawn,
+    zetZaalRotatie: zaal.zetRotatie,
+    zaalRotatie: zaal.rotatie,
+    zaalBox: zaal.zaalBox,
   };
 }

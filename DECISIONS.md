@@ -34,6 +34,13 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Entreedeuren (zuidoost/noord/nacht) horen bij de zuidhal-inrichting → fase 3; gevels nu dicht.
 - Vogelvlucht-camera (CONFIG) staat vlak boven het oostelijke dakvlak; CONFIG is wet, dus niet verplaatst — daken/daklichten zijn er goed op te beoordelen.
 
+## IJking referentiekader (na MENSTEST 1-feedback)
+
+- Zaal hersteld uit git 676f6ac — deur terug in de zuidelijke raamwand: asserts volgen de werkelijkheid, nooit andersom; A3-deurrichtingscheck tijdelijk uit (positiecheck x>50/z 40–54 blijft), komt terug na de ijking.
+- CONFIG.zaalRotatie (0/90/180/270, nu 90) stuurt de wrapper-rotatie om de eigen as; colliders, loopvlak, spawn en deur-interactie zijn lokaal gedefinieerd en roteren mee (incl. userData.deurNormaal).
+- Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
+- Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
+
 ## Fase 2 — Keuzes
 
 - Tribune-opbouw: vlak topplatform van 4 m (z 31–35, y = 5) aan de verdiepingsrand, daarna 28 treden naar BG. Trede ≈ 18 × 32 cm i.p.v. 18 × 30: 5 m hoogte over de resterende 9 m diepte moet wiskundig kloppen (28 × 0,179 / 28 × 0,321).
