@@ -45,8 +45,13 @@ const shotNaam = params.get('shot');
 
 const klok = new THREE.Clock();
 
-if (shotNaam && CONFIG.cameras[shotNaam]) {
-  const [pos, kijk] = CONFIG.cameras[shotNaam];
+// 'vrij' = losse debug-camera: ?shot=vrij&pos=x,y,z&kijk=x,y,z
+const vrij = shotNaam === 'vrij' && params.get('pos') && params.get('kijk')
+  ? [params.get('pos').split(',').map(Number), params.get('kijk').split(',').map(Number)]
+  : null;
+
+if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
+  const [pos, kijk] = vrij ?? CONFIG.cameras[shotNaam];
   camera.position.set(...pos);
   camera.lookAt(...kijk);
   document.getElementById('hint').style.display = 'none';

@@ -46,3 +46,5 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - "Gewone trap omlaag direct ten zuiden van de StemmingMakerij" (sectie 8) uitgesteld naar fase 3: ten zuiden van de zaal ligt de vide-rand; route loopt nu via tribunes/zijtrappen zoals de spelersroute (sectie 12) beschrijft.
 - Stadsbalkon (zuidgevel niveau 3, decor) uitgesteld naar fase 4-polish.
 - Plateau-camera (CONFIG) kijkt pal langs de middenkolom op as z = 37,5 — kolom domineert dat shot; camera's zijn wet, dus gelaten en beoordeling via de overige shots.
+- Op verzoek van de mens (na fase 2): glazen deur (1,0 × 2,1 m, glas + donker kozijn, toets E, opent naar binnen) in de zuidelijke raamwand van de StemmingMakerij, in het linker raamvak vanuit de kamer gezien (wereld x ≈ 57,4–58,4). Deur komt uit op de 1 m brede rand langs de vide-balustrade. Glasvlak/onderregel/colliders ter plaatse gesplitst; alleen in de wrapper-module, kamer.html onaangetast.
+- Debug-camera toegevoegd aan shot-modus (?shot=vrij&pos=…&kijk=…) voor visuele controles buiten de vaste CONFIG-camera's om.

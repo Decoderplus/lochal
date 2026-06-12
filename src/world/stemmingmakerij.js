@@ -169,13 +169,21 @@ export function bouwStemmingMakerij() {
   const frameDik = 0.10;
   const xWand    = B/2 - 0.02;
 
-  const glas = new THREE.Mesh(new THREE.PlaneGeometry(L, H), matGlas);
-  glas.position.set(0, H/2, 0);
-  glas.rotation.y = -Math.PI/2;
-  // kleine correctie: glasvlak op de wandpositie zetten (origineel stond het
-  // gecentreerd in de groep; de groep stond op de wand)
-  glas.position.x = xWand;
-  raamWand.add(glas);
+  // TWEEDE INGREEP (op verzoek van de mens, zie DECISIONS.md): glazen deur in
+  // het linker raamvak (vanuit de kamer naar buiten kijkend = lokaal +z,
+  // wereld-oostzijde van de zuidwand). Opening 1,0 × 2,1 m op lokaal z 3,5–4,5.
+  const GD0 = 3.5, GD1 = 4.5, GDH = 2.1;   // glazen-deuropening
+
+  function glasVlak(lenZ, lenY, z, y) {
+    const g = new THREE.Mesh(new THREE.PlaneGeometry(lenZ, lenY), matGlas);
+    g.position.set(xWand, y, z);
+    g.rotation.y = -Math.PI/2;
+    raamWand.add(g);
+  }
+  // glas in drie delen om de deuropening heen (origineel: één vlak L × H)
+  glasVlak(GD0 + L/2, H, (GD0 - L/2) / 2, H/2);          // z −6 … 3,5
+  glasVlak(L/2 - GD1, H, (GD1 + L/2) / 2, H/2);          // z 4,5 … 6
+  glasVlak(GD1 - GD0, H - GDH, (GD0 + GD1) / 2, GDH + (H - GDH) / 2); // boven de deur
 
   function frameBalk(lenZ, lenY, z, y) {
     const g = new THREE.BoxGeometry(0.06, lenY, lenZ);
@@ -184,13 +192,49 @@ export function bouwStemmingMakerij() {
     raamWand.add(m);
   }
   frameBalk(L, frameDik, 0, H - frameDik/2);
-  frameBalk(L, frameDik, 0, frameDik/2);
+  // onderregel in twee delen om de deuropening heen
+  frameBalk(GD0 + L/2, frameDik, (GD0 - L/2) / 2, frameDik/2);
+  frameBalk(L/2 - GD1, frameDik, (GD1 + L/2) / 2, frameDik/2);
   for (const z of [-L/2, -L/6, L/6, L/2]) {
     const g = new THREE.BoxGeometry(0.06, H, frameDik);
     const m = new THREE.Mesh(g, matFrame);
     m.position.set(xWand, H/2, z);
     raamWand.add(m);
   }
+  // deurkozijn: twee stijlen + bovendorpel
+  for (const z of [GD0, GD1]) {
+    const stijl = new THREE.Mesh(new THREE.BoxGeometry(0.06, GDH + 0.12, 0.08), matFrame);
+    stijl.position.set(xWand, (GDH + 0.12) / 2, z);
+    raamWand.add(stijl);
+  }
+  const dorpel = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.10, GD1 - GD0), matFrame);
+  dorpel.position.set(xWand, GDH + 0.05, (GD0 + GD1) / 2);
+  raamWand.add(dorpel);
+
+  // de glazen deur zelf: glaspaneel met smal donker randwerk, scharnier op z = 3,5
+  const glasDeurPivot = new THREE.Group();
+  glasDeurPivot.position.set(xWand, 0, GD0);
+  const gdPaneel = new THREE.Group();
+  const gdGlas = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 2.02), matGlas);
+  gdGlas.rotation.y = -Math.PI/2;
+  gdGlas.position.set(0, 1.06, 0.48);
+  gdPaneel.add(gdGlas);
+  for (const dz of [0.04, 0.92]) {
+    const rand = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.08, 0.05), matFrame);
+    rand.position.set(0, 1.07, dz);
+    gdPaneel.add(rand);
+  }
+  for (const dy of [0.05, 2.08]) {
+    const rand = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.94), matFrame);
+    rand.position.set(0, dy, 0.48);
+    gdPaneel.add(rand);
+  }
+  const klink = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.04, 0.16), matFrame);
+  klink.position.set(0, 1.05, 0.82);
+  gdPaneel.add(klink);
+  glasDeurPivot.add(gdPaneel);
+  scene.add(glasDeurPivot);
+
   scene.add(raamWand);
 
   // (Foto-backdrop achter de ramen is app-decor van de zelfstandige versie en
@@ -476,7 +520,10 @@ export function bouwStemmingMakerij() {
   const zZuid = czW - B / 2, zNoord = czW + B / 2;
   const deurZ0 = czW - DEUR_B / 2 - 0.2, deurZ1 = czW + DEUR_B / 2 + 0.2;
   const yB = y0, yT = y0 + H;
+  // glazen deur (zuidwand): lokaal z 3,5–4,5 → wereld x = cxW + lokaal z
+  const gdX0 = cxW + GD0, gdX1 = cxW + GD1;
   const deurCollider = { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: deurZ0, z1: deurZ1, actief: true };
+  const glasDeurCollider = { x0: gdX0 - 0.15, x1: gdX1 + 0.15, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte, actief: true };
   const colliders = [
     // westwand in 2 stukken rond de deuropening
     { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: zZuid, z1: deurZ0 },
@@ -484,7 +531,10 @@ export function bouwStemmingMakerij() {
     deurCollider,
     { x0: xOost - dikte, x1: xOost + dikte, y0: yB, y1: yT, z0: zZuid, z1: zNoord },  // oost
     { x0: xWest, x1: xOost, y0: yB, y1: yT, z0: zNoord - dikte, z1: zNoord + dikte }, // noord (gordijnwand)
-    { x0: xWest, x1: xOost, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte },   // zuid (ramen)
+    // zuid (ramen) in 2 stukken rond de glazen deur
+    { x0: xWest, x1: gdX0, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte },
+    { x0: gdX1, x1: xOost, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte },
+    glasDeurCollider,
   ];
 
   // Loopvlak van de zaal zelf (vloer-1-plak komt pas in fase 2)
@@ -492,25 +542,33 @@ export function bouwStemmingMakerij() {
     { kind: 'vlak', x0: xWest, x1: xOost, z0: zZuid, z1: zNoord, y: y0 },
   ];
 
-  // ── Deurlogica ──────────────────────────────────────────────────────────
+  // ── Deurlogica (westdeur + zuidelijke glazen deur) ──────────────────────
   const deur = { open: false, t: 0 };
-  const OPEN_HOEK = -1.95; // naar buiten (het plateau op)
-  function toggleDeur() { deur.open = !deur.open; }
+  const glasDeur = { open: false, t: 0 };
+  const OPEN_HOEK = -1.95;       // westdeur: naar buiten (het plateau op)
+  const GLAS_OPEN_HOEK = -1.85;  // glazen deur: naar binnen (de kamer in)
+  function stapDeur(d, pivot, hoek, collider, dt) {
+    const doel = d.open ? 1 : 0;
+    if (d.t === doel) return;
+    d.t += Math.sign(doel - d.t) * dt * 1.8;
+    d.t = Math.max(0, Math.min(1, d.t));
+    const e = d.t * d.t * (3 - 2 * d.t);
+    pivot.rotation.y = hoek * e;
+    collider.actief = d.t < 0.35;
+  }
   function update(dt) {
-    const doel = deur.open ? 1 : 0;
-    if (deur.t !== doel) {
-      deur.t += Math.sign(doel - deur.t) * dt * 1.8;
-      deur.t = Math.max(0, Math.min(1, deur.t));
-      const e = deur.t * deur.t * (3 - 2 * deur.t);
-      deurPivot.rotation.y = OPEN_HOEK * e;
-      deurCollider.actief = deur.t < 0.35;
-    }
+    stapDeur(deur, deurPivot, OPEN_HOEK, deurCollider, dt);
+    stapDeur(glasDeur, glasDeurPivot, GLAS_OPEN_HOEK, glasDeurCollider, dt);
   }
 
   const interactables = [{
     x: xWest, y: y0 + 1.2, z: czW, radius: 2.4,
     label: () => deur.open ? 'E — deur sluiten' : 'E — deur openen',
-    onInteract: toggleDeur,
+    onInteract: () => { deur.open = !deur.open; },
+  }, {
+    x: (gdX0 + gdX1) / 2, y: y0 + 1.2, z: zZuid, radius: 2.2,
+    label: () => glasDeur.open ? 'E — glazen deur sluiten' : 'E — glazen deur openen',
+    onInteract: () => { glasDeur.open = !glasDeur.open; },
   }];
 
   return { groep, colliders, surfaces, interactables, update };
