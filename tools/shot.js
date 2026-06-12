@@ -29,7 +29,7 @@ try {
   const browser = await puppeteer.launch({
     executablePath: exe,
     headless: true,
-    userDataDir: `${SHOTS}/.browser-profiel`,
+    userDataDir: `${process.env.TEMP ?? '.'}/lochal-shot-profiel`,
     args: ['--no-sandbox', '--no-first-run', '--disable-sync',
            '--use-angle=swiftshader', '--enable-unsafe-swiftshader',
            '--hide-scrollbars', '--mute-audio'],
