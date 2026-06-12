@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>LocHal</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { overflow: hidden; background: #000; font-family: Georgia, serif; }
+    canvas { display: block; }
+    #startuitleg {
+      position: fixed; top: 14px; left: 50%; transform: translateX(-50%);
+      color: #f0e9dd; background: rgba(20, 16, 12, 0.55);
+      padding: 7px 16px; border-radius: 6px; font-size: 14px;
+      pointer-events: none; user-select: none;
+    }
+    body.spelend #startuitleg { display: none; }
+    #hint {
+      position: fixed; bottom: 56px; left: 50%; transform: translateX(-50%);
+      display: none; color: #fff; background: rgba(20, 16, 12, 0.65);
+      padding: 8px 18px; border-radius: 6px; font-size: 16px;
+      pointer-events: none; user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <div id="startuitleg">Klik om te starten &nbsp;|&nbsp; WASD = lopen &nbsp;|&nbsp; muis = kijken &nbsp;|&nbsp; E = gebruiken &nbsp;|&nbsp; ESC = stoppen</div>
+  <div id="hint"></div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./node_modules/three/build/three.module.js",
+      "three/addons/": "./node_modules/three/examples/jsm/"
+    }
+  }
+  </script>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
