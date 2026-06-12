@@ -36,4 +36,13 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 
 ## Fase 2 — Keuzes
 
-(volgt)
+- Tribune-opbouw: vlak topplatform van 4 m (z 31–35, y = 5) aan de verdiepingsrand, daarna 28 treden naar BG. Trede ≈ 18 × 32 cm i.p.v. 18 × 30: 5 m hoogte over de resterende 9 m diepte moet wiskundig kloppen (28 × 0,179 / 28 × 0,321).
+- Loopbrug op z = 31–33 i.p.v. "z ≈ 30": alleen zo sluit het dek (y = 5) vloeiend aan op de binnenflanken van beide topplatforms; verify-vak daarop verruimd (z 28–34). Brug-entree = opening in de flankbalustrade (z 31–33).
+- Treden als dunne platen + stootborden op drie stalen schinkels → de wereld onder beide tribunes blijft open, donker en toegankelijk (spec sectie 7); schinkels iets ingekort zodat niets door de BG-vloer prikt.
+- Zijtrappen = vrijgehouden stroken van 1,3 m langs beide flanken van elke tribune (blokken liggen daarbuiten), met glasbalustrade + eiken handregel langs de helling — zelfde treden, dus geen aparte trapgeometrie.
+- Eiken blokken: 12 per tribune, breedte 2–6 m semi-willekeurig (seeded RNG → verify/shots stabiel); kussens 60×60×8 in rood/donkerblauw/oranje, per kleur één InstancedMesh.
+- Collision: loopvlakken als 'vlak' + 'helling' (ramp-collider over de treden, conform werkplan); flank-leuningen als 3 trapsgewijze schotten per kant; balustrade vide-rand met openingen alléén bij de tribunemonden.
+- Boekenkast-silhouetten vloer 2/3 nu al als simpele zwarte blokken (InstancedMesh 'kastBlokken'): de randen ogen anders kaal; verfijning hoort bij fase 3/4-decor.
+- "Gewone trap omlaag direct ten zuiden van de StemmingMakerij" (sectie 8) uitgesteld naar fase 3: ten zuiden van de zaal ligt de vide-rand; route loopt nu via tribunes/zijtrappen zoals de spelersroute (sectie 12) beschrijft.
+- Stadsbalkon (zuidgevel niveau 3, decor) uitgesteld naar fase 4-polish.
+- Plateau-camera (CONFIG) kijkt pal langs de middenkolom op as z = 37,5 — kolom domineert dat shot; camera's zijn wet, dus gelaten en beoordeling via de overige shots.
