@@ -9,9 +9,10 @@
 //  • Alle positionering loopt uitsluitend via de wrapper-Group
 //    (stemmingMakerijGroup): positie (53.9, 5, 39), rotatie +90°, schaal 1
 //    (de zaal was al in meters). Ramen kijken zuid de vide in, deur west.
-//  • ENIGE toegestane ingreep: deuropening 1 × 2,1 m in de westwand (lokale
-//    achterwand). Daarvoor is dat ene wandvlak gesplitst in 3 vlakken, de
-//    wandbank aldaar onderbroken en de kussensrij in 2 stukken gelegd.
+//  • ENIGE ingreep (op verzoek van de mens, na MENSTEST-feedback): een glazen
+//    deur van 1 × 2,1 m in de zuidelijke raamwand, westelijke raamvak — dit is
+//    de enige deur van de zaal. De eerdere westdeur is teruggedraaid; de
+//    achterwand, wandbank en kussensrij zijn weer exact origineel.
 //    Zie DECISIONS.md.
 //  • App-systemen van kamer.html (menu, video-afspeellijst, audio-cues,
 //    lichtstanden, post-processing, besturing, foto-backdrop) zijn app-niveau
@@ -147,12 +148,9 @@ export function bouwStemmingMakerij() {
   maakVlak(B, L, matPlafond, 0,       H,    0,     Math.PI/2, 0);
   // Korte wanden: mat zwart
   const matZwarteWand = new THREE.MeshLambertMaterial({ color: 0x121212 });
-  // Achterwand (z = -L/2) — ENIGE INGREEP: deuropening 1 × 2,1 m (gecentreerd).
-  // Origineel: maakVlak(B, H, matZwarteWand, 0, H/2, -L/2, 0, 0);
-  const DEUR_B = 1.0, DEUR_H = 2.1;
-  maakVlak((B - DEUR_B) / 2, H, matZwarteWand, -(DEUR_B + (B - DEUR_B) / 2) / 2, H / 2, -L / 2, 0, 0);
-  maakVlak((B - DEUR_B) / 2, H, matZwarteWand,  (DEUR_B + (B - DEUR_B) / 2) / 2, H / 2, -L / 2, 0, 0);
-  maakVlak(DEUR_B, H - DEUR_H, matZwarteWand, 0, DEUR_H + (H - DEUR_H) / 2, -L / 2, 0, 0);
+  // Achterwand (z = -L/2) — origineel dicht vlak (westdeur vervallen op
+  // verzoek van de mens: de zuidelijke glazen deur is de enige deur)
+  maakVlak(B, H, matZwarteWand, 0, H/2, -L/2, 0, 0);
   // Voorwand    (z = +L/2)
   maakVlak(B, H, matZwarteWand, 0,  H/2,  L/2,  0,   Math.PI);
   // Linkerwand  (x = -B/2) — donkere achtergrond achter het touwtjesgordijn
@@ -170,9 +168,9 @@ export function bouwStemmingMakerij() {
   const xWand    = B/2 - 0.02;
 
   // TWEEDE INGREEP (op verzoek van de mens, zie DECISIONS.md): glazen deur in
-  // het linker raamvak (vanuit de kamer naar buiten kijkend = lokaal +z,
-  // wereld-oostzijde van de zuidwand). Opening 1,0 × 2,1 m op lokaal z 3,5–4,5.
-  const GD0 = 3.5, GD1 = 4.5, GDH = 2.1;   // glazen-deuropening
+  // het linker raamvak gezien vanaf de vide (= lokaal −z, wereld-WESTzijde van
+  // de zuidwand). Opening 1,0 × 2,1 m op lokaal z −4,5 … −3,5.
+  const GD0 = -4.5, GD1 = -3.5, GDH = 2.1;  // glazen-deuropening
 
   function glasVlak(lenZ, lenY, z, y) {
     const g = new THREE.Mesh(new THREE.PlaneGeometry(lenZ, lenY), matGlas);
@@ -379,16 +377,11 @@ export function bouwStemmingMakerij() {
     new THREE.BoxGeometry(bankDiepte, bankHoog, L), matHout);
   bankLinks.position.set(-B/2 + bankDiepte/2, bankHoog/2, 0);
   scene.add(bankLinks);
-  // Achterwand-bank — ter plaatse van de deuropening onderbroken (deuringreep):
-  // origineel: één blok van B breed; nu twee blokken met 1,4 m vrije ruimte.
-  const BANKGAT = 1.4;
-  for (const kant of [-1, 1]) {
-    const stukB = (B - BANKGAT) / 2;
-    const bankStuk = new THREE.Mesh(
-      new THREE.BoxGeometry(stukB, bankHoog, bankDiepte), matHout);
-    bankStuk.position.set(kant * (BANKGAT / 2 + stukB / 2), bankHoog/2, -L/2 + bankDiepte/2);
-    scene.add(bankStuk);
-  }
+  // Achterwand (z = -L/2, langs X, volle breedte) — origineel
+  const bankAchter = new THREE.Mesh(
+    new THREE.BoxGeometry(B, bankHoog, bankDiepte), matHout);
+  bankAchter.position.set(0, bankHoog/2, -L/2 + bankDiepte/2);
+  scene.add(bankAchter);
   // Voorwand (z = +L/2, langs X, volle breedte)
   const bankVoor = new THREE.Mesh(
     new THREE.BoxGeometry(B, bankHoog, bankDiepte), matHout);
@@ -418,10 +411,9 @@ export function bouwStemmingMakerij() {
   const cx = -B/2 + bankDiepte/2 + 0.02;
   const cz1 = -L/2 + bankDiepte/2 + 0.02;
   const cz2 =  L/2 - bankDiepte/2 - 0.02;
-  legKussens(cx, -L/2 + 0.4, cx, L/2 - 0.4);          // linkerwand
-  legKussens(-B/2 + 0.6, cz1, -BANKGAT/2 - 0.25, cz1); // achterwand links van deur
-  legKussens(BANKGAT/2 + 0.25, cz1, B/2 - 0.4, cz1);   // achterwand rechts van deur
-  legKussens(-B/2 + 0.6, cz2, B/2 - 0.4, cz2);         // voorwand
+  legKussens(cx, -L/2 + 0.4, cx, L/2 - 0.4);   // linkerwand
+  legKussens(-B/2 + 0.6, cz1, B/2 - 0.4, cz1); // achterwand
+  legKussens(-B/2 + 0.6, cz2, B/2 - 0.4, cz2); // voorwand
 
   // ── Cirkelbank op het tapijt (open aan de tv-kant, -X) ────────────────
   const cbInner  = 1.67, cbOuter = 2.10;
@@ -495,40 +487,26 @@ export function bouwStemmingMakerij() {
     scene.add(lamp);
   }
 
-  // ── Deur (de toegestane ingreep): paneel in de opening, E om te openen ──
-  const deurPivot = new THREE.Group();
-  deurPivot.position.set(DEUR_B / 2, 0, -L / 2);
-  const deurPaneel = new THREE.Mesh(
-    new THREE.BoxGeometry(DEUR_B, DEUR_H, 0.06),
-    new THREE.MeshLambertMaterial({ color: 0x241c14 })
-  );
-  deurPaneel.position.set(-DEUR_B / 2, DEUR_H / 2, 0);
-  deurPivot.add(deurPaneel);
-  scene.add(deurPivot);
-
   // ── Wrapper-transform naar de CONFIG-positie (oostgevel, vloer 1) ───────
+  // 0,5 m noordelijker binnen het vak, zodat de vide-rand vóór de glazen
+  // deur (de enige uitgang) een begaanbare strook van ~1,5 m is.
   const vak = CONFIG.objects.stemmingMakerij;
   const y0 = CONFIG.floors[vak.floor];
-  const cxW = 53.9, czW = 39;          // middelpunt (oost net vrij van de gevel)
+  const cxW = 53.9, czW = 39.5;        // middelpunt (oost net vrij van de gevel)
   groep.position.set(cxW, y0, czW);
-  groep.rotation.y = Math.PI / 2;      // ramen → zuid (vide), deurwand → west
+  groep.rotation.y = Math.PI / 2;      // ramen → zuid (vide)
   // schaalfactor 1: de zaal is al in meters gebouwd
 
   // ── Wereld-colliders (lokaal → wereld: X = cx + lz, Z = cz − lx) ────────
   const dikte = 0.18;
   const xWest = cxW - L / 2, xOost = cxW + L / 2;
   const zZuid = czW - B / 2, zNoord = czW + B / 2;
-  const deurZ0 = czW - DEUR_B / 2 - 0.2, deurZ1 = czW + DEUR_B / 2 + 0.2;
   const yB = y0, yT = y0 + H;
-  // glazen deur (zuidwand): lokaal z 3,5–4,5 → wereld x = cxW + lokaal z
+  // glazen deur (zuidwand): lokaal z −4,5…−3,5 → wereld x = cxW + lokaal z
   const gdX0 = cxW + GD0, gdX1 = cxW + GD1;
-  const deurCollider = { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: deurZ0, z1: deurZ1, actief: true };
   const glasDeurCollider = { x0: gdX0 - 0.15, x1: gdX1 + 0.15, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte, actief: true };
   const colliders = [
-    // westwand in 2 stukken rond de deuropening
-    { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: zZuid, z1: deurZ0 },
-    { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: deurZ1, z1: zNoord },
-    deurCollider,
+    { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: zZuid, z1: zNoord }, // west (dicht)
     { x0: xOost - dikte, x1: xOost + dikte, y0: yB, y1: yT, z0: zZuid, z1: zNoord },  // oost
     { x0: xWest, x1: xOost, y0: yB, y1: yT, z0: zNoord - dikte, z1: zNoord + dikte }, // noord (gordijnwand)
     // zuid (ramen) in 2 stukken rond de glazen deur
@@ -542,30 +520,20 @@ export function bouwStemmingMakerij() {
     { kind: 'vlak', x0: xWest, x1: xOost, z0: zZuid, z1: zNoord, y: y0 },
   ];
 
-  // ── Deurlogica (westdeur + zuidelijke glazen deur) ──────────────────────
-  const deur = { open: false, t: 0 };
+  // ── Deurlogica: alleen de zuidelijke glazen deur (de enige deur) ────────
   const glasDeur = { open: false, t: 0 };
-  const OPEN_HOEK = -1.95;       // westdeur: naar buiten (het plateau op)
-  const GLAS_OPEN_HOEK = -1.85;  // glazen deur: naar binnen (de kamer in)
-  function stapDeur(d, pivot, hoek, collider, dt) {
-    const doel = d.open ? 1 : 0;
-    if (d.t === doel) return;
-    d.t += Math.sign(doel - d.t) * dt * 1.8;
-    d.t = Math.max(0, Math.min(1, d.t));
-    const e = d.t * d.t * (3 - 2 * d.t);
-    pivot.rotation.y = hoek * e;
-    collider.actief = d.t < 0.35;
-  }
+  const GLAS_OPEN_HOEK = -1.85;  // naar binnen (de kamer in)
   function update(dt) {
-    stapDeur(deur, deurPivot, OPEN_HOEK, deurCollider, dt);
-    stapDeur(glasDeur, glasDeurPivot, GLAS_OPEN_HOEK, glasDeurCollider, dt);
+    const doel = glasDeur.open ? 1 : 0;
+    if (glasDeur.t === doel) return;
+    glasDeur.t += Math.sign(doel - glasDeur.t) * dt * 1.8;
+    glasDeur.t = Math.max(0, Math.min(1, glasDeur.t));
+    const e = glasDeur.t * glasDeur.t * (3 - 2 * glasDeur.t);
+    glasDeurPivot.rotation.y = GLAS_OPEN_HOEK * e;
+    glasDeurCollider.actief = glasDeur.t < 0.35;
   }
 
   const interactables = [{
-    x: xWest, y: y0 + 1.2, z: czW, radius: 2.4,
-    label: () => deur.open ? 'E — deur sluiten' : 'E — deur openen',
-    onInteract: () => { deur.open = !deur.open; },
-  }, {
     x: (gdX0 + gdX1) / 2, y: y0 + 1.2, z: zZuid, radius: 2.2,
     label: () => glasDeur.open ? 'E — glazen deur sluiten' : 'E — glazen deur openen',
     onInteract: () => { glasDeur.open = !glasDeur.open; },
