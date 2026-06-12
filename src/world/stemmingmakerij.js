@@ -9,11 +9,10 @@
 //  • Alle positionering loopt uitsluitend via de wrapper-Group
 //    (stemmingMakerijGroup): positie (53.9, 5, 39), rotatie +90°, schaal 1
 //    (de zaal was al in meters). Ramen kijken zuid de vide in, deur west.
-//  • ENIGE ingreep (op verzoek van de mens, na MENSTEST-feedback): een glazen
-//    deur van 1 × 2,1 m in de zuidelijke raamwand, westelijke raamvak — dit is
-//    de enige deur van de zaal. De eerdere westdeur is teruggedraaid; de
-//    achterwand, wandbank en kussensrij zijn weer exact origineel.
-//    Zie DECISIONS.md.
+//  • ENIGE ingreep: één glazen deur van 1 × 2,1 m in de achterwand (lokaal -Z).
+//    Na de wrapper-rotatie kijkt die wand naar wereld -x (west) — de route naar
+//    het plateau/de tribunes; de ramenwand blijft volledig glas en kijkt zuid de
+//    vide in. ASSENCHECK eist 'deur kijkt -x'. Zie DECISIONS.md.
 //  • App-systemen van kamer.html (menu, video-afspeellijst, audio-cues,
 //    lichtstanden, post-processing, besturing, foto-backdrop) zijn app-niveau
 //    en geen zaal-vormgeving; die draaien alleen in de zelfstandige
@@ -148,9 +147,13 @@ export function bouwStemmingMakerij() {
   maakVlak(B, L, matPlafond, 0,       H,    0,     Math.PI/2, 0);
   // Korte wanden: mat zwart
   const matZwarteWand = new THREE.MeshLambertMaterial({ color: 0x121212 });
-  // Achterwand (z = -L/2) — origineel dicht vlak (westdeur vervallen op
-  // verzoek van de mens: de zuidelijke glazen deur is de enige deur)
-  maakVlak(B, H, matZwarteWand, 0, H/2, -L/2, 0, 0);
+  // Achterwand (z = -L/2) — ENIGE ingreep: glazen deuropening 1,0 × 2,1 m.
+  // Deze wand kijkt na de wrapper-rotatie naar wereld -x (west = de route naar
+  // het KennisMakerij-plateau / de tribunes); ASSENCHECK eist 'deur kijkt -x'.
+  const DEUR_B = 1.0, DEUR_H = 2.1;     // glazen-deuropening (lokaal X, hoogte)
+  maakVlak((B - DEUR_B) / 2, H, matZwarteWand, -(DEUR_B / 2 + (B - DEUR_B) / 4), H / 2, -L / 2, 0, 0);
+  maakVlak((B - DEUR_B) / 2, H, matZwarteWand,  (DEUR_B / 2 + (B - DEUR_B) / 4), H / 2, -L / 2, 0, 0);
+  maakVlak(DEUR_B, H - DEUR_H, matZwarteWand, 0, DEUR_H + (H - DEUR_H) / 2, -L / 2, 0, 0);
   // Voorwand    (z = +L/2)
   maakVlak(B, H, matZwarteWand, 0,  H/2,  L/2,  0,   Math.PI);
   // Linkerwand  (x = -B/2) — donkere achtergrond achter het touwtjesgordijn
@@ -163,25 +166,16 @@ export function bouwStemmingMakerij() {
     shininess: 90, side: THREE.DoubleSide, depthWrite: false
   });
 
+  // Ramenwand (rechterwand, lokaal +X) — origineel: doorlopend glas + frame.
+  // Kijkt na de wrapper-rotatie naar wereld -z (zuid): uitzicht de vide in.
   const raamWand = new THREE.Group();
   const frameDik = 0.10;
   const xWand    = B/2 - 0.02;
 
-  // TWEEDE INGREEP (op verzoek van de mens, zie DECISIONS.md): glazen deur in
-  // het linker raamvak gezien vanaf de vide (= lokaal −z, wereld-WESTzijde van
-  // de zuidwand). Opening 1,0 × 2,1 m op lokaal z −4,5 … −3,5.
-  const GD0 = -4.5, GD1 = -3.5, GDH = 2.1;  // glazen-deuropening
-
-  function glasVlak(lenZ, lenY, z, y) {
-    const g = new THREE.Mesh(new THREE.PlaneGeometry(lenZ, lenY), matGlas);
-    g.position.set(xWand, y, z);
-    g.rotation.y = -Math.PI/2;
-    raamWand.add(g);
-  }
-  // glas in drie delen om de deuropening heen (origineel: één vlak L × H)
-  glasVlak(GD0 + L/2, H, (GD0 - L/2) / 2, H/2);          // z −6 … 3,5
-  glasVlak(L/2 - GD1, H, (GD1 + L/2) / 2, H/2);          // z 4,5 … 6
-  glasVlak(GD1 - GD0, H - GDH, (GD0 + GD1) / 2, GDH + (H - GDH) / 2); // boven de deur
+  const glas = new THREE.Mesh(new THREE.PlaneGeometry(L, H), matGlas);
+  glas.position.set(xWand, H/2, 0);
+  glas.rotation.y = -Math.PI/2;
+  raamWand.add(glas);
 
   function frameBalk(lenZ, lenY, z, y) {
     const g = new THREE.BoxGeometry(0.06, lenY, lenZ);
@@ -190,53 +184,48 @@ export function bouwStemmingMakerij() {
     raamWand.add(m);
   }
   frameBalk(L, frameDik, 0, H - frameDik/2);
-  // onderregel in twee delen om de deuropening heen
-  frameBalk(GD0 + L/2, frameDik, (GD0 - L/2) / 2, frameDik/2);
-  frameBalk(L/2 - GD1, frameDik, (GD1 + L/2) / 2, frameDik/2);
+  frameBalk(L, frameDik, 0, frameDik/2);
   for (const z of [-L/2, -L/6, L/6, L/2]) {
     const g = new THREE.BoxGeometry(0.06, H, frameDik);
     const m = new THREE.Mesh(g, matFrame);
     m.position.set(xWand, H/2, z);
     raamWand.add(m);
   }
-  // deurkozijn: twee stijlen + bovendorpel
-  for (const z of [GD0, GD1]) {
-    const stijl = new THREE.Mesh(new THREE.BoxGeometry(0.06, GDH + 0.12, 0.08), matFrame);
-    stijl.position.set(xWand, (GDH + 0.12) / 2, z);
-    raamWand.add(stijl);
-  }
-  const dorpel = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.10, GD1 - GD0), matFrame);
-  dorpel.position.set(xWand, GDH + 0.05, (GD0 + GD1) / 2);
-  raamWand.add(dorpel);
+  scene.add(raamWand);
 
-  // de glazen deur zelf: glaspaneel met smal donker randwerk, scharnier op z = 3,5
+  // ── Glazen deur in de westwand (achterwand, lokaal -Z) ──────────────────
+  // Kozijn rond de opening + scharnierend glaspaneel. De deur kijkt lokaal -Z,
+  // wat na de wrapper-rotatie wereld -x (west) is → ASSENCHECK 'deur kijkt -x'.
+  for (const x of [-DEUR_B / 2, DEUR_B / 2]) {
+    const stijl = new THREE.Mesh(new THREE.BoxGeometry(0.08, DEUR_H + 0.12, 0.10), matFrame);
+    stijl.position.set(x, (DEUR_H + 0.12) / 2, -L / 2);
+    scene.add(stijl);
+  }
+  const deurDorpel = new THREE.Mesh(new THREE.BoxGeometry(DEUR_B, 0.10, 0.10), matFrame);
+  deurDorpel.position.set(0, DEUR_H + 0.05, -L / 2);
+  scene.add(deurDorpel);
+
   const glasDeurPivot = new THREE.Group();
-  glasDeurPivot.position.set(xWand, 0, GD0);
+  glasDeurPivot.position.set(-DEUR_B / 2, 0, -L / 2);   // scharnier links in de opening
   const gdPaneel = new THREE.Group();
-  const gdGlas = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 2.02), matGlas);
-  gdGlas.rotation.y = -Math.PI/2;
-  gdGlas.position.set(0, 1.06, 0.48);
+  const gdGlas = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 2.02), matGlas); // XY-vlak → kijkt ±Z
+  gdGlas.position.set(0.48, 1.06, 0);
   gdPaneel.add(gdGlas);
-  for (const dz of [0.04, 0.92]) {
+  for (const dx of [0.04, 0.92]) {
     const rand = new THREE.Mesh(new THREE.BoxGeometry(0.05, 2.08, 0.05), matFrame);
-    rand.position.set(0, 1.07, dz);
+    rand.position.set(dx, 1.07, 0);
     gdPaneel.add(rand);
   }
   for (const dy of [0.05, 2.08]) {
-    const rand = new THREE.Mesh(new THREE.BoxGeometry(0.05, 0.05, 0.94), matFrame);
-    rand.position.set(0, dy, 0.48);
+    const rand = new THREE.Mesh(new THREE.BoxGeometry(0.94, 0.05, 0.05), matFrame);
+    rand.position.set(0.48, dy, 0);
     gdPaneel.add(rand);
   }
-  const klink = new THREE.Mesh(new THREE.BoxGeometry(0.10, 0.04, 0.16), matFrame);
-  klink.position.set(0, 1.05, 0.82);
+  const klink = new THREE.Mesh(new THREE.BoxGeometry(0.16, 0.04, 0.10), matFrame);
+  klink.position.set(0.82, 1.05, 0);
   gdPaneel.add(klink);
   glasDeurPivot.add(gdPaneel);
   scene.add(glasDeurPivot);
-
-  scene.add(raamWand);
-
-  // (Foto-backdrop achter de ramen is app-decor van de zelfstandige versie en
-  //  vervalt hier: door de ramen kijk je nu de echte LocHal-zuidhal in.)
 
   // ── Industriële plafond-elementen (buizen + luchtkanalen) ──────────────
   const matBuis   = new THREE.MeshLambertMaterial({ color: 0x3a3a3a }); // donkergrijs
@@ -487,42 +476,47 @@ export function bouwStemmingMakerij() {
     scene.add(lamp);
   }
 
-  // ── Wrapper-transform naar de CONFIG-positie (oostgevel, vloer 1) ───────
-  // 0,5 m noordelijker binnen het vak, zodat de vide-rand vóór de glazen
-  // deur (de enige uitgang) een begaanbare strook van ~1,5 m is.
+  // ── Wrapper-transform naar de CONFIG-positie (vloer 1, noorddeel) ───────
+  // 12 m (lokaal Z) → wereld X (vak x[48,60]); 6 m (lokaal B) → wereld Z
+  // (vak z[43,51], center 47). Rotatie +90°: ramen → zuid (vide), de
+  // glazen-deurwand (lokaal -Z) → wereld -x (west) = de route-uitgang.
   const vak = CONFIG.objects.stemmingMakerij;
   const y0 = CONFIG.floors[vak.floor];
-  const cxW = 53.9, czW = 39.5;        // middelpunt (oost net vrij van de gevel)
+  const cxW = 53.9, czW = 47;          // center x>50, z 40–54 (ASSENCHECK)
   groep.position.set(cxW, y0, czW);
-  groep.rotation.y = Math.PI / 2;      // ramen → zuid (vide)
+  groep.rotation.y = Math.PI / 2;
   // schaalfactor 1: de zaal is al in meters gebouwd
+
+  // Deurrichting (gesloten) in wereldruimte — voor de ASSENCHECK '-x':
+  const _n = new THREE.Vector3(0, 0, -1).applyQuaternion(groep.quaternion);
+  groep.userData.deurNormaal = [_n.x, _n.y, _n.z];
 
   // ── Wereld-colliders (lokaal → wereld: X = cx + lz, Z = cz − lx) ────────
   const dikte = 0.18;
-  const xWest = cxW - L / 2, xOost = cxW + L / 2;
-  const zZuid = czW - B / 2, zNoord = czW + B / 2;
+  const xWest = cxW - L / 2, xOost = cxW + L / 2;   // L (lokaal Z) → wereld X
+  const zZuid = czW - B / 2, zNoord = czW + B / 2;  // B (lokaal X) → wereld Z
   const yB = y0, yT = y0 + H;
-  // glazen deur (zuidwand): lokaal z −4,5…−3,5 → wereld x = cxW + lokaal z
-  const gdX0 = cxW + GD0, gdX1 = cxW + GD1;
-  const glasDeurCollider = { x0: gdX0 - 0.15, x1: gdX1 + 0.15, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte, actief: true };
+  // glazen deur in de westwand: lokaal x −0,5…0,5 → wereld z = czW − lokaal x
+  const deurZ0 = czW - DEUR_B / 2 - 0.2, deurZ1 = czW + DEUR_B / 2 + 0.2;
+  const glasDeurCollider = { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: deurZ0, z1: deurZ1, actief: true };
   const colliders = [
-    { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: zZuid, z1: zNoord }, // west (dicht)
-    { x0: xOost - dikte, x1: xOost + dikte, y0: yB, y1: yT, z0: zZuid, z1: zNoord },  // oost
-    { x0: xWest, x1: xOost, y0: yB, y1: yT, z0: zNoord - dikte, z1: zNoord + dikte }, // noord (gordijnwand)
-    // zuid (ramen) in 2 stukken rond de glazen deur
-    { x0: xWest, x1: gdX0, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte },
-    { x0: gdX1, x1: xOost, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte },
+    // west (achterwand) in 2 stukken rond de glazen deuropening
+    { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: zZuid, z1: deurZ0 },
+    { x0: xWest - dikte, x1: xWest + dikte, y0: yB, y1: yT, z0: deurZ1, z1: zNoord },
     glasDeurCollider,
+    { x0: xOost - dikte, x1: xOost + dikte, y0: yB, y1: yT, z0: zZuid, z1: zNoord },  // oost (voorwand)
+    { x0: xWest, x1: xOost, y0: yB, y1: yT, z0: zNoord - dikte, z1: zNoord + dikte }, // noord (gordijnwand)
+    { x0: xWest, x1: xOost, y0: yB, y1: yT, z0: zZuid - dikte, z1: zZuid + dikte },   // zuid (ramen)
   ];
 
-  // Loopvlak van de zaal zelf (vloer-1-plak komt pas in fase 2)
+  // Loopvlak van de zaal zelf (vloer 1 ligt eronder; deze stabiliseert de zaal)
   const surfaces = [
     { kind: 'vlak', x0: xWest, x1: xOost, z0: zZuid, z1: zNoord, y: y0 },
   ];
 
-  // ── Deurlogica: alleen de zuidelijke glazen deur (de enige deur) ────────
+  // ── Deurlogica: de glazen westdeur (de enige deur) ──────────────────────
   const glasDeur = { open: false, t: 0 };
-  const GLAS_OPEN_HOEK = -1.85;  // naar binnen (de kamer in)
+  const GLAS_OPEN_HOEK = -1.85;  // naar binnen (de kamer in) draaien
   function update(dt) {
     const doel = glasDeur.open ? 1 : 0;
     if (glasDeur.t === doel) return;
@@ -534,7 +528,7 @@ export function bouwStemmingMakerij() {
   }
 
   const interactables = [{
-    x: (gdX0 + gdX1) / 2, y: y0 + 1.2, z: zZuid, radius: 2.2,
+    x: xWest, y: y0 + 1.2, z: czW, radius: 2.2,
     label: () => glasDeur.open ? 'E — glazen deur sluiten' : 'E — glazen deur openen',
     onInteract: () => { glasDeur.open = !glasDeur.open; },
   }];

@@ -22,7 +22,7 @@ export const CONFIG = {
     fog: 0xd8d6d0,
   },
   objects: {
-    stemmingMakerij: { x: [48, 60], z: [35, 43], floor: 'f1', door: 'zuid' }, // mens: glazen deur zuid = enige deur
+    stemmingMakerij: { x: [48, 60], z: [43, 51], floor: 'f1', door: 'west' }, // deur kijkt naar -x (ASSENCHECK); x[48,60] amendment (zaal 12 m)
     glazenzaal:      { x: [18, 30], z: [55, 70], h: 4 },
     seats2meet:      { x: [32, 48], z: [55, 75] },
     kennisPlateau:   { x: [15, 45], z: [35, 42] },

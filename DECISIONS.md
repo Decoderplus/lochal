@@ -49,3 +49,10 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Op verzoek van de mens (na fase 2): glazen deur (1,0 × 2,1 m, glas + donker kozijn, toets E, opent naar binnen) in de zuidelijke raamwand van de StemmingMakerij. Na correctie door de mens: in het **westelijke** raamvak (wereld x ≈ 49,4–50,4) en dit is de **enige** deur — de westdeur uit fase 0 is teruggedraaid; achterwand, wandbank en kussensrij zijn weer exact origineel (CONFIG door: 'west' → 'zuid', gelogd). De deur komt uit pal boven de monding van de oosttribune: naar buiten = direct het tribuneplatform op, of via de vide-rand westwaarts het plateau op.
 - Zaal 0,5 m noordelijker geplaatst (middelpunt z 39 → 39,5, binnen het vak z [35, 43]): de vide-rand vóór de glazen deur is anders maar ~3 cm netto begaanbaar; nu is die strook ~1,5 m — ruim genoeg als enige uitgang.
 - Debug-camera toegevoegd aan shot-modus (?shot=vrij&pos=…&kijk=…) voor visuele controles buiten de vaste CONFIG-camera's om.
+
+## Assencheck-fix (sectie 2)
+
+- ASSENCHECK als asserts in verify.js (A1 hal-assen, A2 tribunes, A3 StemmingMakerij+deurrichting, A4 café/glazenzaal, A5 doeken; A4/A5 conditioneel op 'gebouwd').
+- Root-cause: A1 (assen) en A2 (tribunes) waren al groen — geen verwisseling/draaiing. Enige fout zat in de StemmingMakerij-wrapper: center z=39,5 (<40) én deur keek -z i.p.v. -x.
+- Fix (alleen wrapper, zaal-interne code onaangeraakt): czW 39,5 → 47 (center binnen z[43,51]); de glazen deur verhuisd van de ramenwand (zuid) naar de achterwand (lokaal -Z → wereld -x = west, de route-uitgang); ramenwand weer volledig glas (uitzicht zuid de vide in). CONFIG z[43,51], door 'west'; deurNormaal als userData voor de assert.
+- shot.js: standaard alleen spelerstart + vogelvlucht; overige drie via `node tools/shot.js {N} all` of expliciete namen.

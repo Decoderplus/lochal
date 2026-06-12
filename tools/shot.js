@@ -1,5 +1,8 @@
 // Screenshots vanaf de vaste CONFIG-camera's — werkplan sectie 4.
-// Gebruik: node tools/shot.js <fasenummer>   → shots/fase{N}_{naam}.png
+// Gebruik: node tools/shot.js <fasenummer> [cameralijst|all]
+//   Standaard: alleen 'spelerstart' en 'vogelvlucht'.
+//   'all' of expliciete namen (komma-gescheiden): de overige drie alleen op
+//   expliciet menselijk verzoek.  → shots/fase{N}_{naam}.png
 // Gebruikt puppeteer-core met de op het systeem aanwezige Edge/Chrome
 // (geen extra download; gelogd in DECISIONS.md).
 import { existsSync, mkdirSync } from 'node:fs';
@@ -9,6 +12,11 @@ import { startServer } from './serve.js';
 import { CONFIG } from '../src/config.js';
 
 const fase = process.argv[2] ?? '0';
+const STANDAARD_CAMS = ['spelerstart', 'vogelvlucht'];
+const camArg = (process.argv[3] ?? '').trim();
+const cameras = !camArg ? STANDAARD_CAMS
+  : camArg === 'all' ? Object.keys(CONFIG.cameras)
+  : camArg.split(',').map((s) => s.trim()).filter((n) => CONFIG.cameras[n]);
 const PORT = 8127;
 const SHOTS = fileURLToPath(new URL('../shots', import.meta.url));
 
@@ -38,7 +46,7 @@ try {
   const page = await browser.newPage();
   page.on('pageerror', (e) => console.error('  pagina-fout:', e.message));
 
-  for (const naam of Object.keys(CONFIG.cameras)) {
+  for (const naam of cameras) {
     await page.goto(`http://localhost:${PORT}/index.html?shot=${naam}`, { waitUntil: 'load' });
     await page.waitForFunction('window.__shotReady === true', { timeout: 45000 });
     const pad = `${SHOTS}/fase${fase}_${naam}.png`;

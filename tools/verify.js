@@ -9,7 +9,7 @@ const ok = (m) => console.log('  ✓ ' + m);
 const fout = (m) => { fouten.push(m); console.log('  ✗ ' + m); };
 
 const scene = new THREE.Scene();
-bouwWereld(scene);
+const wereld = bouwWereld(scene);
 scene.updateMatrixWorld(true);
 
 // ── 1. Benoemde groepen + bounding box binnen hal én CONFIG-vak (+1 m) ────
@@ -97,6 +97,95 @@ else ok(`unieke materialen buiten de zaal: ${mats.size} (≤ 25)`);
 function boxStr(b) {
   const f = (v) => v.toFixed(1);
   return `[x ${f(b.min.x)}…${f(b.max.x)}, y ${f(b.min.y)}…${f(b.max.y)}, z ${f(b.min.z)}…${f(b.max.z)}]`;
+}
+function center(naam) {
+  const o = scene.getObjectByName(naam);
+  if (!o) return null;
+  return new THREE.Box3().setFromObject(o).getCenter(new THREE.Vector3());
+}
+
+// ── 5. ASSENCHECK (werkplan sectie 2) ────────────────────────────────────
+console.log('\nASSENCHECK');
+
+// A1. Halbox: breedte 60 langs X, lengte 90 langs Z (andersom = fataal)
+{
+  const casco = scene.getObjectByName('casco');
+  if (!casco) fout('ASSEN: casco ontbreekt');
+  else {
+    const b = new THREE.Box3().setFromObject(casco);
+    const exX = b.max.x - b.min.x, exZ = b.max.z - b.min.z;
+    if (Math.abs(exX - 60) <= 3 && Math.abs(exZ - 90) <= 3)
+      ok(`A1 halbox: breedte X≈${exX.toFixed(0)} (60), lengte Z≈${exZ.toFixed(0)} (90)`);
+    else
+      fout(`A1 ASSEN VERWISSELD — X≈${exX.toFixed(0)}, Z≈${exZ.toFixed(0)} (verwacht X=60, Z=90)`);
+  }
+}
+
+// A2. Tribunes: treden oost-west; bovenkant y≈5 noord (z≈35), onder y≈0 zuid (z≈22)
+{
+  // treden oost-west: tredebreedte langs X >> langs Z (uit instance-schalen)
+  const treden = scene.getObjectByName('tribuneTreden');
+  if (!treden || !treden.isInstancedMesh) fout('A2 tribuneTreden InstancedMesh ontbreekt');
+  else {
+    const m = new THREE.Matrix4(), s = new THREE.Vector3();
+    let oostWest = true;
+    for (let i = 0; i < Math.min(treden.count, 20); i++) {
+      treden.getMatrixAt(i, m); m.decompose(new THREE.Vector3(), new THREE.Quaternion(), s);
+      if (s.x <= s.z) oostWest = false;
+    }
+    if (oostWest) ok('A2 treden oost-west (breedte langs X > langs Z)');
+    else fout('A2 TRIBUNE GEDRAAID — treden niet oost-west (langs X ≤ langs Z)');
+  }
+  // ramp-loopvlakken: per tribune een helling met y=0 zuid (z≈22) → y=5 noord (z≈31–35)
+  const hellingen = wereld.surfaces.filter((s) => s.kind === 'helling');
+  const goed = hellingen.filter((h) =>
+    Math.abs(h.yBijZ0) < 0.5 && h.z0 >= 20 && h.z0 <= 24 &&
+    Math.abs(h.yBijZ1 - 5) < 0.6 && h.z1 >= 30 && h.z1 <= 36);
+  if (goed.length >= 2) ok(`A2 ${goed.length} tribune-hellingen: y0 zuid (z≈22) → y5 noord (z≈31–35)`);
+  else fout(`A2 TRIBUNE-RICHTING — ${goed.length}/2 hellingen met onder-zuid/boven-noord (y0@z22 → y5@z~33)`);
+}
+
+// A3. StemmingMakerij-center: x > 50 én z 40–54; deur kijkt naar -x
+{
+  const c = center('stemmingMakerij');
+  const zaal = scene.getObjectByName('stemmingMakerij');
+  if (!c || !zaal) fout('A3 stemmingMakerij ontbreekt');
+  else {
+    if (c.x > 50 && c.z >= 40 && c.z <= 54)
+      ok(`A3 StemmingMakerij-center x=${c.x.toFixed(1)} (>50), z=${c.z.toFixed(1)} (40–54)`);
+    else
+      fout(`A3 StemmingMakerij-center x=${c.x.toFixed(1)}, z=${c.z.toFixed(1)} (verwacht x>50, z 40–54)`);
+    const n = zaal.userData.deurNormaal;     // wereld-richting van de deur (gesloten)
+    if (n && n[0] < -0.8 && Math.abs(n[2]) < 0.4)
+      ok(`A3 deur kijkt naar -x (normaal ${n.map((v) => v.toFixed(2))})`);
+    else
+      fout(`A3 DEUR-RICHTING — deur kijkt niet naar -x (normaal ${n ? n.map((v) => v.toFixed(2)) : 'onbekend'})`);
+  }
+}
+
+// A4. Café-center z < 15 · Glazenzaal-center x < 30 (alleen toetsen indien gebouwd)
+for (const [naam, test, eis] of [
+  ['cafe', (c) => c.z < 15, 'z < 15'],
+  ['glazenzaal', (c) => c.x < 30, 'x < 30'],
+]) {
+  if (!GEBOUWD.includes(naam)) { console.log(`  · A4 '${naam}' nog niet gebouwd (latere fase)`); continue; }
+  const c = center(naam);
+  if (c && test(c)) ok(`A4 ${naam}-center ${eis} (${c.x.toFixed(1)},${c.z.toFixed(1)})`);
+  else fout(`A4 ${naam}-center voldoet niet aan ${eis}`);
+}
+
+// A5. Minimaal 2 grote doeken in de zuidhal (z < 30), weerszijden van x=30
+{
+  const doeken = [];
+  scene.traverse((o) => { if (o.name && /doek/i.test(o.name)) doeken.push(o); });
+  if (!doeken.length) console.log('  · A5 doeken nog niet gebouwd (latere fase)');
+  else {
+    const zuid = doeken.map((d) => new THREE.Box3().setFromObject(d).getCenter(new THREE.Vector3()))
+      .filter((c) => c.z < 30);
+    const west = zuid.some((c) => c.x < 30), oost = zuid.some((c) => c.x > 30);
+    if (zuid.length >= 2 && west && oost) ok(`A5 ${zuid.length} doeken in zuidhal, weerszijden van x=30`);
+    else fout(`A5 DOEKEN — ${zuid.length} in zuidhal (z<30), west=${west}, oost=${oost} (eis ≥2, beide kanten)`);
+  }
 }
 
 if (fouten.length) {

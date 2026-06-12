@@ -70,7 +70,7 @@ export const CONFIG = {
     fog: 0xd8d6d0,
   },
   objects: {
-    stemmingMakerij: { x: [52, 60], z: [35, 43], floor: 'f1', door: 'west' },
+    stemmingMakerij: { x: [52, 60], z: [43, 51], floor: 'f1', door: 'west' },
     glazenzaal:      { x: [18, 30], z: [55, 70], h: 4 },
     seats2meet:      { x: [32, 48], z: [55, 75] },
     kennisPlateau:   { x: [15, 45], z: [35, 42] },
@@ -100,6 +100,14 @@ export const CONFIG = {
 };
 ```
 
+ASSENCHECK (verplichte asserts in verify.js):
+
+- LENGTE (90 m) loopt langs Z; BREEDTE (60 m) langs X. Halbox: x 0→60, z 0→90. Andersom = fataal.
+- Tribunes: treden oost-west, looprichting noord-zuid, bovenkant (y=5) noord (z≈35), onderkant (y=0) zuid (z≈22).
+- StemmingMakerij-center: x > 50 én z 40–54; deur kijkt naar -x.
+- Café-center: z < 15. Glazenzaal-center: x < 30.
+- Minimaal 2 grote doeken in de zuidhal (z < 30), weerszijden van x=30.
+
 Schattingen in deze CONFIG mogen NIET "verbeterd" worden op eigen initiatief;
 alleen aanpassen als een fasechecklist of de mens daarom vraagt.
 
@@ -126,11 +134,13 @@ Alle overige materialen: effen kleuren met roughness/metalness, geen maps.
 - aantal unieke materialen ≤ 25; geen materialen buiten materials.js
 - exit code ≠ 0 bij falen → fase niet committen, eerst fixen
 
-**shot.js** (puppeteer): start statische server, laadt index.html, rendert de
-5 CONFIG.cameras, slaat op als `shots/fase{N}_{naam}.png`. Claude Code BEKIJKT
-deze PNG's na elke fase en toetst aan de fasechecklist. Bij afwijking: fixen en
-opnieuw schieten, max 3 iteraties per fase, daarna beste resultaat committen en
-afwijking loggen in DECISIONS.md.
+**shot.js** (puppeteer): start statische server, laadt index.html, rendert
+**standaard alleen de camera's `spelerstart` en `vogelvlucht`** (de overige drie
+— `plateau`, `zuidhal`, `tribune` — alleen op expliciet menselijk verzoek, bv.
+`node tools/shot.js {N} all` of met expliciete cameranamen). Slaat op als
+`shots/fase{N}_{naam}.png`. Claude Code BEKIJKT deze PNG's na elke fase en toetst
+aan de fasechecklist. Bij afwijking: fixen en opnieuw schieten, max 3 iteraties
+per fase, daarna beste resultaat committen en afwijking loggen in DECISIONS.md.
 
 ## 5. Fasering (autonoom, mens test 3×)
 
