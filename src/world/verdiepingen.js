@@ -5,7 +5,6 @@
 import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { maakMaterialen } from '../materials.js';
-import { PLATFORM_WEST, PLATFORM_OOST } from './tribunes.js';
 
 export function bouwVerdiepingen() {
   const M = maakMaterialen();
@@ -52,11 +51,11 @@ export function bouwVerdiepingen() {
       colliders.push({ x0, x1, y0: y, y1: y + 1.2, z0: F.builtFromZ - 0.08, z1: F.builtFromZ + 0.18 });
     }
   }
-  // vloer 1: openingen alleen waar de tribune-topplatforms aansluiten
-  // (kwartslag-gedraaide tribunes: platforms x 10–13,2 en 46,8–50)
-  balustrade(0, PLATFORM_WEST[0], F.f1, true);
-  balustrade(PLATFORM_WEST[1], PLATFORM_OOST[0], F.f1, true);
-  balustrade(PLATFORM_OOST[1], W, F.f1, true);
+  // vloer 1: openingen bij de tribunes (x 10–22 en 38–50)
+  const tw = CONFIG.objects.tribuneWest.x, to = CONFIG.objects.tribuneOost.x;
+  balustrade(0, tw[0], F.f1, true);
+  balustrade(tw[1], to[0], F.f1, true);
+  balustrade(to[1], W, F.f1, true);
   // vloeren 2/3: doorlopend (decor)
   balustrade(0, W, F.f2, false);
   balustrade(0, W, F.f3, false);

@@ -22,14 +22,16 @@ export const CONFIG = {
     fog: 0xd8d6d0,
   },
   objects: {
-    stemmingMakerij: { x: [48, 60], z: [43, 51], floor: 'f1', door: 'west' }, // deur kijkt naar -x (ASSENCHECK); x[48,60] amendment (zaal 12 m)
+    // Plattegrond (first floor): zaal langs de oostgevel, lange as noord-zuid,
+    // ramen west de hal in, glazen deur (enige deur) noordelijk in de westwand.
+    stemmingMakerij: { x: [48, 60], z: [36, 48], floor: 'f1', door: 'west' },
     glazenzaal:      { x: [18, 30], z: [55, 70], h: 4 },
     seats2meet:      { x: [32, 48], z: [55, 75] },
     kennisPlateau:   { x: [15, 45], z: [35, 42] },
     tijdLab:         { x: [0, 8],   z: [35, 48] },
     tribuneWest:     { x: [10, 22], zTop: 35, zBottom: 22, yTop: 5 },
     tribuneOost:     { x: [38, 50], zTop: 35, zBottom: 22, yTop: 5 },
-    loopbrug:        { x: [13.2, 46.8], z: 30, y: 5, breedte: 2 }, // overspant de vide tussen de gedraaide tribune-platforms (mens: kwartslag)
+    loopbrug:        { x: [22, 38], z: 30, y: 5, breedte: 2 },
     cafe:            { x: [30, 42], z: [6, 14], kapH: 3.5 },
     kroonluchter:    { cx: 38, cz: 18, count: 60, yMin: 4, yMax: 9, spreid: 5 },
     stellage:        { x: [26, 34], z: [5, 30], liggerY: [4.5, 7.5] },
@@ -40,8 +42,9 @@ export const CONFIG = {
   },
   player: { hoogte: 1.75, loopsnelheid: 4 },
   // Rotatie van de StemmingMakerij-wrapper om zijn eigen as (0/90/180/270).
-  // IJkbaar in het spel met debugtoets R; M toont de minikaart.
-  zaalRotatie: 90,
+  // 180 = geijkt op de plattegrond: lange as noord-zuid, ramen west, deur
+  // noordelijk in de westwand. (Debugtoets R draait verder; M = minikaart.)
+  zaalRotatie: 180,
   renderer: { toneMapping: 'ACESFilmic', exposure: 1.0,
               outputColorSpace: 'srgb', shadowMapSize: 1024, maxShadowLights: 1 },
   performance: { maxTris: 200000, maxDrawCalls: 120, minFPS: 30 },

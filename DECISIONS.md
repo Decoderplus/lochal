@@ -41,6 +41,12 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## IJking op de echte plattegronden (GF/1e/3e + secties A-A/B-B, mens aangeleverd)
+
+- Rootcause gevonden: de zaal-wrapper stond 90° verkeerd. Plattegrond (first floor): StemmingMakerij langs de oostgevel met lange as NOORD-ZUID, ramen + glazen deur west de hal in → zaalRotatie 90 → 180, center (53,9 · 42), CONFIG-vak z [36, 48]; A3-deurrichtingscheck (deur → −x) weer actief en groen.
+- Tribunes terug naar de plattegrond-stand ("Stair landscape": treden oost-west, dalend noord→zuid de zuidhal in) — de kwartslag van gisteren was een verkeerde fix op de verkeerde rootcause; tribunes.js/verdiepingen.js hersteld uit d3031fb, CONFIG.loopbrug weer x [22, 38], A2 en werkplan-ASSENCHECK terug geijkt.
+- Plattegrond bevestigt zuidhal-indeling (café zuid-midden/oost, treintafels, expositie zuidwest, hoofdentree zuidoost) en sectie A-A/B-B bevestigen twee beuken + vide zuid over volle hoogte.
+
 ## Tribunes kwartslag (MENSTEST 1-feedback)
 
 - Tribunes kwartslag gedraaid op aanwijzing van de mens: treden noord-zuid, beide tribunes dalen naar het hal-midden; topplatforms aan de buitenzijden tegen de vide-rand (west x 10–13,2 · oost x 46,8–50 — pal voor de zaaluitgang), treden x 13,2→22 resp. 46,8→38 over z 22–31.

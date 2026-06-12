@@ -496,7 +496,7 @@ export function bouwStemmingMakerij() {
   // hieronder LOKAAL gedefinieerd en worden per rotatie herrekend.
   const vak = CONFIG.objects.stemmingMakerij;
   const y0 = CONFIG.floors[vak.floor];
-  const cxW = 53.9, czW = 47;          // ASSENCHECK A3 (positie): x > 50, z 40–54
+  const cxW = 53.9, czW = 42;          // plattegrond: oostgevel, zuidkant 1 m vrij van de vide-rand
   groep.position.set(cxW, y0, czW);
   // schaalfactor 1: de zaal is al in meters gebouwd
 

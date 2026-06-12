@@ -121,40 +121,35 @@ console.log('\nASSENCHECK');
   }
 }
 
-// A2. Tribunes — HERIJKT na MENSTEST 1 (asserts volgen de werkelijkheid):
-// kwartslag gedraaid → treden noord-zuid, looprichting oost-west, beide
-// tribunes dalen naar het hal-midden (y≈5 aan de buitenzijde bij de
-// topplatforms x≈13/47, y≈0 aan de middenzijde x≈22/38).
+// A2. Tribunes — geijkt op de plattegrond ("Stair landscape", first floor):
+// treden oost-west, looprichting noord-zuid, bovenkant y≈5 noord (z≈35),
+// onderkant y≈0 zuid (z≈22), afdalend de zuidhal in.
 {
-  // treden noord-zuid: tredelengte langs Z >> langs X (uit instance-schalen)
+  // treden oost-west: tredebreedte langs X >> langs Z (uit instance-schalen)
   const treden = scene.getObjectByName('tribuneTreden');
   if (!treden || !treden.isInstancedMesh) fout('A2 tribuneTreden InstancedMesh ontbreekt');
   else {
     const m = new THREE.Matrix4(), s = new THREE.Vector3();
-    let noordZuid = true;
+    let oostWest = true;
     for (let i = 0; i < Math.min(treden.count, 20); i++) {
       treden.getMatrixAt(i, m); m.decompose(new THREE.Vector3(), new THREE.Quaternion(), s);
-      if (s.z <= s.x) noordZuid = false;
+      if (s.x <= s.z) oostWest = false;
     }
-    if (noordZuid) ok('A2 treden noord-zuid (lengte langs Z > langs X)');
-    else fout('A2 TRIBUNE GEDRAAID — treden niet noord-zuid (langs Z ≤ langs X)');
+    if (oostWest) ok('A2 treden oost-west (breedte langs X > langs Z)');
+    else fout('A2 TRIBUNE GEDRAAID — treden niet oost-west (langs X ≤ langs Z)');
   }
-  // ramp-loopvlakken: per tribune een X-helling die daalt naar het midden
-  const hellingen = wereld.surfaces.filter((s) => s.kind === 'hellingX');
-  const goed = hellingen.filter((h) => {
-    const yLaag = Math.min(h.yBijX0, h.yBijX1), yHoog = Math.max(h.yBijX0, h.yBijX1);
-    const xLaag = h.yBijX0 < h.yBijX1 ? h.x0 : h.x1;
-    const naarMidden = Math.abs(xLaag - 22) < 1.5 || Math.abs(xLaag - 38) < 1.5;
-    return yLaag < 0.5 && Math.abs(yHoog - 5) < 0.6 && naarMidden;
-  });
-  if (goed.length >= 2) ok(`A2 ${goed.length} tribune-hellingen dalen naar het hal-midden (y5 buiten → y0 bij x≈22/38)`);
-  else fout(`A2 TRIBUNE-RICHTING — ${goed.length}/2 X-hellingen met y5 buiten → y0 midden`);
+  // ramp-loopvlakken: per tribune een helling met y=0 zuid (z≈22) → y=5 noord (z≈31–35)
+  const hellingen = wereld.surfaces.filter((s) => s.kind === 'helling');
+  const goed = hellingen.filter((h) =>
+    Math.abs(h.yBijZ0) < 0.5 && h.z0 >= 20 && h.z0 <= 24 &&
+    Math.abs(h.yBijZ1 - 5) < 0.6 && h.z1 >= 30 && h.z1 <= 36);
+  if (goed.length >= 2) ok(`A2 ${goed.length} tribune-hellingen: y0 zuid (z≈22) → y5 noord (z≈31–35)`);
+  else fout(`A2 TRIBUNE-RICHTING — ${goed.length}/2 hellingen met onder-zuid/boven-noord (y0@z22 → y5@z~33)`);
 }
 
-// A3. StemmingMakerij-center: x > 50 én z 40–54.
-// De deurrichtingscheck is TIJDELIJK uitgeschakeld: de zaal is onaantastbaar
-// en de wrapper-rotatie wordt eerst in het spel geijkt (CONFIG.zaalRotatie,
-// debugtoets R). Na de ijking komt de richtingscheck hier terug.
+// A3. StemmingMakerij-center: x > 50 én z 40–54; deur kijkt naar -x.
+// Richtingscheck weer ACTIEF: geijkt op de plattegrond (zaalRotatie 180 →
+// raamwand + glazen deur kijken west de hal in).
 {
   const c = center('stemmingMakerij');
   const zaal = scene.getObjectByName('stemmingMakerij');
@@ -164,8 +159,11 @@ console.log('\nASSENCHECK');
       ok(`A3 StemmingMakerij-center x=${c.x.toFixed(1)} (>50), z=${c.z.toFixed(1)} (40–54)`);
     else
       fout(`A3 StemmingMakerij-center x=${c.x.toFixed(1)}, z=${c.z.toFixed(1)} (verwacht x>50, z 40–54)`);
-    const n = zaal.userData.deurNormaal;
-    console.log(`  · A3 deurrichting-check tijdelijk uit (ijking zaalRotatie; deurNormaal nu ${n ? n.map((v) => v.toFixed(2)) : 'onbekend'})`);
+    const n = zaal.userData.deurNormaal;     // wereld-richting van de deur (gesloten)
+    if (n && n[0] < -0.8 && Math.abs(n[2]) < 0.4)
+      ok(`A3 deur kijkt naar -x (normaal ${n.map((v) => v.toFixed(2))})`);
+    else
+      fout(`A3 DEUR-RICHTING — deur kijkt niet naar -x (normaal ${n ? n.map((v) => v.toFixed(2)) : 'onbekend'})`);
   }
 }
 

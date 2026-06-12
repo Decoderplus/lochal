@@ -70,7 +70,7 @@ export const CONFIG = {
     fog: 0xd8d6d0,
   },
   objects: {
-    stemmingMakerij: { x: [52, 60], z: [43, 51], floor: 'f1', door: 'west' },
+    stemmingMakerij: { x: [48, 60], z: [36, 48], floor: 'f1', door: 'west' }, // geijkt op plattegrond: lange as N-Z langs oostgevel, ramen west
     glazenzaal:      { x: [18, 30], z: [55, 70], h: 4 },
     seats2meet:      { x: [32, 48], z: [55, 75] },
     kennisPlateau:   { x: [15, 45], z: [35, 42] },
@@ -103,7 +103,7 @@ export const CONFIG = {
 ASSENCHECK (verplichte asserts in verify.js):
 
 - LENGTE (90 m) loopt langs Z; BREEDTE (60 m) langs X. Halbox: x 0→60, z 0→90. Andersom = fataal.
-- Tribunes (herijkt na MENSTEST 1): treden noord-zuid, looprichting oost-west; topplatforms (y=5) aan de buitenzijden tegen de vide-rand (x≈10–13 en 47–50), onderkant (y=0) richting het hal-midden (x≈22 en 38).
+- Tribunes (geijkt op plattegrond "Stair landscape"): treden oost-west, looprichting noord-zuid, bovenkant (y=5) noord (z≈35), onderkant (y=0) zuid (z≈22), afdalend de zuidhal in.
 - StemmingMakerij-center: x > 50 én z 40–54; deur kijkt naar -x.
 - Café-center: z < 15. Glazenzaal-center: x < 30.
 - Minimaal 2 grote doeken in de zuidhal (z < 30), weerszijden van x=30.
