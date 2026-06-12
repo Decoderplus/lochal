@@ -103,7 +103,7 @@ export const CONFIG = {
 ASSENCHECK (verplichte asserts in verify.js):
 
 - LENGTE (90 m) loopt langs Z; BREEDTE (60 m) langs X. Halbox: x 0→60, z 0→90. Andersom = fataal.
-- Tribunes: treden oost-west, looprichting noord-zuid, bovenkant (y=5) noord (z≈35), onderkant (y=0) zuid (z≈22).
+- Tribunes (herijkt na MENSTEST 1): treden noord-zuid, looprichting oost-west; topplatforms (y=5) aan de buitenzijden tegen de vide-rand (x≈10–13 en 47–50), onderkant (y=0) richting het hal-midden (x≈22 en 38).
 - StemmingMakerij-center: x > 50 én z 40–54; deur kijkt naar -x.
 - Café-center: z < 15. Glazenzaal-center: x < 30.
 - Minimaal 2 grote doeken in de zuidhal (z < 30), weerszijden van x=30.

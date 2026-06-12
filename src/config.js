@@ -29,7 +29,7 @@ export const CONFIG = {
     tijdLab:         { x: [0, 8],   z: [35, 48] },
     tribuneWest:     { x: [10, 22], zTop: 35, zBottom: 22, yTop: 5 },
     tribuneOost:     { x: [38, 50], zTop: 35, zBottom: 22, yTop: 5 },
-    loopbrug:        { x: [22, 38], z: 30, y: 5, breedte: 2 },
+    loopbrug:        { x: [13.2, 46.8], z: 30, y: 5, breedte: 2 }, // overspant de vide tussen de gedraaide tribune-platforms (mens: kwartslag)
     cafe:            { x: [30, 42], z: [6, 14], kapH: 3.5 },
     kroonluchter:    { cx: 38, cz: 18, count: 60, yMin: 4, yMax: 9, spreid: 5 },
     stellage:        { x: [26, 34], z: [5, 30], liggerY: [4.5, 7.5] },

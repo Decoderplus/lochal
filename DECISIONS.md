@@ -41,6 +41,12 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## Tribunes kwartslag (MENSTEST 1-feedback)
+
+- Tribunes kwartslag gedraaid op aanwijzing van de mens: treden noord-zuid, beide tribunes dalen naar het hal-midden; topplatforms aan de buitenzijden tegen de vide-rand (west x 10–13,2 · oost x 46,8–50 — pal voor de zaaluitgang), treden x 13,2→22 resp. 46,8→38 over z 22–31.
+- Loopbrug overspant nu de hele vide tussen de twee topplatforms (x 13,2–46,8, z 31–33, y 5); CONFIG.loopbrug.x daarop aangepast. Balustrade-openingen op de vide-rand alleen boven de platforms.
+- A2-assert en de ASSENCHECK-regel in het werkplan herijkt naar deze werkelijkheid (asserts volgen de werkelijkheid); speler-collision uitgebreid met hellingen langs X.
+
 ## Fase 2 — Keuzes
 
 - Tribune-opbouw: vlak topplatform van 4 m (z 31–35, y = 5) aan de verdiepingsrand, daarna 28 treden naar BG. Trede ≈ 18 × 32 cm i.p.v. 18 × 30: 5 m hoogte over de resterende 9 m diepte moet wiskundig kloppen (28 × 0,179 / 28 × 0,321).

@@ -76,12 +76,17 @@ export class Speler {
     return '';
   }
 
-  // Hoogte van een loopvlak op (x, z); 'vlak' of 'helling' (lineair in z).
+  // Hoogte van een loopvlak op (x, z); 'vlak', 'helling' (lineair in z)
+  // of 'hellingX' (lineair in x).
   _vlakHoogte(s, x, z) {
     if (x < s.x0 || x > s.x1 || z < s.z0 || z > s.z1) return -Infinity;
     if (s.kind === 'helling') {
       const t = (z - s.z0) / (s.z1 - s.z0);
       return s.yBijZ0 + (s.yBijZ1 - s.yBijZ0) * t;
+    }
+    if (s.kind === 'hellingX') {
+      const t = (x - s.x0) / (s.x1 - s.x0);
+      return s.yBijX0 + (s.yBijX1 - s.yBijX0) * t;
     }
     return s.y;
   }
