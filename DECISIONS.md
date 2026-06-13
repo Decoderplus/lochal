@@ -41,6 +41,12 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## Fase 3/4 — zuidhal-inrichting (src/world/zuidhal.js)
+
+- Iconische elementen op foto/plattegrond gebaseerd: StadsCafé (U-bar + rood-zwart mozaïekkap + LocHal-letterframe), kraanbaanstellage (oud-staal torens + plantenbakken + boom + rode buisleuning), kroonluchter-wolk (60 pastel emissive bollen op kabels, InstancedMesh), XXL-treintafels op rails + rode stoelen, expowanden, staande lampen, gele kraanbrug + theaterspots, boekenstapel-bankjes op de plaza, plantenbakken/planten (instanced), 3 doeken (kunstdoek west + zwart hangdoek + voile).
+- Benoemde subgroepen (cafe/stellage/treintafels/expoWanden/kroonluchter/kraan/grootDoek) toegevoegd aan GEBOUWD; alle binnen hun CONFIG-vak. 52k tris, 23/25 materialen. A4 (café z<15) en A5 (≥2 doeken weerszijden) groen.
+- Nog te doen (interieur fase 3): TijdLab-klokkenwand, Glazenzaal, KennisMakerij-boekenplint, kolomtafels; plus echte loopbrug over de vide + definitief lichtontwerp (fase 4).
+
 ## Breed + hoog trappenlandschap (mens: "stair landscape over bijna hele breedte, ook hoger")
 
 - Tribunes verbreed tot bijna de volle breedte: west x[6,27], oost x[31,47] (stopt vóór de StemmingMakerij x48-60), centrale gleuf x27-31 voor de loopbrug.
