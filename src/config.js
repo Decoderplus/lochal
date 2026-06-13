@@ -8,8 +8,11 @@ export const CONFIG = {
           baseWallH: 4, glassGridX: 1.5, glassGridY: 2.0 },
   // f*VanZ = vanaf welke z de vloerplak ligt; 2 en 3 wijken terug zodat het
   // hoge open volume boven het trappenlandschap doorloopt (mens: wijds & hoog).
+  // bovenTierVanZ = waar de OPLOPENDE trap (vloer 1 → 2) begint: pas
+  // halverwege de StemmingMakerij (z36–48 → z42), met een vlakke vloer-1-plaza
+  // ervóór (z35–42) — zoals op de foto vanuit de zaal.
   floors: { f1: 5.0, f2: 9.0, f3: 12.5, slabT: 0.4, builtFromZ: 35,
-            f1VanZ: 35, f2VanZ: 44, f3VanZ: 50 },
+            f1VanZ: 35, bovenTierVanZ: 42, f2VanZ: 51, f3VanZ: 57 },
   grid: { baySpacing: 7.5, bays: 13, centerColX: 30 },
   colors: {
     steelOld: 0x9a9484, steelOldRust: 0xb35a2e, steelOldGreen: 0x6e7265,

@@ -54,8 +54,11 @@ export function bouwVerdiepingen() {
   balustrade(0, tw[0], F.f1, F.f1VanZ, true);
   balustrade(tw[1], to[0], F.f1, F.f1VanZ, true);
   balustrade(to[1], W, F.f1, F.f1VanZ, true);
-  // vloeren 2/3: doorlopend langs hun eigen (teruggeweken) vide-rand (decor)
-  balustrade(0, W, F.f2, F.f2VanZ, false);
+  // vloer 2: openingen bij de tribunes (de oploop komt daar uit op het
+  // uitkijkpunt); vloer 3 doorlopend (decor)
+  balustrade(0, tw[0], F.f2, F.f2VanZ, false);
+  balustrade(tw[1], to[0], F.f2, F.f2VanZ, false);
+  balustrade(to[1], W, F.f2, F.f2VanZ, false);
   balustrade(0, W, F.f3, F.f3VanZ, false);
 
   const staanders = new THREE.InstancedMesh(

@@ -157,7 +157,7 @@ export function bouwTribunes() {
     //    vloer 2 (y9), noordwaarts — dat maakt het volume hoog én wijd.
     //    Beloopbaar tot een uitkijk-lip aan de top; daarachter een balustrade
     //    (vloer 2 zelf is decor). ──
-    const zB0 = zTop, zB1 = CONFIG.floors.f2VanZ;          // 35 → 44
+    const zB0 = CONFIG.floors.bovenTierVanZ, zB1 = CONFIG.floors.f2VanZ;  // 42 → 51
     const yB0 = yTop, yB1 = CONFIG.floors.f2;              // 5 → 9
     const nB = 24;
     const stijgB = (yB1 - yB0) / nB, diepB = (zB1 - zB0) / nB;

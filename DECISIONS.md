@@ -47,6 +47,7 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Trappenlandschap nu twee tiers: onder-tier daalt z35→z22 (y5→y0) de vide in [bestaand]; nieuwe boven-tier loopt dóór z35→z44 (y5→y9) omhoog naar vloer 2, beloopbaar tot een uitkijk-lip + balustrade (vloer 2 blijft decor).
 - Vloeren 2/3 wijken noordwaarts terug (CONFIG.floors.f2VanZ=44, f3VanZ=50) zodat het hoge open volume boven het hele landschap doorloopt — "wijds en open". Balustrades en boekenkast-silhouetten volgen de teruggeweken randen.
 - A2 ongewijzigd geldig (onder-tier blijft de N-Z afdaling); tribune-verify-vak verruimd tot y~10 / z~46.
+- Correctie op foto-uitzicht vanuit de zaal (mens): de OPLOPENDE trap begint niet aan de vide-rand maar pas halverwege de StemmingMakerij (CONFIG.floors.bovenTierVanZ=42), met een vlakke vloer-1-plaza ervóór (z35–42, voor de boekenstapel-bankjes). Oploop nu z42→51; vloeren 2/3 verder terug (f2VanZ=51, f3VanZ=57); vloer-2-balustrade kreeg tribune-openingen zodat de oploop op het uitkijkpunt aansluit.
 
 ## Spiegeling over de lengteas (mens: "het geheel over de lengteas spiegelen")
 
