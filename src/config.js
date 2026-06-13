@@ -6,7 +6,10 @@ export const CONFIG = {
   units: 'meters', // x: 0 west → 60 oost | z: 0 zuid → 90 noord | y: hoogte
   hall: { width: 60, length: 90, height: 15, ridgeX: [15, 45],
           baseWallH: 4, glassGridX: 1.5, glassGridY: 2.0 },
-  floors: { f1: 5.0, f2: 9.0, f3: 12.5, slabT: 0.4, builtFromZ: 35 },
+  // f*VanZ = vanaf welke z de vloerplak ligt; 2 en 3 wijken terug zodat het
+  // hoge open volume boven het trappenlandschap doorloopt (mens: wijds & hoog).
+  floors: { f1: 5.0, f2: 9.0, f3: 12.5, slabT: 0.4, builtFromZ: 35,
+            f1VanZ: 35, f2VanZ: 44, f3VanZ: 50 },
   grid: { baySpacing: 7.5, bays: 13, centerColX: 30 },
   colors: {
     steelOld: 0x9a9484, steelOldRust: 0xb35a2e, steelOldGreen: 0x6e7265,
@@ -29,9 +32,11 @@ export const CONFIG = {
     seats2meet:      { x: [32, 48], z: [55, 75] },
     kennisPlateau:   { x: [15, 45], z: [35, 42] },
     tijdLab:         { x: [0, 8],   z: [35, 48] },
-    tribuneWest:     { x: [10, 22], zTop: 35, zBottom: 22, yTop: 5 },
-    tribuneOost:     { x: [38, 50], zTop: 35, zBottom: 22, yTop: 5 },
-    loopbrug:        { x: [22, 38], z: 30, y: 5, breedte: 2 },
+    // Breed trappenlandschap (bijna volle breedte), centrale gleuf voor de
+    // loopbrug/kernen; oost stopt vóór de StemmingMakerij (x 48–60).
+    tribuneWest:     { x: [6, 27],  zTop: 35, zBottom: 22, yTop: 5 },
+    tribuneOost:     { x: [31, 47], zTop: 35, zBottom: 22, yTop: 5 },
+    loopbrug:        { x: [27, 31], z: 30, y: 5, breedte: 2 },
     cafe:            { x: [30, 42], z: [6, 14], kapH: 3.5 },
     kroonluchter:    { cx: 38, cz: 18, count: 60, yMin: 4, yMax: 9, spreid: 5 },
     stellage:        { x: [26, 34], z: [5, 30], liggerY: [4.5, 7.5] },

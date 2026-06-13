@@ -41,6 +41,13 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## Breed + hoog trappenlandschap (mens: "stair landscape over bijna hele breedte, ook hoger")
+
+- Tribunes verbreed tot bijna de volle breedte: west x[6,27], oost x[31,47] (stopt vóór de StemmingMakerij x48-60), centrale gleuf x27-31 voor de loopbrug.
+- Trappenlandschap nu twee tiers: onder-tier daalt z35→z22 (y5→y0) de vide in [bestaand]; nieuwe boven-tier loopt dóór z35→z44 (y5→y9) omhoog naar vloer 2, beloopbaar tot een uitkijk-lip + balustrade (vloer 2 blijft decor).
+- Vloeren 2/3 wijken noordwaarts terug (CONFIG.floors.f2VanZ=44, f3VanZ=50) zodat het hoge open volume boven het hele landschap doorloopt — "wijds en open". Balustrades en boekenkast-silhouetten volgen de teruggeweken randen.
+- A2 ongewijzigd geldig (onder-tier blijft de N-Z afdaling); tribune-verify-vak verruimd tot y~10 / z~46.
+
 ## Spiegeling over de lengteas (mens: "het geheel over de lengteas spiegelen")
 
 - CONFIG.spiegelX (true): de hele wereld spiegelt in één keer over de N-Z middenlijn (x → 60−x). Eén rootcause-transform: visueel via spiegel-parent-Group `wereld` (scale.x −1); fysica (colliders/loopvlakken/interactie) centraal mee-gespiegeld in de aggregator; de StemmingMakerij spiegelt zijn eigen fysica intern (mapPunt/mapRichting) zodat debug-R blijft kloppen. Three.js draait face-winding automatisch om bij negatieve determinant → belichting/schaduw blijven goed.

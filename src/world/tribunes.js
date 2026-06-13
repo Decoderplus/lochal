@@ -153,6 +153,52 @@ export function bouwTribunes() {
     surfaces.push({ kind: 'vlak', x0, x1, z0: Z_TOP_PLAT, z1: zTop, y: yTop });
     surfaces.push({ kind: 'helling', x0, x1, z0: zBottom, z1: Z_TOP_PLAT, yBijZ0: 0, yBijZ1: yTop });
 
+    // ── Boven-tier: het trappenlandschap loopt dóór van vloer 1 (y5) naar
+    //    vloer 2 (y9), noordwaarts — dat maakt het volume hoog én wijd.
+    //    Beloopbaar tot een uitkijk-lip aan de top; daarachter een balustrade
+    //    (vloer 2 zelf is decor). ──
+    const zB0 = zTop, zB1 = CONFIG.floors.f2VanZ;          // 35 → 44
+    const yB0 = yTop, yB1 = CONFIG.floors.f2;              // 5 → 9
+    const nB = 24;
+    const stijgB = (yB1 - yB0) / nB, diepB = (zB1 - zB0) / nB;
+    for (let i = 1; i <= nB; i++) {
+      const yb = yB0 + i * stijgB;
+      const zb = zB0 + (i - 0.5) * diepB;
+      tredePlekken.push({ p: [xc, yb - 0.045, zb], s: [breed, 0.09, diepB + 0.06] });
+      tredePlekken.push({                                   // stootbord
+        p: [xc, yB0 + (i - 0.5) * stijgB, zB0 + (i - 1) * diepB + 0.02],
+        s: [breed, stijgB + 0.02, 0.05] });
+    }
+    // zitblokken + kussens op de boven-tier
+    for (let b = 0; b < 7; b++) {
+      const i = 2 + Math.floor(rng() * (nB - 4));
+      const w = 2 + rng() * 3;
+      const xMin = x0 + 1.3 + w / 2, xMax = x1 - 1.3 - w / 2;
+      if (xMax <= xMin) continue;
+      const bx = xMin + rng() * (xMax - xMin);
+      const yb = yB0 + i * stijgB, zb = zB0 + (i - 0.5) * diepB;
+      blokPlekken.push({ p: [bx, yb + 0.21, zb], s: [w, 0.42, 0.62] });
+      kussenPlekken[kleuren[Math.floor(rng() * 3)]].push([bx, yb + 0.46, zb]);
+    }
+    // schinkels onder de boven-tier
+    const helLenB = Math.hypot(zB1 - zB0, yB1 - yB0);
+    for (const sx of [x0 + 0.9, xc, x1 - 0.9]) {
+      const sch = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.35, helLenB - 0.9), M.nieuwStaal);
+      sch.rotation.x = Math.atan2(yB1 - yB0, zB1 - zB0);
+      sch.position.set(sx, (yB0 + yB1) / 2 - 0.45, (zB0 + zB1) / 2);
+      sub.add(sch);
+    }
+    // beloopbaar: helling omhoog + uitkijk-lip; balustrade sluit vloer-2-decor af
+    surfaces.push({ kind: 'helling', x0, x1, z0: zB0, z1: zB1, yBijZ0: yB0, yBijZ1: yB1 });
+    surfaces.push({ kind: 'vlak', x0, x1, z0: zB1, z1: zB1 + 1.6, y: yB1 });
+    colliders.push({ x0, x1, y0: yB1, y1: yB1 + 1.15, z0: zB1 + 1.6, z1: zB1 + 1.78 });
+    const balus = new THREE.Mesh(new THREE.BoxGeometry(breed, 1.0, 0.05), M.glas);
+    balus.position.set(xc, yB1 + 0.5, zB1 + 1.68);
+    sub.add(balus);
+    const balusR = new THREE.Mesh(new THREE.BoxGeometry(breed, 0.07, 0.07), M.eik);
+    balusR.position.set(xc, yB1 + 1.02, zB1 + 1.68);
+    sub.add(balusR);
+
     groep.add(sub);
     return sub;
   }
@@ -216,9 +262,10 @@ export function bouwTribunes() {
     ligger.position.set(bMidX, bY - 0.02, bz);
     ligger.castShadow = true;
     brug.add(ligger);
-    for (let k = 0; k < 6; k++) {
+    const nKruis = Math.max(1, Math.floor(bLen / 2.6));
+    for (let k = 0; k < nKruis; k++) {
       const kruis = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.09, 0.05), M.oudStaal);
-      kruis.position.set(bx0 + 1.6 + k * 2.6, bY - 0.02, bz);
+      kruis.position.set(bx0 + 1.3 + k * 2.6, bY - 0.02, bz);
       kruis.rotation.z = (k % 2 === 0 ? 1 : -1) * 0.46;
       brug.add(kruis);
     }

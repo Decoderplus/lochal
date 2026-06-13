@@ -21,8 +21,10 @@ const vakken = {
   seats2meet: { x: O.seats2meet.x, z: O.seats2meet.z },
   kennisPlateau: { x: O.kennisPlateau.x, z: O.kennisPlateau.z },
   tijdLab: { x: O.tijdLab.x, z: O.tijdLab.z },
-  tribuneWest: { x: O.tribuneWest.x, z: [O.tribuneWest.zBottom, O.tribuneWest.zTop], y: [-0.2, 7.5] },
-  tribuneOost: { x: O.tribuneOost.x, z: [O.tribuneOost.zBottom, O.tribuneOost.zTop], y: [-0.2, 7.5] },
+  // tribune = trappenlandschap: onder-tier (z22→35, y0→5) + boven-tier
+  // (z35→44, y5→9) + uitkijk-lip/balustrade → z tot ~46, y tot ~10.
+  tribuneWest: { x: O.tribuneWest.x, z: [O.tribuneWest.zBottom, CONFIG.floors.f2VanZ + 2.5], y: [-0.2, 10.5] },
+  tribuneOost: { x: O.tribuneOost.x, z: [O.tribuneOost.zBottom, CONFIG.floors.f2VanZ + 2.5], y: [-0.2, 10.5] },
   // brug verbindt de tribune-topplatforms; vak verruimd gelogd in DECISIONS.md
   loopbrug: { x: O.loopbrug.x, z: [O.loopbrug.z - 2, O.loopbrug.z + 4], y: [3, 8.5] },
   cafe: { x: O.cafe.x, z: O.cafe.z },

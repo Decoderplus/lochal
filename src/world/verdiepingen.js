@@ -14,51 +14,49 @@ export function bouwVerdiepingen() {
   groep.name = 'verdiepingen';
   const dummy = new THREE.Object3D();
 
-  const vloerDiepte = D - F.builtFromZ;          // 55 m (z 35 → 90)
-  const vloerMidZ = F.builtFromZ + vloerDiepte / 2;
-
   // ── Vloerplakken 1/2/3 + zwarte onderkant ───────────────────────────────
-  for (const [topY, speelbaar] of [[F.f1, true], [F.f2, false], [F.f3, false]]) {
-    const plak = new THREE.Mesh(
-      new THREE.BoxGeometry(W, F.slabT, vloerDiepte),
-      speelbaar ? M.vloerF : M.vloerF);
-    plak.position.set(W / 2, topY - F.slabT / 2, vloerMidZ);
+  // Vloer 1 vanaf z35; vloeren 2/3 wijken noordwaarts terug (z44/z50) zodat
+  // het hoge open volume boven het trappenlandschap doorloopt.
+  for (const [topY, vanZ] of [[F.f1, F.f1VanZ], [F.f2, F.f2VanZ], [F.f3, F.f3VanZ]]) {
+    const diepte = D - vanZ, midZ = vanZ + diepte / 2;
+    const plak = new THREE.Mesh(new THREE.BoxGeometry(W, F.slabT, diepte), M.vloerF);
+    plak.position.set(W / 2, topY - F.slabT / 2, midZ);
     plak.receiveShadow = true;
     groep.add(plak);
 
     const onderkant = new THREE.Mesh(
-      new THREE.PlaneGeometry(W, vloerDiepte), M.onderkantZwart);
+      new THREE.PlaneGeometry(W, diepte), M.onderkantZwart);
     onderkant.rotation.x = Math.PI / 2;          // kijkt omlaag
-    onderkant.position.set(W / 2, topY - F.slabT - 0.02, vloerMidZ);
+    onderkant.position.set(W / 2, topY - F.slabT - 0.02, midZ);
     groep.add(onderkant);
   }
 
   // ── Balustrades langs de vide-rand (glas + eiken regel + staanders) ─────
   const colliders = [];
   const staanderPlekken = [];
-  function balustrade(x0, x1, y, metCollider) {
+  function balustrade(x0, x1, y, randZ, metCollider) {
     const len = x1 - x0, cx = (x0 + x1) / 2;
     const glas = new THREE.Mesh(new THREE.PlaneGeometry(len, 1.05), M.glas);
-    glas.position.set(cx, y + 0.55, F.builtFromZ + 0.06);
+    glas.position.set(cx, y + 0.55, randZ + 0.06);
     groep.add(glas);
     const regel = new THREE.Mesh(new THREE.BoxGeometry(len, 0.07, 0.09), M.eik);
-    regel.position.set(cx, y + 1.1, F.builtFromZ + 0.06);
+    regel.position.set(cx, y + 1.1, randZ + 0.06);
     groep.add(regel);
     for (let x = x0 + 0.4; x <= x1 - 0.2; x += 1.5) {
-      staanderPlekken.push([x, y + 0.55, F.builtFromZ + 0.06]);
+      staanderPlekken.push([x, y + 0.55, randZ + 0.06]);
     }
     if (metCollider) {
-      colliders.push({ x0, x1, y0: y, y1: y + 1.2, z0: F.builtFromZ - 0.08, z1: F.builtFromZ + 0.18 });
+      colliders.push({ x0, x1, y0: y, y1: y + 1.2, z0: randZ - 0.08, z1: randZ + 0.18 });
     }
   }
-  // vloer 1: openingen bij de tribunes (x 10–22 en 38–50)
+  // vloer 1: openingen bij de tribunes (de boven-tier rijst daar op)
   const tw = CONFIG.objects.tribuneWest.x, to = CONFIG.objects.tribuneOost.x;
-  balustrade(0, tw[0], F.f1, true);
-  balustrade(tw[1], to[0], F.f1, true);
-  balustrade(to[1], W, F.f1, true);
-  // vloeren 2/3: doorlopend (decor)
-  balustrade(0, W, F.f2, false);
-  balustrade(0, W, F.f3, false);
+  balustrade(0, tw[0], F.f1, F.f1VanZ, true);
+  balustrade(tw[1], to[0], F.f1, F.f1VanZ, true);
+  balustrade(to[1], W, F.f1, F.f1VanZ, true);
+  // vloeren 2/3: doorlopend langs hun eigen (teruggeweken) vide-rand (decor)
+  balustrade(0, W, F.f2, F.f2VanZ, false);
+  balustrade(0, W, F.f3, F.f3VanZ, false);
 
   const staanders = new THREE.InstancedMesh(
     new THREE.BoxGeometry(0.05, 1.05, 0.05), M.nieuwStaal, staanderPlekken.length);
@@ -74,8 +72,8 @@ export function bouwVerdiepingen() {
 
   // ── Zwarte boekenkast-silhouetten op de randen van vloer 2/3 (decor) ────
   const kastPlekken = [];
-  for (let x = 4; x <= W - 6; x += 7) kastPlekken.push([x + 2, F.f2 + 1.1, 36.9]);
-  for (let x = 7.5; x <= W - 6; x += 7) kastPlekken.push([x + 2, F.f3 + 1.1, 36.9]);
+  for (let x = 4; x <= W - 6; x += 7) kastPlekken.push([x + 2, F.f2 + 1.1, F.f2VanZ + 1.9]);
+  for (let x = 7.5; x <= W - 6; x += 7) kastPlekken.push([x + 2, F.f3 + 1.1, F.f3VanZ + 1.9]);
   const kasten = new THREE.InstancedMesh(
     new THREE.BoxGeometry(4, 2.2, 0.4), M.onderkantZwart, kastPlekken.length);
   kasten.name = 'kastBlokken';

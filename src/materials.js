@@ -235,6 +235,26 @@ export function maakMaterialen() {
     daklicht: new THREE.MeshStandardMaterial({
       color: 0xf2f0ea, emissive: 0xfff6e0, emissiveIntensity: 0.65, roughness: 0.6,
     }),
+
+    // ── Fase 3/4 — zuidhal-inrichting & iconische elementen ──────────────
+    mozaiek: maakMozaiekTex()
+      ? new THREE.MeshStandardMaterial({ map: maakMozaiekTex(), roughness: 0.85 })
+      : new THREE.MeshStandardMaterial({ color: C.mosaicRed, roughness: 0.85 }),
+    boekenstapel: maakBoekenstapelTex()
+      ? new THREE.MeshStandardMaterial({ map: maakBoekenstapelTex(), roughness: 0.9 })
+      : new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.9 }),
+    doek: maakDoekPatroonTex()
+      ? new THREE.MeshStandardMaterial({ map: maakDoekPatroonTex(), roughness: 1.0, side: THREE.DoubleSide })
+      : new THREE.MeshStandardMaterial({ color: C.curtainWhite, roughness: 1.0, side: THREE.DoubleSide }),
+    voile: new THREE.MeshLambertMaterial({
+      color: C.voile, transparent: true, opacity: 0.42, side: THREE.DoubleSide, depthWrite: false }),
+    plantGroen: new THREE.MeshLambertMaterial({ color: 0x4f7a3a }),
+    kraanGeel: new THREE.MeshStandardMaterial({ color: C.crane, roughness: 0.55, metalness: 0.45 }),
+    bollamp: new THREE.MeshBasicMaterial({ vertexColors: true }),   // emissive look, kleur per instance
+    klokOranje: new THREE.MeshStandardMaterial({
+      color: C.tijdlabOrange, emissive: C.tijdlabOrange, emissiveIntensity: 0.25, roughness: 0.8 }),
+    leidingRood: new THREE.MeshStandardMaterial({ color: C.pipeRed, roughness: 0.6, metalness: 0.3 }),
+    leidingBlauw: new THREE.MeshStandardMaterial({ color: C.pipeBlue, roughness: 0.6, metalness: 0.3 }),
   };
   _cache = M;
   return M;
