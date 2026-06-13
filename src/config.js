@@ -11,8 +11,8 @@ export const CONFIG = {
   // bovenTierVanZ = waar de OPLOPENDE trap (vloer 1 → 2) begint: pas
   // halverwege de StemmingMakerij (z36–48 → z42), met een vlakke vloer-1-plaza
   // ervóór (z35–42) — zoals op de foto vanuit de zaal.
-  floors: { f1: 5.0, f2: 9.0, f3: 12.5, slabT: 0.4, builtFromZ: 35,
-            f1VanZ: 35, bovenTierVanZ: 42, f2VanZ: 51, f3VanZ: 57 },
+  floors: { f1: 5.0, f2: 9.0, f3: 12.5, slabT: 0.4, builtFromZ: 39,
+            f1VanZ: 39, bovenTierVanZ: 46, f2VanZ: 55, f3VanZ: 61 },
   grid: { baySpacing: 7.5, bays: 13, centerColX: 30 },
   colors: {
     steelOld: 0x9a9484, steelOldRust: 0xb35a2e, steelOldGreen: 0x6e7265,
@@ -30,20 +30,22 @@ export const CONFIG = {
   objects: {
     // Plattegrond (first floor): zaal langs de oostgevel, lange as noord-zuid,
     // ramen west de hal in, glazen deur (enige deur) noordelijk in de westwand.
-    stemmingMakerij: { x: [48, 60], z: [36, 48], floor: 'f1', door: 'west' },
+    stemmingMakerij: { x: [48, 60], z: [39, 51], floor: 'f1', door: 'west' },
     glazenzaal:      { x: [18, 30], z: [55, 70], h: 4 },
     seats2meet:      { x: [32, 48], z: [55, 75] },
     kennisPlateau:   { x: [15, 45], z: [35, 42] },
     tijdLab:         { x: [0, 8],   z: [35, 48] },
     // Breed trappenlandschap (bijna volle breedte), centrale gleuf voor de
     // loopbrug/kernen; oost stopt vóór de StemmingMakerij (x 48–60).
-    tribuneWest:     { x: [6, 27],  zTop: 35, zBottom: 22, yTop: 5 },
-    tribuneOost:     { x: [31, 47], zTop: 35, zBottom: 22, yTop: 5 },
-    loopbrug:        { x: [27, 31], z: 30, y: 5, breedte: 2 },
-    cafe:            { x: [30, 42], z: [6, 14], kapH: 3.5 },
+    tribuneWest:     { x: [6, 27],  zTop: 39, zBottom: 26, yTop: 5 },
+    tribuneOost:     { x: [31, 47], zTop: 39, zBottom: 26, yTop: 5 },
+    loopbrug:        { x: [27, 31], z: 34, y: 5, breedte: 2 },
+    // kiosk: kleine kraampje (glazen bar + zwevende mozaïekdoos + LocHal-bord)
+    cafe:            { x: [27, 35], z: [5, 11], kapH: 2.4 },
     kroonluchter:    { cx: 38, cz: 18, count: 60, yMin: 4, yMax: 9, spreid: 5 },
-    stellage:        { x: [26, 34], z: [5, 30], liggerY: [4.5, 7.5] },
-    treintafels:     { count: 3, maat: [8, 2, 1.1], z: [15, 25] },
+    stellage:        { x: [25, 33], z: [4, 23], liggerY: [4.5, 7.5] },
+    // lange leestafels op rails, NAAST de kiosk (vullen samen de breedte)
+    treintafels:     { count: 4, maat: [11, 1.6, 1.05], z: [4, 12] },
     expoWanden:      { x: [5, 15], z: [5, 15], count: 5, maat: [3, 4] },
     kraan:           { spanX: [0, 30], y: 11, parkZ: 33, spots: 9 },
     grootDoek:       { gevel: 'zuidwest', breedte: 28, hoogte: 14 },

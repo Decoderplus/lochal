@@ -152,13 +152,18 @@ const ontDirX = (dx) => CONFIG.spiegelX ? -dx : dx;
     if (oostWest) ok('A2 treden oost-west (breedte langs X > langs Z)');
     else fout('A2 TRIBUNE GEDRAAID — treden niet oost-west (langs X ≤ langs Z)');
   }
-  // ramp-loopvlakken: per tribune een helling met y=0 zuid (z≈22) → y=5 noord (z≈31–35)
+  // ramp-loopvlakken: per tribune een AFDALENDE helling, y=0 aan de zuidkant
+  // (stair foot, zBottom) → y=5 aan de noordkant (topplatform, zTop-4).
+  const zB = O.tribuneWest.zBottom, zP = O.tribuneWest.zTop - 4;
   const hellingen = wereld.surfaces.filter((s) => s.kind === 'helling');
-  const goed = hellingen.filter((h) =>
-    Math.abs(h.yBijZ0) < 0.5 && h.z0 >= 20 && h.z0 <= 24 &&
-    Math.abs(h.yBijZ1 - 5) < 0.6 && h.z1 >= 30 && h.z1 <= 36);
-  if (goed.length >= 2) ok(`A2 ${goed.length} tribune-hellingen: y0 zuid (z≈22) → y5 noord (z≈31–35)`);
-  else fout(`A2 TRIBUNE-RICHTING — ${goed.length}/2 hellingen met onder-zuid/boven-noord (y0@z22 → y5@z~33)`);
+  const goed = hellingen.filter((h) => {
+    const zLaag = h.yBijZ0 < h.yBijZ1 ? h.z0 : h.z1;   // zuidkant = y0
+    const zHoog = h.yBijZ0 < h.yBijZ1 ? h.z1 : h.z0;
+    return Math.min(h.yBijZ0, h.yBijZ1) < 0.5 && Math.abs(Math.max(h.yBijZ0, h.yBijZ1) - 5) < 0.6 &&
+           Math.abs(zLaag - zB) < 2 && Math.abs(zHoog - zP) < 2;
+  });
+  if (goed.length >= 2) ok(`A2 ${goed.length} tribune-hellingen: y0 zuid (z≈${zB}) → y5 noord (z≈${zP})`);
+  else fout(`A2 TRIBUNE-RICHTING — ${goed.length}/2 afdalende hellingen (y0@z${zB} → y5@z${zP})`);
 }
 
 // A3. StemmingMakerij-center: x > 50 én z 40–54; deur kijkt naar -x.

@@ -41,6 +41,14 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## Zuidhal-correcties op de café-foto's (mens, 5 punten)
+
+- Trap +4 m noordwaarts (open zuidhal ~20% langer): builtFromZ 35→39, bovenTierVanZ 42→46, f2VanZ 51→55, f3VanZ 57→61, tribune zTop 35→39 / zBottom 22→26 (Z_TOP_PLAT afgeleid = zTop−4), zaal z [36,48]→[39,51] (czW leidt nu af van het vak); A2-assert volgt CONFIG.
+- Kiosk herontworpen + kleiner (CONFIG.cafe x[27,35] z[5,11]): glazen bar-onderbouw + houten toonbankblad + ZWEVENDE rood-zwart mozaïekdoos op zwarte posten + wit "LocHal"-gebouwbord (geen gabled kap meer).
+- Leestafels op rails NAAST de kiosk (west- en oostvak x4–56), met boekenopslag eronder + rode stoelen; kiosk+tafels vullen samen bijna de hele breedte (zuid-band z4–12).
+- Stellage: nog maar ÉÉN laag plantenbakken (bovenste ligger), iets hoger, met grotere groene kronen.
+- Gordijnen verplaatst: grote witte voiles langs de ZUIDGEVEL (z≈1,6, vol hoog 0→14) weerszijden van de kiosk; kunstdoek langs de westgevel. (A5 groen.)
+
 ## Fase 3/4 — zuidhal-inrichting (src/world/zuidhal.js)
 
 - Iconische elementen op foto/plattegrond gebaseerd: StadsCafé (U-bar + rood-zwart mozaïekkap + LocHal-letterframe), kraanbaanstellage (oud-staal torens + plantenbakken + boom + rode buisleuning), kroonluchter-wolk (60 pastel emissive bollen op kabels, InstancedMesh), XXL-treintafels op rails + rode stoelen, expowanden, staande lampen, gele kraanbrug + theaterspots, boekenstapel-bankjes op de plaza, plantenbakken/planten (instanced), 3 doeken (kunstdoek west + zwart hangdoek + voile).

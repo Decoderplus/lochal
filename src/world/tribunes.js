@@ -12,7 +12,8 @@ import { CONFIG } from '../config.js';
 import { maakMaterialen, maakRng } from '../materials.js';
 
 const N_TREDEN = 28;
-const Z_TOP_PLAT = 31;   // zuidrand topplatform; treden dalen 31 → 22
+// zuidrand topplatform = 4 m vóór de vide-rand; treden dalen daarvandaan
+const Z_TOP_PLAT = CONFIG.objects.tribuneWest.zTop - 4;
 
 export function bouwTribunes() {
   const M = maakMaterialen();

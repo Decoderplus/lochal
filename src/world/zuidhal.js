@@ -36,68 +36,44 @@ export function bouwZuidhal() {
   const bakPlekken = [];      // plantenbakken (eik)
   const plantPlekken = [];    // groene plant-blobs
 
-  // ── StadsCafé: barvolume + mozaïekkap + LocHal-letterframe ─────────────
+  // ── Kiosk (StadsCafé), naar de foto: glazen bar-onderbouw met houten
+  //    toonbankblad, een ZWEVENDE rood-zwart-oranje mozaïekdoos op zwarte
+  //    posten, en daarbovenop het witte "LocHal"-gebouwbord. Compact. ──────
   function bouwCafe() {
     beginSub('cafe');
     const [x0, x1] = O.cafe.x, [z0, z1] = O.cafe.z;
     const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2, bw = x1 - x0, bd = z1 - z0;
-    // U-vormige bar (drie balken rond een werkkern)
-    const barH = 1.1;
-    for (const [bx, bz, w, d] of [
-      [cx, z0 + 0.4, bw - 1.6, 0.8], [x0 + 0.4, cz, 0.8, bd - 0.4], [x1 - 0.4, cz, 0.8, bd - 0.4],
-    ]) {
-      const bar = add(box(w, barH, d, M.eik));
-      bar.position.set(bx, barH / 2, bz);
-      bar.castShadow = true;
+    const barH = 1.15;
+    // glazen wanden van de bar-onderbouw + donkere hoekstijlen
+    for (const [gx, gz, gw, gd] of [
+      [cx, z0, bw, 0.04], [cx, z1, bw, 0.04], [x0, cz, 0.04, bd], [x1, cz, 0.04, bd],
+    ]) { const g = add(box(gw, barH, gd, M.glas)); g.position.set(gx, barH / 2, gz); }
+    for (const px of [x0, x1]) for (const pz of [z0, z1]) {
+      const p = add(box(0.1, barH + 0.2, 0.1, M.onderkantZwart));
+      p.position.set(px, (barH + 0.2) / 2, pz);
     }
-    colliders.push({ x0, x1, y0: 0, y1: barH, z0, z1 });
-    // kapposten + mozaïekkap (gabled) erboven
-    const kapY = O.cafe.kapH, kapTop = kapY + 1.6;
-    for (const px of [x0 + 0.3, x1 - 0.3]) for (const pz of [z0 + 0.3, z1 - 0.3]) {
-      const post = add(box(0.18, kapY, 0.18, M.nieuwStaal));
-      post.position.set(px, kapY / 2, pz);
+    // houten toonbankblad (steekt over)
+    const blad = add(box(bw + 0.7, 0.16, bd + 0.7, M.eik));
+    blad.position.set(cx, barH + 0.08, cz); blad.castShadow = true;
+    colliders.push({ x0: x0 - 0.4, x1: x1 + 0.4, y0: 0, y1: barH + 0.16, z0: z0 - 0.4, z1: z1 + 0.4 });
+    // zwevende mozaïekdoos op 4 zwarte posten boven de bar
+    const postH = O.cafe.kapH, doosBodem = barH + postH, doosH = 1.5;
+    for (const px of [x0 + 0.4, x1 - 0.4]) for (const pz of [z0 + 0.4, z1 - 0.4]) {
+      const post = add(box(0.1, postH, 0.1, M.onderkantZwart));
+      post.position.set(px, barH + postH / 2, pz);
     }
-    // twee hellende mozaïekvlakken (nok N-Z over het midden)
-    const helHoek = Math.atan2(kapTop - kapY, bw / 2);
-    const helLen = Math.hypot(bw / 2, kapTop - kapY);
-    for (const kant of [-1, 1]) {
-      const vlak = add(box(helLen, 0.12, bd + 0.6, M.mozaiek));
-      vlak.position.set(cx + kant * bw / 4, (kapY + kapTop) / 2, cz);
-      vlak.rotation.z = -kant * helHoek;
-      vlak.castShadow = true;
-    }
-    // geveltop-driehoekjes (dicht) + nokbalk
-    const nok = add(box(0.12, 0.12, bd + 0.6, M.onderkantZwart));
-    nok.position.set(cx, kapTop, cz);
-    // "LocHal"-letterframe: gebouwvormige witte omlijsting op de nok, naar zuid
+    const doos = add(box(bw + 0.5, doosH, bd + 0.5, M.mozaiek));
+    doos.position.set(cx, doosBodem + doosH / 2, cz); doos.castShadow = true;
+    // "LocHal"-gebouwbord (witte omlijsting met schuin geveltopje) bovenop
     const frame = new THREE.Group();
-    const fw = 4.2, fh = 1.6;
-    for (const [lx, ly, lw, lh] of [
-      [0, 0, fw, 0.12], [0, fh, fw, 0.12], [-fw / 2, fh / 2, 0.12, fh], [fw / 2, fh / 2, 0.12, fh],
-      [0, fh + 0.45, 0.12, 0.9], [-1, fh + 0.7, 2.2, 0.12], [1, fh + 0.7, 2.2, 0.12], // geveltopje
-    ]) {
-      const bar = box(lw, lh, 0.1, M.tred);
-      bar.position.set(lx, ly, 0);
-      frame.add(bar);
-    }
-    frame.position.set(cx, kapTop + 0.3, z0 - 0.2);
+    const fw = bw + 0.2, fh = 1.3;
+    for (const [lx, ly, lw, lh, rot] of [
+      [0, 0, fw, 0.14, 0], [0, fh, fw * 0.62, 0.14, 0],
+      [-fw / 2, fh / 2, 0.14, fh, 0], [fw / 2, fh / 2, 0.14, fh, 0],
+      [fw / 2 - 0.1, fh + 0.35, 0.14, 0.9, 0], [fw * 0.16, fh + 0.62, fw * 0.46, 0.14, -0.5],
+    ]) { const b = box(lw, lh, 0.12, M.tred); b.position.set(lx, ly, 0); b.rotation.z = rot; frame.add(b); }
+    frame.position.set(cx, doosBodem + doosH + 0.2, z0 - 0.05);
     add(frame);
-    // bartafels met rode krukken + plantjes ervoor
-    for (let t = 0; t < 2; t++) {
-      const tx = x0 + 2 + t * (bw - 4);
-      const tafel = add(box(0.9, 0.05, bd - 2, M.eik));
-      tafel.position.set(tx, 1.05, cz);
-      for (const pz of [z0 + 1.2, cz, z1 - 1.2]) {
-        const poot = add(box(0.06, 1.0, 0.06, M.nieuwStaal));
-        poot.position.set(tx, 0.5, pz);
-        bolPlekken.length; // (noop) houd structuur
-      }
-      for (let s = 0; s < 3; s++) {
-        const kruk = add(new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.5, 10), M.kussenRood));
-        kruk.position.set(tx + (t === 0 ? 0.7 : -0.7), 0.25, z0 + 1.5 + s * (bd - 3) / 2);
-      }
-      bakPlekken.push([tx, 1.18, z0 + 0.6]); plantPlekken.push([tx, 1.45, z0 + 0.6, 0.5]);
-    }
     eindeSub();
   }
 
@@ -116,22 +92,20 @@ export function bouwZuidhal() {
         }
         colliders.push({ x0: tx - 0.6, x1: tx + 0.6, y0: 0, y1: hi, z0: z - 0.5, z1: z + 0.5 });
       }
-      // liggers op twee niveaus
+      // liggers op twee niveaus (constructie)
       for (const ly of [lo, hi]) {
         const lig = add(box(0.18, 0.3, z1 - z0, M.oudStaal));
         lig.position.set(tx, ly, (z0 + z1) / 2);
         lig.castShadow = true;
-        // rode buisleuning langs de bovenste laag
-        if (ly === hi) {
-          const buis = add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, z1 - z0, 8), M.leidingRood));
-          buis.rotation.x = Math.PI / 2;
-          buis.position.set(tx, ly + 0.9, (z0 + z1) / 2);
-        }
-        // plantenbakken op de liggers
-        for (let z = z0 + 2; z <= z1 - 2; z += 4.5) {
-          bakPlekken.push([tx, ly + 0.35, z]);
-          plantPlekken.push([tx, ly + 0.75, z, 0.6 + rng() * 0.4]);
-        }
+      }
+      // rode buisleuning + ÉÉN laag plantenbakken op de bovenste ligger,
+      // iets hoger geplaatst met grotere groene kronen
+      const buis = add(new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, z1 - z0, 8), M.leidingRood));
+      buis.rotation.x = Math.PI / 2;
+      buis.position.set(tx, hi + 0.95, (z0 + z1) / 2);
+      for (let z = z0 + 2; z <= z1 - 2; z += 4) {
+        bakPlekken.push([tx, hi + 0.55, z]);
+        plantPlekken.push([tx, hi + 1.25, z, 1.2 + rng() * 0.6]);
       }
     }
     // dwarsliggers tussen de torens
@@ -176,35 +150,38 @@ export function bouwZuidhal() {
     add(kabels);
   }
 
-  // ── XXL-treintafels op rails + rode stoelen ─────────────────────────────
+  // ── Lange leestafels op rails — NAAST de kiosk (west- en oostvak), met
+  //    boekenopslag eronder en rode stoelen. Kiosk + tafels vullen samen
+  //    bijna de hele breedte van de hal (de zuid-band). ─────────────────────
   function bouwTreintafels() {
     beginSub('treintafels');
-    const [w, d, h] = O.treintafels.maat;
+    const [, d, h] = O.treintafels.maat;
     const [z0, z1] = O.treintafels.z;
-    for (let t = 0; t < O.treintafels.count; t++) {
-      const tz = z0 + (t + 0.5) * (z1 - z0) / O.treintafels.count;
-      const tx = 34 + (t % 2) * 8;     // oost-centraal, tussen stellage en café
+    const tz = (z0 + z1) / 2;
+    const [cafX0, cafX1] = O.cafe.x;
+    const vakken = [[4, cafX0 - 1], [cafX1 + 1, 56]];   // west en oost van de kiosk
+    for (const [vx0, vx1] of vakken) {
+      const len = vx1 - vx0, tx = (vx0 + vx1) / 2;
       // donkere rails (oost-west strips in de vloer)
       for (const rz of [tz - d / 2 + 0.2, tz + d / 2 - 0.2]) {
-        const rail = add(box(w + 2, 0.03, 0.12, M.onderkantZwart));
+        const rail = add(box(len, 0.03, 0.1, M.onderkantZwart));
         rail.position.set(tx, 0.015, rz);
       }
-      // tafelblad + zware poten (treinonderstel-look)
-      const blad = add(box(w, 0.12, d, M.eik));
-      blad.position.set(tx, h, tz);
-      blad.castShadow = true;
-      for (const px of [tx - w / 2 + 0.6, tx, tx + w / 2 - 0.6]) {
-        const poot = add(box(0.5, h, 0.5, M.onderkantZwart));
-        poot.position.set(px, h / 2, tz);
+      // tafelblad + zware treinonderstel-poten
+      const blad = add(box(len, 0.1, d, M.eik));
+      blad.position.set(tx, h, tz); blad.castShadow = true;
+      for (let x = vx0 + 1; x <= vx1 - 1; x += 3.5) {
+        const poot = add(box(0.45, h, 0.45, M.onderkantZwart));
+        poot.position.set(x, h / 2, tz);
       }
-      colliders.push({ x0: tx - w / 2, x1: tx + w / 2, y0: 0, y1: h, z0: tz - d / 2, z1: tz + d / 2 });
-      // rode stoelen rondom
-      for (let s = 0; s < 6; s++) {
-        const sx = tx - w / 2 + 0.8 + s * (w - 1.6) / 5;
-        for (const sz of [tz - d / 2 - 0.5, tz + d / 2 + 0.5]) {
-          const stoel = add(box(0.45, 0.5, 0.45, M.kussenRood));
-          stoel.position.set(sx, 0.45, sz);
-        }
+      colliders.push({ x0: vx0, x1: vx1, y0: 0, y1: h, z0: tz - d / 2, z1: tz + d / 2 });
+      // boekenopslag onder de tafel (boekenstapel-plint)
+      const boeken = add(box(len - 1, 0.55, d - 0.4, M.boekenstapel));
+      boeken.position.set(tx, 0.28, tz);
+      // rode stoelen langs beide lange zijden
+      for (let x = vx0 + 1.2; x <= vx1 - 1; x += 1.9) for (const sz of [tz - d / 2 - 0.45, tz + d / 2 + 0.45]) {
+        const stoel = add(box(0.42, 0.5, 0.42, M.kussenRood));
+        stoel.position.set(x, 0.45, sz);
       }
     }
     eindeSub();
@@ -242,10 +219,10 @@ export function bouwZuidhal() {
   // ── Boekenstapel-bankjes op de vloer-1-plaza (+ enkele op BG) ───────────
   function bouwBoekenbankjes() {
     const banken = [
-      // plaza (y5) — voorgrond foto
-      [16, 5, 38, 1.6], [22, 5, 40, 1.2], [38, 5, 38.5, 1.4], [42, 5, 40.5, 1.0],
-      // begane grond bij de leeszone
-      [40, 0, 12, 1.6], [46, 0, 18, 1.2],
+      // vloer-1-plaza (y5) — voorgrond zoals de foto
+      [16, 5, 41, 1.6], [21, 5, 43, 1.2], [36, 5, 41.5, 1.4], [41, 5, 43, 1.0],
+      // begane grond, open vloer tussen tafels en trap
+      [30, 0, 18, 1.6], [24, 0, 20, 1.2],
     ];
     for (const [bx, by, bz, bl] of banken) {
       const plint = add(box(bl, 0.42, 0.7, M.boekenstapel));
@@ -302,12 +279,12 @@ export function bouwZuidhal() {
     add(doek);
   }
   function bouwDoeken() {
-    // kunstdoek vóór de zuidwest-glasgevel (langs de westgevel), x<30
-    plooiDoek('grootDoek', M.doek, 2.6, 11, O.grootDoek.breedte * 0.5, O.grootDoek.hoogte, true);
-    // zwart megagordijn dat in de vide hangt (oostkant, x>30, z<30)
-    plooiDoek('zwartDoek', M.onderkantZwart, 41, 24, 8, 12, true);
-    // grijswitte voile bij het café
-    plooiDoek('voileDoek', M.voile, 44, 8, 10, 9, false);
+    // Grote witte voile-gordijnen langs de ZUIDGEVEL, vol hoog (vloer→dak),
+    // weerszijden van de kiosk — zoals op de foto.
+    plooiDoek('doekZuidwest', M.voile, 12, 1.6, 14, 14, false);
+    plooiDoek('doekZuidoost', M.voile, 49, 1.6, 14, 14, false);
+    // kunstdoek met patroon langs de westgevel (decor), x<30, z<30
+    plooiDoek('grootDoek', M.doek, 1.8, 16, O.grootDoek.breedte * 0.5, O.grootDoek.hoogte, true);
   }
 
   bouwCafe();
