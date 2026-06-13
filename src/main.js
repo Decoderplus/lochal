@@ -1,7 +1,7 @@
 // LocHal — app-schil: renderer (CONFIG is wet), wereld, speler, shot-modus.
 import * as THREE from 'three';
 import { CONFIG } from './config.js';
-import { bouwWereld } from './world/index.js';
+import { bouwWereld, MIRROR } from './world/index.js';
 import { Speler } from './player.js';
 
 // ── Renderer volgens CONFIG.renderer ─────────────────────────────────────
@@ -91,8 +91,16 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
   let kaartAan = false;
   const px = (x) => PAD + x * S;
   const py = (z) => PAD + (90 - z) * S;        // noord (z=90) boven
+  const RX = (x) => MIRROR ? 60 - x : x;       // plattegrond-x → (gespiegelde) wereld-x
+  // teken een zone uit plattegrond-coördinaten (spiegelt mee)
+  function zone(a, b, z0, z1, fill) {
+    const xl = Math.min(RX(a), RX(b)), xr = Math.max(RX(a), RX(b));
+    ctx.fillStyle = fill;
+    ctx.fillRect(px(xl), py(z1), (xr - xl) * S, (z1 - z0) * S);
+  }
+  let ctx;
   function tekenKaart() {
-    const ctx = kaart.getContext('2d');
+    ctx = kaart.getContext('2d');
     ctx.clearRect(0, 0, kaart.width, kaart.height);
     ctx.fillStyle = 'rgba(14,12,10,0.85)';
     ctx.fillRect(0, 0, kaart.width, kaart.height);
@@ -101,27 +109,21 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
     ctx.strokeStyle = '#cfc8ba'; ctx.lineWidth = 1.5;
     ctx.strokeRect(px(0), py(90), 60 * S, 90 * S);
     // vide (zuidhal, z < 35)
-    ctx.fillStyle = 'rgba(255,255,255,0.08)';
-    ctx.fillRect(px(0), py(35), 60 * S, 35 * S);
+    zone(0, 60, 0, 35, 'rgba(255,255,255,0.08)');
     ctx.fillStyle = '#b8ac96';
     ctx.fillText('vide', px(27.5), py(15));
-    // tribunes
-    ctx.fillStyle = 'rgba(216,213,205,0.45)';
-    ctx.fillRect(px(10), py(35), 12 * S, 13 * S);
-    ctx.fillRect(px(38), py(35), 12 * S, 13 * S);
+    // tribunes (plattegrond-x; spiegelen mee)
+    zone(10, 22, 22, 35, 'rgba(216,213,205,0.45)');
+    zone(38, 50, 22, 35, 'rgba(216,213,205,0.45)');
     ctx.fillStyle = '#e8e2d4';
-    ctx.fillText('tribune W', px(10.5), py(27.5));
-    ctx.fillText('tribune O', px(38.5), py(27.5));
+    ctx.fillText('tribune', px(RX(16)) - 14, py(28));
+    ctx.fillText('tribune', px(RX(44)) - 14, py(28));
     // loopbrug
-    ctx.fillStyle = 'rgba(154,148,132,0.8)';
-    ctx.fillRect(px(22), py(33), 16 * S, 2 * S);
-    // café (CONFIG-zone, fase 3) — gestippeld
-    ctx.setLineDash([3, 3]);
-    ctx.strokeStyle = '#a3786a';
-    ctx.strokeRect(px(30), py(14), 12 * S, 8 * S);
-    ctx.setLineDash([]);
+    zone(22, 38, 31, 33, 'rgba(154,148,132,0.8)');
+    // café (CONFIG-zone, fase 3)
+    zone(30, 42, 6, 14, 'rgba(163,120,106,0.5)');
     ctx.fillStyle = '#c9a092';
-    ctx.fillText('café', px(33), py(9));
+    ctx.fillText('café', px(RX(36)) - 10, py(9));
     // StemmingMakerij (huidige wrapper-rotatie)
     const zb = wereld.zaalBox();
     ctx.fillStyle = 'rgba(204,36,31,0.55)';

@@ -41,6 +41,12 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## Spiegeling over de lengteas (mens: "het geheel over de lengteas spiegelen")
+
+- CONFIG.spiegelX (true): de hele wereld spiegelt in één keer over de N-Z middenlijn (x → 60−x). Eén rootcause-transform: visueel via spiegel-parent-Group `wereld` (scale.x −1); fysica (colliders/loopvlakken/interactie) centraal mee-gespiegeld in de aggregator; de StemmingMakerij spiegelt zijn eigen fysica intern (mapPunt/mapRichting) zodat debug-R blijft kloppen. Three.js draait face-winding automatisch om bij negatieve determinant → belichting/schaduw blijven goed.
+- Gevolg: alles wisselt west↔oost (zaal nu west, tribunes/café gespiegeld). Module-code bouwt nog steeds op plattegrond-coördinaten; de namen (tribuneWest enz.) verwijzen naar die plattegrond-positie, niet naar de gespiegelde wereldzijde. Eén vlag terug = origineel.
+- Asserts blijven de plattegrond-getallen gebruiken: verify ont-spiegelt de gemeten posities/richtingen (spiegelVakX/ontX/ontDirX) vóór toetsing, dus A3 (x>50, deur→−x) en A4 blijven letterlijk geldig en groen.
+
 ## IJking op de echte plattegronden (GF/1e/3e + secties A-A/B-B, mens aangeleverd)
 
 - Rootcause gevonden: de zaal-wrapper stond 90° verkeerd. Plattegrond (first floor): StemmingMakerij langs de oostgevel met lange as NOORD-ZUID, ramen + glazen deur west de hal in → zaalRotatie 90 → 180, center (53,9 · 42), CONFIG-vak z [36, 48]; A3-deurrichtingscheck (deur → −x) weer actief en groen.

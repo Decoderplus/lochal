@@ -500,22 +500,32 @@ export function bouwStemmingMakerij() {
   groep.position.set(cxW, y0, czW);
   // schaalfactor 1: de zaal is al in meters gebouwd
 
+  // Spiegeling: de hele wereld kan over de lengteas (x = W/2) gespiegeld zijn.
+  // De zaal spiegelt zijn eigen fysica mee, zodat hij overeenkomt met de
+  // visuele spiegel-parent én de debug-rotatie R blijft kloppen.
+  const SPIEGEL = CONFIG.spiegelX === true;
+  const HW = CONFIG.hall.width;
+
   // Lokaal → wereld voor as-uitgelijnde rotaties (graden, om de eigen as)
   function mapPunt(lx, lz, deg) {
+    let x, z;
     switch (((deg % 360) + 360) % 360) {
-      case 0:   return [cxW + lx, czW + lz];
-      case 90:  return [cxW + lz, czW - lx];
-      case 180: return [cxW - lx, czW - lz];
-      default:  return [cxW - lz, czW + lx];   // 270
+      case 0:   [x, z] = [cxW + lx, czW + lz]; break;
+      case 90:  [x, z] = [cxW + lz, czW - lx]; break;
+      case 180: [x, z] = [cxW - lx, czW - lz]; break;
+      default:  [x, z] = [cxW - lz, czW + lx]; break;   // 270
     }
+    return [SPIEGEL ? HW - x : x, z];
   }
   function mapRichting(dx, dz, deg) {
+    let x, z;
     switch (((deg % 360) + 360) % 360) {
-      case 0:   return [dx, dz];
-      case 90:  return [dz, -dx];
-      case 180: return [-dx, -dz];
-      default:  return [-dz, dx];              // 270
+      case 0:   [x, z] = [dx, dz]; break;
+      case 90:  [x, z] = [dz, -dx]; break;
+      case 180: [x, z] = [-dx, -dz]; break;
+      default:  [x, z] = [-dz, dx]; break;              // 270
     }
+    return [SPIEGEL ? -x : x, z];
   }
   function mapBox(b, deg) {
     const [xa, za] = mapPunt(b.lx0, b.lz0, deg);

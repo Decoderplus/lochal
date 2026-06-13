@@ -2,7 +2,15 @@
 // colliders / loopvlakken / interactables / per-frame-updates.
 // Wordt zowel door de browser-app (src/main.js) als headless door
 // tools/verify.js gebruikt.
+//
+// SPIEGELING (CONFIG.spiegelX): de hele wereld kan in één keer over de
+// lengteas (de N-Z middenlijn op x = W/2) gespiegeld worden — x → W − x.
+// Visueel via een spiegel-parent-Group (scale.x = −1); de fysica
+// (colliders/loopvlakken/interactie) wordt centraal mee-gespiegeld. De
+// StemmingMakerij spiegelt zichzelf intern (zodat zijn debug-rotatie R
+// blijft kloppen) en wordt hier dus niet nogmaals gespiegeld.
 import * as THREE from 'three';
+import { CONFIG } from '../config.js';
 import { bouwStemmingMakerij } from './stemmingmakerij.js';
 import { bouwCasco } from './casco.js';
 import { bouwConstructie } from './constructie.js';
@@ -24,6 +32,20 @@ export const VERPLICHT_INSTANCED = [
   'tribuneTreden', 'tribuneBlokken', 'kussensRood', 'kussensBlauw', 'kussensOranje',
 ];
 
+export const MIRROR = CONFIG.spiegelX === true;
+const HW = CONFIG.hall.width;
+
+// x-spiegel-helpers (W − x). Alleen toepassen op niet-zaal-modules.
+function spiegelBox(b) {
+  if (!MIRROR) return b;
+  const n = { ...b, x0: HW - b.x1, x1: HW - b.x0 };
+  if (b.kind === 'hellingX') { n.yBijX0 = b.yBijX1; n.yBijX1 = b.yBijX0; }
+  return n;
+}
+function spiegelInteract(it) {
+  return MIRROR ? { ...it, x: HW - it.x } : it;
+}
+
 export function bouwWereld(scene) {
   const colliders = [];
   const surfaces = [
@@ -33,7 +55,13 @@ export function bouwWereld(scene) {
   const interactables = [];
   const updates = [];
 
-  const zaal = bouwStemmingMakerij();
+  // Spiegel-parent: alle visuele groepen hangen hieronder.
+  const wereldGroep = new THREE.Group();
+  wereldGroep.name = 'wereld';
+  if (MIRROR) { wereldGroep.scale.x = -1; wereldGroep.position.x = HW; }
+  scene.add(wereldGroep);
+
+  const zaal = bouwStemmingMakerij();   // spiegelt zichzelf intern
   const delen = [
     bouwCasco(),
     bouwConstructie(),
@@ -42,10 +70,11 @@ export function bouwWereld(scene) {
     zaal,
   ];
   for (const d of delen) {
-    scene.add(d.groep);
-    if (d.colliders) colliders.push(...d.colliders);
-    if (d.surfaces) surfaces.push(...d.surfaces);
-    if (d.interactables) interactables.push(...d.interactables);
+    wereldGroep.add(d.groep);
+    const eigenSpiegel = d === zaal;   // zaal heeft zijn fysica al gespiegeld
+    if (d.colliders) for (const c of d.colliders) colliders.push(eigenSpiegel ? c : spiegelBox(c));
+    if (d.surfaces) for (const s of d.surfaces) surfaces.push(eigenSpiegel ? s : spiegelBox(s));
+    if (d.interactables) for (const it of d.interactables) interactables.push(eigenSpiegel ? it : spiegelInteract(it));
     if (d.update) updates.push(d.update);
   }
 

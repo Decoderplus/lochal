@@ -45,6 +45,9 @@ export const CONFIG = {
   // 180 = geijkt op de plattegrond: lange as noord-zuid, ramen west, deur
   // noordelijk in de westwand. (Debugtoets R draait verder; M = minikaart.)
   zaalRotatie: 180,
+  // De hele wereld over de lengteas (de N-Z middenlijn op x = W/2) spiegelen:
+  // x → W − x. Visueel + fysica + asserts volgen deze vlag. (Mens: spiegelen.)
+  spiegelX: true,
   renderer: { toneMapping: 'ACESFilmic', exposure: 1.0,
               outputColorSpace: 'srgb', shadowMapSize: 1024, maxShadowLights: 1 },
   performance: { maxTris: 200000, maxDrawCalls: 120, minFPS: 30 },

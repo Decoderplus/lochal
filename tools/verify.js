@@ -40,6 +40,11 @@ const hal = new THREE.Box3(
   new THREE.Vector3(-1.5, -0.3, -1.5),
   new THREE.Vector3(61.5, 16.5, 91.5));
 
+// De wereld kan over de lengteas gespiegeld zijn (CONFIG.spiegelX, x → W−x).
+// CONFIG-vakken beschrijven de plattegrond → spiegel het verwachte x-bereik.
+const HW = CONFIG.hall.width;
+const spiegelVakX = (xr) => (CONFIG.spiegelX && xr) ? [HW - xr[1], HW - xr[0]] : xr;
+
 console.log('\nVERIFY — gebouwde objecten (' + GEBOUWD.join(', ') + ')');
 for (const naam of GEBOUWD) {
   const obj = scene.getObjectByName(naam);
@@ -50,8 +55,9 @@ for (const naam of GEBOUWD) {
     continue;
   }
   const vak = vakken[naam] ?? {};
+  const vakX = spiegelVakX(vak.x);
   let binnen = true;
-  if (vak.x && (box.min.x < vak.x[0] - TOL || box.max.x > vak.x[1] + TOL)) binnen = false;
+  if (vakX && (box.min.x < vakX[0] - TOL || box.max.x > vakX[1] + TOL)) binnen = false;
   if (vak.z && (box.min.z < vak.z[0] - TOL || box.max.z > vak.z[1] + TOL)) binnen = false;
   if (vak.y && (box.min.y < vak.y[0] - TOL || box.max.y > vak.y[1] + TOL)) binnen = false;
   if (!binnen) fout(`'${naam}' buiten zijn CONFIG-vak (+1 m): ${boxStr(box)}`);
@@ -107,6 +113,12 @@ function center(naam) {
 // ── 5. ASSENCHECK (werkplan sectie 2) ────────────────────────────────────
 console.log('\nASSENCHECK');
 
+// De ASSENCHECK-getallen beschrijven de PLATTEGROND; we toetsen op de
+// ont-spiegelde waarden (zie spiegelVakX/HW boven), zodat de eisen letterlijk
+// blijven kloppen ook als CONFIG.spiegelX aanstaat.
+const ontX = (x) => CONFIG.spiegelX ? HW - x : x;        // wereld-x → plattegrond-x
+const ontDirX = (dx) => CONFIG.spiegelX ? -dx : dx;
+
 // A1. Halbox: breedte 60 langs X, lengte 90 langs Z (andersom = fataal)
 {
   const casco = scene.getObjectByName('casco');
@@ -155,22 +167,24 @@ console.log('\nASSENCHECK');
   const zaal = scene.getObjectByName('stemmingMakerij');
   if (!c || !zaal) fout('A3 stemmingMakerij ontbreekt');
   else {
-    if (c.x > 50 && c.z >= 40 && c.z <= 54)
-      ok(`A3 StemmingMakerij-center x=${c.x.toFixed(1)} (>50), z=${c.z.toFixed(1)} (40–54)`);
+    const cx = ontX(c.x);   // plattegrond-x (ont-spiegeld)
+    if (cx > 50 && c.z >= 40 && c.z <= 54)
+      ok(`A3 StemmingMakerij-center x=${cx.toFixed(1)} (>50, plattegrond), z=${c.z.toFixed(1)} (40–54)`);
     else
-      fout(`A3 StemmingMakerij-center x=${c.x.toFixed(1)}, z=${c.z.toFixed(1)} (verwacht x>50, z 40–54)`);
+      fout(`A3 StemmingMakerij-center x=${cx.toFixed(1)}, z=${c.z.toFixed(1)} (verwacht plattegrond-x>50, z 40–54)`);
     const n = zaal.userData.deurNormaal;     // wereld-richting van de deur (gesloten)
-    if (n && n[0] < -0.8 && Math.abs(n[2]) < 0.4)
-      ok(`A3 deur kijkt naar -x (normaal ${n.map((v) => v.toFixed(2))})`);
+    const nx = n ? ontDirX(n[0]) : 0;        // plattegrond-richting
+    if (n && nx < -0.8 && Math.abs(n[2]) < 0.4)
+      ok(`A3 deur kijkt naar -x (plattegrond; normaal ${n.map((v) => v.toFixed(2))})`);
     else
-      fout(`A3 DEUR-RICHTING — deur kijkt niet naar -x (normaal ${n ? n.map((v) => v.toFixed(2)) : 'onbekend'})`);
+      fout(`A3 DEUR-RICHTING — deur kijkt niet naar -x (plattegrond-normaal x=${nx.toFixed(2)})`);
   }
 }
 
 // A4. Café-center z < 15 · Glazenzaal-center x < 30 (alleen toetsen indien gebouwd)
 for (const [naam, test, eis] of [
   ['cafe', (c) => c.z < 15, 'z < 15'],
-  ['glazenzaal', (c) => c.x < 30, 'x < 30'],
+  ['glazenzaal', (c) => ontX(c.x) < 30, 'x < 30 (plattegrond)'],
 ]) {
   if (!GEBOUWD.includes(naam)) { console.log(`  · A4 '${naam}' nog niet gebouwd (latere fase)`); continue; }
   const c = center(naam);
