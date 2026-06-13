@@ -180,14 +180,8 @@ export function bouwTribunes() {
       blokPlekken.push({ p: [bx, yb + 0.21, zb], s: [w, 0.42, 0.62] });
       kussenPlekken[kleuren[Math.floor(rng() * 3)]].push([bx, yb + 0.46, zb]);
     }
-    // schinkels onder de boven-tier
-    const helLenB = Math.hypot(zB1 - zB0, yB1 - yB0);
-    for (const sx of [x0 + 0.9, xc, x1 - 0.9]) {
-      const sch = new THREE.Mesh(new THREE.BoxGeometry(0.22, 0.35, helLenB - 0.9), M.nieuwStaal);
-      sch.rotation.x = Math.atan2(yB1 - yB0, zB1 - zB0);
-      sch.position.set(sx, (yB0 + yB1) / 2 - 0.45, (zB0 + zB1) / 2);
-      sub.add(sch);
-    }
+    // (geen schinkels onder de boven-tier: die staat op vloer 1, niet boven
+    //  de open onderwereld — anders zweven er losse balken)
     // beloopbaar: helling omhoog + uitkijk-lip; balustrade sluit vloer-2-decor af
     surfaces.push({ kind: 'helling', x0, x1, z0: zB0, z1: zB1, yBijZ0: yB0, yBijZ1: yB1 });
     surfaces.push({ kind: 'vlak', x0, x1, z0: zB1, z1: zB1 + 1.6, y: yB1 });
@@ -245,46 +239,10 @@ export function bouwTribunes() {
     groep.add(im);
   }
 
-  // ── Loopbrug: oude geklonken brug tussen de twee topplatforms ───────────
-  const brug = new THREE.Group();
-  brug.name = 'loopbrug';
-  const bx0 = CONFIG.objects.tribuneWest.x[1];   // 22
-  const bx1 = CONFIG.objects.tribuneOost.x[0];   // 38
-  const bLen = bx1 - bx0 + 0.4, bMidX = (bx0 + bx1) / 2;
-  const bz0 = 31, bz1 = 33, bMidZ = 32, bY = CONFIG.objects.loopbrug.y;
-
-  const dek = new THREE.Mesh(new THREE.BoxGeometry(bLen, 0.12, bz1 - bz0), M.onderkantZwart);
-  dek.position.set(bMidX, bY - 0.06, bMidZ);
-  dek.receiveShadow = true;
-  brug.add(dek);
-  for (const bz of [bz0 + 0.07, bz1 - 0.07]) {
-    const ligger = new THREE.Mesh(new THREE.BoxGeometry(bLen, 1.15, 0.14), M.oudStaal);
-    ligger.position.set(bMidX, bY - 0.02, bz);
-    ligger.castShadow = true;
-    brug.add(ligger);
-    const nKruis = Math.max(1, Math.floor(bLen / 2.6));
-    for (let k = 0; k < nKruis; k++) {
-      const kruis = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.09, 0.05), M.oudStaal);
-      kruis.position.set(bx0 + 1.3 + k * 2.6, bY - 0.02, bz);
-      kruis.rotation.z = (k % 2 === 0 ? 1 : -1) * 0.46;
-      brug.add(kruis);
-    }
-    const regel = new THREE.Mesh(new THREE.BoxGeometry(bLen, 0.06, 0.06), M.eik);
-    regel.position.set(bMidX, bY + 1.05, bz);
-    brug.add(regel);
-    for (let x = bx0 + 0.6; x < bx1; x += 2.6) {
-      const staander = new THREE.Mesh(new THREE.BoxGeometry(0.05, 1.0, 0.05), M.nieuwStaal);
-      staander.position.set(x, bY + 0.52, bz);
-      brug.add(staander);
-    }
-  }
-  groep.add(brug);
-
-  colliders.push(
-    { x0: bx0 - 0.2, x1: bx1 + 0.2, y0: bY, y1: bY + 1.15, z0: bz0 - 0.1, z1: bz0 + 0.16 },
-    { x0: bx0 - 0.2, x1: bx1 + 0.2, y0: bY, y1: bY + 1.15, z0: bz1 - 0.16, z1: bz1 + 0.1 },
-  );
-  surfaces.push({ kind: 'vlak', x0: bx0 - 0.2, x1: bx1 + 0.2, z0: bz0, z1: bz1, y: bY });
+  // (Loopbrug verwijderd: hij lag in de centrale gleuf pal over de middenkolom
+  //  x30 — vandaar "de trap loopt door ondanks de pilaar". De twee tribunes
+  //  verbinden al via de vlakke vloer-1-plaza. De geklonken loopbrug komt later
+  //  terug als echte brug die de vide overspant, vrij van de kolomas.)
 
   return { groep, colliders, surfaces, interactables: [] };
 }

@@ -22,7 +22,7 @@ import { bouwTribunes } from './tribunes.js';
 // hal-omvang getoetst).
 export const GEBOUWD = [
   'stemmingMakerij', 'casco', 'constructie', 'verdiepingen',
-  'tribuneWest', 'tribuneOost', 'loopbrug',
+  'tribuneWest', 'tribuneOost',
 ];
 
 // InstancedMesh-namen die verify moet aantreffen (groeit per fase).

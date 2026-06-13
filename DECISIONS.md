@@ -48,6 +48,7 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Vloeren 2/3 wijken noordwaarts terug (CONFIG.floors.f2VanZ=44, f3VanZ=50) zodat het hoge open volume boven het hele landschap doorloopt — "wijds en open". Balustrades en boekenkast-silhouetten volgen de teruggeweken randen.
 - A2 ongewijzigd geldig (onder-tier blijft de N-Z afdaling); tribune-verify-vak verruimd tot y~10 / z~46.
 - Correctie op foto-uitzicht vanuit de zaal (mens): de OPLOPENDE trap begint niet aan de vide-rand maar pas halverwege de StemmingMakerij (CONFIG.floors.bovenTierVanZ=42), met een vlakke vloer-1-plaza ervóór (z35–42, voor de boekenstapel-bankjes). Oploop nu z42→51; vloeren 2/3 verder terug (f2VanZ=51, f3VanZ=57); vloer-2-balustrade kreeg tribune-openingen zodat de oploop op het uitkijkpunt aansluit.
+- Drie correcties (mens): (1) schinkels onder de boven-tier verwijderd (zweefden boven vloer 1); (2) loopbrug verwijderd — lag in de centrale gleuf over de middenkolom x30 ("trap loopt door ondanks de pilaar"); kolom staat nu vrij, tribunes verbinden via de plaza; 'loopbrug' uit GEBOUWD. (3) glazen deur naar het andere raamvak (GD lokaal z −4,5/−3,5 → +3,5/+4,5).
 
 ## Spiegeling over de lengteas (mens: "het geheel over de lengteas spiegelen")
 

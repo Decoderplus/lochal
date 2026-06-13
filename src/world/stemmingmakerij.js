@@ -172,7 +172,7 @@ export function bouwStemmingMakerij() {
   // TWEEDE INGREEP (op verzoek van de mens, zie DECISIONS.md): glazen deur in
   // het linker raamvak gezien vanaf de vide (= lokaal −z, wereld-WESTzijde van
   // de zuidwand). Opening 1,0 × 2,1 m op lokaal z −4,5 … −3,5.
-  const GD0 = -4.5, GD1 = -3.5, GDH = 2.1;  // glazen-deuropening
+  const GD0 = 3.5, GD1 = 4.5, GDH = 2.1;  // glazen-deuropening (andere raamvak: mens)
 
   function glasVlak(lenZ, lenY, z, y) {
     const g = new THREE.Mesh(new THREE.PlaneGeometry(lenZ, lenY), matGlas);
