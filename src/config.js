@@ -41,8 +41,9 @@ export const CONFIG = {
     tribuneWest:     { x: [4, 25],  zTop: 39, zBottom: 26, yTop: 5 },
     tribuneOost:     { x: [33, 48], zTop: 39, zBottom: 26, yTop: 5 },
     loopbrug:        { x: [25, 33], z: 34, y: 5, breedte: 2 },
-    // kiosk: glazen bar + zwevende mozaïekdoos + LocHal-bord, aan de OOSTKANT
-    cafe:            { x: [48, 57], z: [4, 11], kapH: 2.4 },
+    // kiosk: glazen bar + zwevende mozaïekdoos + LocHal-bord; 4 m richting het
+    // midden (weg van de StemmingMakerij)
+    cafe:            { x: [44, 53], z: [4, 11], kapH: 2.4 },
     kroonluchter:    { cx: 39, cz: 16, count: 60, yMin: 4, yMax: 9, spreid: 5 },
     stellage:        { x: [25, 33], z: [4, 23], liggerY: [4.5, 7.5] },
     // lange leestafels op rails, TEGENOVER de kiosk (westkant)

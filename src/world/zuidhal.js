@@ -107,14 +107,14 @@ export function bouwZuidhal() {
     const [x0, x1] = O.stellage.x, [z0, z1] = O.stellage.z;
     const [lo, hi] = O.stellage.liggerY;
     const torenX = [x0 + 1, x1 - 1];
-    // verticale vakwerktorens om de ~5 m
+    // ÉÉN slanke kolom per plek (was een dikke cluster van 4 stijlen): de
+    // grote en kleine pilaren zijn nu één smalle constructie.
     for (const tx of torenX) {
       for (let z = z0 + 1; z <= z1 - 1; z += 5) {
-        for (const dx of [-0.5, 0.5]) for (const dz of [-0.4, 0.4]) {
-          const stijl = add(box(0.12, hi + 0.6, 0.12, M.oudStaal));
-          stijl.position.set(tx + dx, (hi + 0.6) / 2, z + dz);
-        }
-        colliders.push({ x0: tx - 0.6, x1: tx + 0.6, y0: 0, y1: hi, z0: z - 0.5, z1: z + 0.5 });
+        const kol = add(box(0.2, hi + 0.6, 0.2, M.oudStaal));
+        kol.position.set(tx, (hi + 0.6) / 2, z);
+        kol.castShadow = true;
+        colliders.push({ x0: tx - 0.18, x1: tx + 0.18, y0: 0, y1: hi, z0: z - 0.18, z1: z + 0.18 });
       }
       // liggers op twee niveaus (constructie)
       for (const ly of [lo, hi]) {

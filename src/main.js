@@ -82,13 +82,13 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
   }
 
   const kaart = document.createElement('canvas');
-  const S = 3, PAD = 16;                       // 3 px per meter, noord boven
+  const S = 2.4, PAD = 20;                      // px per meter; rand voor kompas
   kaart.width = 60 * S + PAD * 2;
   kaart.height = 90 * S + PAD * 2;
-  kaart.style.cssText = 'position:fixed;right:14px;top:14px;z-index:50;display:none;' +
-    'border-radius:8px;pointer-events:none;';
+  kaart.style.cssText = 'position:fixed;right:14px;top:14px;z-index:50;display:block;' +
+    'border-radius:8px;pointer-events:none;box-shadow:0 2px 12px rgba(0,0,0,0.45);';
   document.body.appendChild(kaart);
-  let kaartAan = false;
+  let kaartAan = true;
   const px = (x) => PAD + x * S;
   const py = (z) => PAD + (90 - z) * S;        // noord (z=90) boven
   const RX = (x) => MIRROR ? 60 - x : x;       // plattegrond-x → (gespiegelde) wereld-x
@@ -98,38 +98,46 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
     ctx.fillStyle = fill;
     ctx.fillRect(px(xl), py(z1), (xr - xl) * S, (z1 - z0) * S);
   }
+  // tekst gecentreerd op een plattegrond-punt (spiegelt mee)
+  function label(tekst, x, z, kleur) {
+    ctx.fillStyle = kleur;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.fillText(tekst, px(RX(x)), py(z));
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+  }
+  const O = CONFIG.objects;
   let ctx;
   function tekenKaart() {
     ctx = kaart.getContext('2d');
     ctx.clearRect(0, 0, kaart.width, kaart.height);
     ctx.fillStyle = 'rgba(14,12,10,0.85)';
     ctx.fillRect(0, 0, kaart.width, kaart.height);
-    ctx.font = '11px Georgia,serif';
+    ctx.font = '10px Georgia,serif';
     // hal-omtrek
     ctx.strokeStyle = '#cfc8ba'; ctx.lineWidth = 1.5;
     ctx.strokeRect(px(0), py(90), 60 * S, 90 * S);
     // vide (zuidhal, z < 35)
-    zone(0, 60, 0, 35, 'rgba(255,255,255,0.08)');
-    ctx.fillStyle = '#b8ac96';
-    ctx.fillText('vide', px(27.5), py(15));
-    // tribunes (plattegrond-x; spiegelen mee)
-    zone(10, 22, 22, 35, 'rgba(216,213,205,0.45)');
-    zone(38, 50, 22, 35, 'rgba(216,213,205,0.45)');
-    ctx.fillStyle = '#e8e2d4';
-    ctx.fillText('tribune', px(RX(16)) - 14, py(28));
-    ctx.fillText('tribune', px(RX(44)) - 14, py(28));
-    // loopbrug
-    zone(22, 38, 31, 33, 'rgba(154,148,132,0.8)');
-    // café (CONFIG-zone, fase 3)
-    zone(30, 42, 6, 14, 'rgba(163,120,106,0.5)');
-    ctx.fillStyle = '#c9a092';
-    ctx.fillText('café', px(RX(36)) - 10, py(9));
-    // StemmingMakerij (huidige wrapper-rotatie)
+    zone(0, 60, 0, 35, 'rgba(255,255,255,0.06)');
+    label('vide', 30, 30, '#8d8575');
+    // tribunes (uit CONFIG; spiegelen mee)
+    for (const t of [O.tribuneWest, O.tribuneOost]) {
+      zone(t.x[0], t.x[1], t.zBottom, t.zTop, 'rgba(216,213,205,0.40)');
+      label('trap', (t.x[0] + t.x[1]) / 2, (t.zBottom + t.zTop) / 2, '#e8e2d4');
+    }
+    // plantenstellage
+    zone(O.stellage.x[0], O.stellage.x[1], O.stellage.z[0], O.stellage.z[1],
+         'rgba(110,140,90,0.35)');
+    // leestafels op rails (westkant)
+    zone(5, 23, O.treintafels.z[0], O.treintafels.z[1], 'rgba(176,141,90,0.45)');
+    label('tafels', 14, (O.treintafels.z[0] + O.treintafels.z[1]) / 2, '#d8c4a0');
+    // kiosk / café
+    zone(O.cafe.x[0], O.cafe.x[1], O.cafe.z[0], O.cafe.z[1], 'rgba(163,42,34,0.55)');
+    label('kiosk', (O.cafe.x[0] + O.cafe.x[1]) / 2, (O.cafe.z[0] + O.cafe.z[1]) / 2, '#f0c0b6');
+    // StemmingMakerij (huidige wrapper-rotatie, echte box uit de wereld)
     const zb = wereld.zaalBox();
     ctx.fillStyle = 'rgba(204,36,31,0.55)';
     ctx.fillRect(px(zb.x0), py(zb.z1), (zb.x1 - zb.x0) * S, (zb.z1 - zb.z0) * S);
-    ctx.fillStyle = '#ffd9d4';
-    ctx.fillText('zaal', px(zb.x0 + 1), py(zb.z0 + 1.5));
+    label('zaal', (zb.x0 + zb.x1) / 2, (zb.z0 + zb.z1) / 2, '#ffd9d4');
     // speler (stip + kijkrichting)
     const sp = speler.voeten;
     ctx.fillStyle = '#ffce8a';
@@ -141,13 +149,17 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
     ctx.moveTo(px(sp.x), py(sp.z));
     ctx.lineTo(px(sp.x) - Math.sin(yaw) * 12, py(sp.z) + Math.cos(yaw) * 12);
     ctx.stroke();
-    // noordpijl
-    const nx = kaart.width - 18, ny = 30;
-    ctx.strokeStyle = '#ffe6bd'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.moveTo(nx, ny); ctx.lineTo(nx, ny - 16); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(nx - 4, ny - 10); ctx.lineTo(nx, ny - 16); ctx.lineTo(nx + 4, ny - 10); ctx.stroke();
+    // kompas N (boven) · Z (onder) · O (links) · W (rechts)
+    // de wereld is over de lengteas gespiegeld, dus oost = links, west = rechts
     ctx.fillStyle = '#ffe6bd';
-    ctx.fillText('N', nx - 4, ny + 12);
+    ctx.font = 'bold 13px Georgia,serif';
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const cx = kaart.width / 2, cy = kaart.height / 2;
+    ctx.fillText('N', cx, 10);
+    ctx.fillText('Z', cx, kaart.height - 10);
+    ctx.fillText('O', 10, cy);
+    ctx.fillText('W', kaart.width - 10, cy);
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
   }
 
   document.addEventListener('keydown', (e) => {
