@@ -243,6 +243,9 @@ export function maakMaterialen() {
     boekenstapel: maakBoekenstapelTex()
       ? new THREE.MeshStandardMaterial({ map: maakBoekenstapelTex(), roughness: 0.9 })
       : new THREE.MeshStandardMaterial({ color: 0x8a6a4a, roughness: 0.9 }),
+    dambord: maakDambordTex()
+      ? new THREE.MeshStandardMaterial({ map: maakDambordTex(), roughness: 0.95 })
+      : new THREE.MeshStandardMaterial({ color: 0x9a968e, roughness: 0.95 }),
     doek: maakDoekPatroonTex()
       ? new THREE.MeshStandardMaterial({ map: maakDoekPatroonTex(), roughness: 1.0, side: THREE.DoubleSide })
       : new THREE.MeshStandardMaterial({ color: C.curtainWhite, roughness: 1.0, side: THREE.DoubleSide }),

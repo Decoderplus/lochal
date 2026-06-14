@@ -118,3 +118,13 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Root-cause: A1 (assen) en A2 (tribunes) waren al groen — geen verwisseling/draaiing. Enige fout zat in de StemmingMakerij-wrapper: center z=39,5 (<40) én deur keek -z i.p.v. -x.
 - Fix (alleen wrapper, zaal-interne code onaangeraakt): czW 39,5 → 47 (center binnen z[43,51]); de glazen deur verhuisd van de ramenwand (zuid) naar de achterwand (lokaal -Z → wereld -x = west, de route-uitgang); ramenwand weer volledig glas (uitzicht zuid de vide in). CONFIG z[43,51], door 'west'; deurNormaal als userData voor de assert.
 - shot.js: standaard alleen spelerstart + vogelvlucht; overige drie via `node tools/shot.js {N} all` of expliciete namen.
+
+## Fase 3 (vervolg) — Inrichting eerste verdieping (src/world/verdieping1.js)
+
+- Nieuwe module `bouwVerdieping1()` bouwt vier zones op vloer 1 (y=5), in plattegrond-coördinaten (spiegeling werkt automatisch). Toegevoegd aan GEBOUWD: kennisPlateau, tijdLab, glazenzaal, seats2meet.
+- **KennisMakerij** (x15–45, z≈40): 3 boekenplint-banken (boekenstapel-plint + eiken blad + matraskussen), schermen op zwarte standaards, eiken header, donkerblauw plooigordijn (kussenBlauw, sinus-plooi) als achterwand. Banken kijken zuid de vide in.
+- **TijdLab** (westrand x≈0,7, z39–48): zwarte vakkenwand 5×3, oranje achterpanelen (kussenOranje, instanced) + witte stationsklokken (daklicht-schijven, instanced), dambordvloer, limegroene historische textielmachine (plantGroen).
+- **Glazenzaal** (x19–29, z56–69): glazen vergadervolume met licht gebogen westwand (3 segmenten), stalen hoekposten/bovenrand, vergadertafel + krukken.
+- **Seats2meet** (x33–47, z57–73): open plein met 4 ronde eiken tafels + krukken (instanced).
+- Materiaalbudget: alleen **dambord** toegevoegd → exact 25 (≤25). Oranje panelen en blauw gordijn hergebruiken kussenOranje/kussenBlauw; gordijn NIET clonen (kloon = extra materiaal) maar 180° draaien zodat de voorzijde naar de speler kijkt.
+- Tris na deze fase: ~54k (budget 200k). Verify groen incl. A4 glazenzaal-center x<30 (plattegrond).
