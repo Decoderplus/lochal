@@ -250,7 +250,8 @@ export function maakMaterialen() {
       color: C.voile, transparent: true, opacity: 0.42, side: THREE.DoubleSide, depthWrite: false }),
     plantGroen: new THREE.MeshLambertMaterial({ color: 0x4f7a3a }),
     kraanGeel: new THREE.MeshStandardMaterial({ color: C.crane, roughness: 0.55, metalness: 0.45 }),
-    bollamp: new THREE.MeshBasicMaterial({ vertexColors: true }),   // emissive look, kleur per instance
+    // emissive look; de per-instance kleur (setColorAt) tint dit witte basis.
+    bollamp: new THREE.MeshBasicMaterial({ color: 0xffffff, toneMapped: false }),
     klokOranje: new THREE.MeshStandardMaterial({
       color: C.tijdlabOrange, emissive: C.tijdlabOrange, emissiveIntensity: 0.25, roughness: 0.8 }),
     leidingRood: new THREE.MeshStandardMaterial({ color: C.pipeRed, roughness: 0.6, metalness: 0.3 }),

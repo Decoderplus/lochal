@@ -41,6 +41,12 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## Begane-grond rond de kiosk opnieuw (mens: indeling klopt minder; tekst onzichtbaar)
+
+- LocHal-bord nu leesbaar: canvas-textuur (wit gebouw-silhouet + "LocHal"-tekst) op een vlak aan beide zijden van de mozaïekdoos (de wereldspiegel zet de tekst recht).
+- Kroonluchter-bug: M.bollamp had `vertexColors:true` zonder geometrie-kleur → bollen renderden zwart. Nu `MeshBasicMaterial({color:white, toneMapped:false})` + per-instance setColorAt → kleurige pastel wolk.
+- Indeling hersteld: leestafels vullen niet meer de volle breedte maar flankeren de kiosk (x16–26 west, x36–47 oost); zuidwesthoek vrij voor de expositie (expoWanden x5–15), nieuw Kooklab-blok oost (x49–58: donker werkblad + eiken rand + kook-eiland + mozaïek-afzuigkap).
+
 ## Zuidhal-correcties op de café-foto's (mens, 5 punten)
 
 - Trap +4 m noordwaarts (open zuidhal ~20% langer): builtFromZ 35→39, bovenTierVanZ 42→46, f2VanZ 51→55, f3VanZ 57→61, tribune zTop 35→39 / zBottom 22→26 (Z_TOP_PLAT afgeleid = zTop−4), zaal z [36,48]→[39,51] (czW leidt nu af van het vak); A2-assert volgt CONFIG.

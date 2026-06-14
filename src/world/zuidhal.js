@@ -64,17 +64,38 @@ export function bouwZuidhal() {
     }
     const doos = add(box(bw + 0.5, doosH, bd + 0.5, M.mozaiek));
     doos.position.set(cx, doosBodem + doosH / 2, cz); doos.castShadow = true;
-    // "LocHal"-gebouwbord (witte omlijsting met schuin geveltopje) bovenop
-    const frame = new THREE.Group();
-    const fw = bw + 0.2, fh = 1.3;
-    for (const [lx, ly, lw, lh, rot] of [
-      [0, 0, fw, 0.14, 0], [0, fh, fw * 0.62, 0.14, 0],
-      [-fw / 2, fh / 2, 0.14, fh, 0], [fw / 2, fh / 2, 0.14, fh, 0],
-      [fw / 2 - 0.1, fh + 0.35, 0.14, 0.9, 0], [fw * 0.16, fh + 0.62, fw * 0.46, 0.14, -0.5],
-    ]) { const b = box(lw, lh, 0.12, M.tred); b.position.set(lx, ly, 0); b.rotation.z = rot; frame.add(b); }
-    frame.position.set(cx, doosBodem + doosH + 0.2, z0 - 0.05);
-    add(frame);
+    // "LocHal"-bord bovenop: leesbare witte tekst in een gebouw-silhouet,
+    // naar de hal gericht (de wereldspiegel zet de tekst recht).
+    const bordTex = maakLocHalTex();
+    const bordMat = bordTex
+      ? new THREE.MeshBasicMaterial({ map: bordTex, transparent: true, side: THREE.DoubleSide })
+      : new THREE.MeshBasicMaterial({ color: 0xf4f1ea });
+    const bordW = bw + 1.2, bordH = bordW * 420 / 1024;
+    for (const [bz, ry] of [[z0 - 0.06, Math.PI], [z1 + 0.06, 0]]) {
+      const bord = add(new THREE.Mesh(new THREE.PlaneGeometry(bordW, bordH), bordMat));
+      bord.position.set(cx, doosBodem + doosH + bordH / 2 - 0.15, bz);
+      bord.rotation.y = ry;
+    }
     eindeSub();
+  }
+
+  // canvas-textuur: LocHal-logo (gebouw-silhouet + leesbare tekst)
+  function maakLocHalTex() {
+    if (typeof document === 'undefined') return null;
+    const c = document.createElement('canvas'); c.width = 1024; c.height = 420;
+    const x = c.getContext('2d');
+    x.strokeStyle = '#f4f1ea'; x.lineWidth = 16; x.lineJoin = 'round';
+    x.beginPath();                                   // hal-silhouet (getrapt geveltopje)
+    x.moveTo(34, 388); x.lineTo(34, 150); x.lineTo(600, 150);
+    x.lineTo(600, 78); x.lineTo(812, 28); x.lineTo(990, 78);
+    x.lineTo(990, 388); x.closePath(); x.stroke();
+    x.fillStyle = '#f4f1ea';
+    x.font = 'italic 700 210px Georgia, "Times New Roman", serif';
+    x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillText('LocHal', 512, 280);
+    const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = 8;
+    return t;
   }
 
   // ── Kraanbaanstellage: oud-staal torens, 2 liggerniveaus, planten, boom ──
@@ -159,7 +180,9 @@ export function bouwZuidhal() {
     const [z0, z1] = O.treintafels.z;
     const tz = (z0 + z1) / 2;
     const [cafX0, cafX1] = O.cafe.x;
-    const vakken = [[4, cafX0 - 1], [cafX1 + 1, 56]];   // west en oost van de kiosk
+    // west- en oostvak naast de kiosk; SW blijft vrij voor de expositie,
+    // ver-oost voor het Kooklab. Kiosk + tafels vullen samen de zuid-band.
+    const vakken = [[16, cafX0 - 1], [cafX1 + 1, 47]];
     for (const [vx0, vx1] of vakken) {
       const len = vx1 - vx0, tx = (vx0 + vx1) / 2;
       // donkere rails (oost-west strips in de vloer)
@@ -287,7 +310,34 @@ export function bouwZuidhal() {
     plooiDoek('grootDoek', M.doek, 1.8, 16, O.grootDoek.breedte * 0.5, O.grootDoek.hoogte, true);
   }
 
+  // ── Kooklab: kook-eiland met donker werkblad + houten randen en een
+  //    mozaïek-afzuigkap, ten oosten van de kiosk (plattegrond). ────────────
+  function bouwKooklab() {
+    beginSub('kooklab');
+    const x0 = 49, x1 = 58, z0 = 5, z1 = 11, cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    // L-vormig werkblad langs de oost- en zuidkant
+    const b1 = add(box(x1 - x0, 0.92, 1.0, M.onderkantZwart)); b1.position.set(cx, 0.46, z0 + 0.5);
+    const b2 = add(box(1.0, 0.92, z1 - z0, M.onderkantZwart)); b2.position.set(x1 - 0.5, 0.46, cz);
+    add(box(x1 - x0 + 0.1, 0.08, 1.1, M.eik)).position.set(cx, 0.96, z0 + 0.5);
+    add(box(1.1, 0.08, z1 - z0 + 0.1, M.eik)).position.set(x1 - 0.5, 0.96, cz);
+    colliders.push({ x0, x1, y0: 0, y1: 1, z0, z1: z0 + 1 });
+    colliders.push({ x0: x1 - 1, x1, y0: 0, y1: 1, z0, z1 });
+    // kook-eiland in het midden + krukken
+    const eiland = add(box(2.6, 0.92, 1.1, M.eik)); eiland.position.set(cx - 1.4, 0.46, cz);
+    for (let s = 0; s < 3; s++) {
+      const kruk = add(new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.16, 0.5, 8), M.kussenRood));
+      kruk.position.set(cx - 2.4 + s * 1.0, 0.25, cz + 1.0);
+    }
+    // mozaïek-afzuigkap op zwarte posten boven het eiland
+    const kap = add(box(3.0, 0.8, 1.6, M.mozaiek)); kap.position.set(cx - 1.4, 2.9, cz);
+    for (const px of [cx - 2.6, cx - 0.2]) for (const pz of [cz - 0.7, cz + 0.7]) {
+      add(box(0.08, 2.4, 0.08, M.onderkantZwart)).position.set(px, 1.4, pz);
+    }
+    eindeSub();
+  }
+
   bouwCafe();
+  bouwKooklab();
   bouwStellage();
   bouwKroonluchter();
   bouwTreintafels();
