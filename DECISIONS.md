@@ -128,3 +128,10 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - **Seats2meet** (x33–47, z57–73): open plein met 4 ronde eiken tafels + krukken (instanced).
 - Materiaalbudget: alleen **dambord** toegevoegd → exact 25 (≤25). Oranje panelen en blauw gordijn hergebruiken kussenOranje/kussenBlauw; gordijn NIET clonen (kloon = extra materiaal) maar 180° draaien zodat de voorzijde naar de speler kijkt.
 - Tris na deze fase: ~54k (budget 200k). Verify groen incl. A4 glazenzaal-center x<30 (plattegrond).
+
+## Fase 4 — Loopbrug over de vide (src/world/loopbrug.js)
+
+- Echte loopbrug terug, als eigen module `bouwLoopbrug()`, toegevoegd aan GEBOUWD. Verbindt de twee tribune-topplatforms (x25↔33) op vloer-1-hoogte (y=5).
+- KOLOMVRIJ: bewust op z=34, precies in het gat tussen de middenkolommen (x=30) op z=30 en z=37,5 → ~2,4 m speling, geen clipping meer (de oude brug z31–33 liep nog dwars door de pilaar).
+- Opbouw: vloerF-dek + twee stalen onderliggers + dwarsbalkjes, glazen balustrade + eiken leuning + nieuwStaal-staanders aan beide zijden; loopvlak ('vlak', y=5) zodat de speler er overheen loopt; balustrade-colliders aan de randen. Geen nieuw materiaal (25/25). ~54k tris.
+- Minimap toont de brug nu ook (main.js).

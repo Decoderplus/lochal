@@ -18,6 +18,7 @@ import { bouwVerdiepingen } from './verdiepingen.js';
 import { bouwTribunes } from './tribunes.js';
 import { bouwZuidhal } from './zuidhal.js';
 import { bouwVerdieping1 } from './verdieping1.js';
+import { bouwLoopbrug } from './loopbrug.js';
 
 // Welke benoemde groepen er op dit moment gebouwd zijn (verify toetst deze;
 // casco/constructie/verdiepingen hebben geen CONFIG-vak en worden alleen op
@@ -26,7 +27,7 @@ export const GEBOUWD = [
   'stemmingMakerij', 'casco', 'constructie', 'verdiepingen',
   'tribuneWest', 'tribuneOost',
   'cafe', 'stellage', 'treintafels', 'expoWanden', 'kroonluchter', 'kraan', 'grootDoek',
-  'kennisPlateau', 'tijdLab', 'glazenzaal', 'seats2meet',
+  'kennisPlateau', 'tijdLab', 'glazenzaal', 'seats2meet', 'loopbrug',
 ];
 
 // InstancedMesh-namen die verify moet aantreffen (groeit per fase).
@@ -73,6 +74,7 @@ export function bouwWereld(scene) {
     bouwTribunes(),
     bouwZuidhal(),
     bouwVerdieping1(),
+    bouwLoopbrug(),
     zaal,
   ];
   for (const d of delen) {

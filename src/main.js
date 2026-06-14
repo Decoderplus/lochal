@@ -124,6 +124,9 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
       zone(t.x[0], t.x[1], t.zBottom, t.zTop, 'rgba(216,213,205,0.40)');
       label('trap', (t.x[0] + t.x[1]) / 2, (t.zBottom + t.zTop) / 2, '#e8e2d4');
     }
+    // loopbrug tussen de tribune-platforms
+    zone(O.loopbrug.x[0], O.loopbrug.x[1], O.loopbrug.z - O.loopbrug.breedte / 2,
+         O.loopbrug.z + O.loopbrug.breedte / 2, 'rgba(176,141,90,0.7)');
     // plantenstellage
     zone(O.stellage.x[0], O.stellage.x[1], O.stellage.z[0], O.stellage.z[1],
          'rgba(110,140,90,0.35)');
