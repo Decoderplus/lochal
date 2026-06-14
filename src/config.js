@@ -30,23 +30,24 @@ export const CONFIG = {
   objects: {
     // Plattegrond (first floor): zaal langs de oostgevel, lange as noord-zuid,
     // ramen west de hal in, glazen deur (enige deur) noordelijk in de westwand.
-    stemmingMakerij: { x: [48, 60], z: [39, 51], floor: 'f1', door: 'west' },
+    stemmingMakerij: { x: [48, 60], z: [42, 54], floor: 'f1', door: 'west' }, // 3 m naar achter (mens)
     glazenzaal:      { x: [18, 30], z: [55, 70], h: 4 },
     seats2meet:      { x: [32, 48], z: [55, 75] },
     kennisPlateau:   { x: [15, 45], z: [35, 42] },
     tijdLab:         { x: [0, 8],   z: [35, 48] },
     // Breed trappenlandschap (bijna volle breedte), centrale gleuf voor de
     // loopbrug/kernen; oost stopt vóór de StemmingMakerij (x 48–60).
-    tribuneWest:     { x: [6, 27],  zTop: 39, zBottom: 26, yTop: 5 },
-    tribuneOost:     { x: [31, 47], zTop: 39, zBottom: 26, yTop: 5 },
-    loopbrug:        { x: [27, 31], z: 34, y: 5, breedte: 2 },
-    // kiosk: kleine kraampje (glazen bar + zwevende mozaïekdoos + LocHal-bord)
-    cafe:            { x: [27, 35], z: [5, 11], kapH: 2.4 },
-    kroonluchter:    { cx: 38, cz: 18, count: 60, yMin: 4, yMax: 9, spreid: 5 },
+    // trappen uit elkaar: oost naar de StemmingMakerij, west 2 m naar buiten
+    tribuneWest:     { x: [4, 25],  zTop: 39, zBottom: 26, yTop: 5 },
+    tribuneOost:     { x: [33, 48], zTop: 39, zBottom: 26, yTop: 5 },
+    loopbrug:        { x: [25, 33], z: 34, y: 5, breedte: 2 },
+    // kiosk: glazen bar + zwevende mozaïekdoos + LocHal-bord, aan de OOSTKANT
+    cafe:            { x: [48, 57], z: [4, 11], kapH: 2.4 },
+    kroonluchter:    { cx: 39, cz: 16, count: 60, yMin: 4, yMax: 9, spreid: 5 },
     stellage:        { x: [25, 33], z: [4, 23], liggerY: [4.5, 7.5] },
-    // lange leestafels op rails, NAAST de kiosk (vullen samen de breedte)
-    treintafels:     { count: 4, maat: [11, 1.6, 1.05], z: [4, 12] },
-    expoWanden:      { x: [5, 15], z: [5, 15], count: 5, maat: [3, 4] },
+    // lange leestafels op rails, TEGENOVER de kiosk (westkant)
+    treintafels:     { count: 3, maat: [11, 1.6, 1.05], z: [4, 11] },
+    expoWanden:      { x: [5, 16], z: [13, 22], count: 5, maat: [3, 4] },
     kraan:           { spanX: [0, 30], y: 11, parkZ: 33, spots: 9 },
     grootDoek:       { gevel: 'zuidwest', breedte: 28, hoogte: 14 },
   },

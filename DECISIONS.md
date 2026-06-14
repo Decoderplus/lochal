@@ -41,6 +41,14 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Speler spawnt voortaan via wereld.spawn (in de zaal, kijkend naar de deur) i.p.v. de vaste CONFIG-camera.
 - Debugtoetsen: R = wrapper per druk 90° verder met schermwaarde; M = top-down minikaart (noord boven, noordpijl, labels vide/tribunes/café/zaal, spelerstip + kijkrichting).
 
+## Herpositionering zuid-band + trappen + zaal (mens, 6 punten)
+
+- LocHal-bord gespiegeld (texture repeat.x=-1) zodat het in de gespiegelde wereld correct leest.
+- StemmingMakerij 3 m naar achter: z [39,51]→[42,54] (balkon-strook voor de zaal).
+- Trappen uit elkaar: tribuneOost naar de zaal x[31,47]→[33,48]; tribuneWest 2 m naar buiten x[6,27]→[4,25]; centrale gleuf nu 8 m (stellage rijst erin).
+- Mini-kiosk (Kooklab) verwijderd; de grote kiosk staat nu op die oostplek: cafe x[27,35]→[48,57].
+- Leestafels op rails TEGENOVER de kiosk (westkant, x5–23); kroonluchter naar de open midden-band (cx 38→39, cz 18→16); expositie naar z[13,22] om vrij van de tafels te blijven.
+
 ## Begane-grond rond de kiosk opnieuw (mens: indeling klopt minder; tekst onzichtbaar)
 
 - LocHal-bord nu leesbaar: canvas-textuur (wit gebouw-silhouet + "LocHal"-tekst) op een vlak aan beide zijden van de mozaïekdoos (de wereldspiegel zet de tekst recht).

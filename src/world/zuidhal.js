@@ -67,6 +67,9 @@ export function bouwZuidhal() {
     // "LocHal"-bord bovenop: leesbare witte tekst in een gebouw-silhouet,
     // naar de hal gericht (de wereldspiegel zet de tekst recht).
     const bordTex = maakLocHalTex();
+    if (bordTex) {   // horizontaal spiegelen zodat de tekst in de gespiegelde wereld goed leest
+      bordTex.wrapS = THREE.RepeatWrapping; bordTex.repeat.x = -1; bordTex.offset.x = 1;
+    }
     const bordMat = bordTex
       ? new THREE.MeshBasicMaterial({ map: bordTex, transparent: true, side: THREE.DoubleSide })
       : new THREE.MeshBasicMaterial({ color: 0xf4f1ea });
@@ -179,10 +182,9 @@ export function bouwZuidhal() {
     const [, d, h] = O.treintafels.maat;
     const [z0, z1] = O.treintafels.z;
     const tz = (z0 + z1) / 2;
-    const [cafX0, cafX1] = O.cafe.x;
-    // west- en oostvak naast de kiosk; SW blijft vrij voor de expositie,
-    // ver-oost voor het Kooklab. Kiosk + tafels vullen samen de zuid-band.
-    const vakken = [[16, cafX0 - 1], [cafX1 + 1, 47]];
+    // de kiosk staat aan de oostkant → de leestafels komen TEGENOVER, aan de
+    // westkant (ten westen van de centrale stellage). Lange tafels op rails.
+    const vakken = [[5, 23]];
     for (const [vx0, vx1] of vakken) {
       const len = vx1 - vx0, tx = (vx0 + vx1) / 2;
       // donkere rails (oost-west strips in de vloer)
@@ -337,7 +339,6 @@ export function bouwZuidhal() {
   }
 
   bouwCafe();
-  bouwKooklab();
   bouwStellage();
   bouwKroonluchter();
   bouwTreintafels();
