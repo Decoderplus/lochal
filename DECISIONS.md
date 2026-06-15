@@ -135,3 +135,11 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - KOLOMVRIJ: bewust op z=34, precies in het gat tussen de middenkolommen (x=30) op z=30 en z=37,5 → ~2,4 m speling, geen clipping meer (de oude brug z31–33 liep nog dwars door de pilaar).
 - Opbouw: vloerF-dek + twee stalen onderliggers + dwarsbalkjes, glazen balustrade + eiken leuning + nieuwStaal-staanders aan beide zijden; loopvlak ('vlak', y=5) zodat de speler er overheen loopt; balustrade-colliders aan de randen. Geen nieuw materiaal (25/25). ~54k tris.
 - Minimap toont de brug nu ook (main.js).
+
+## Fase 4 — Definitief lichtontwerp + fog (src/main.js, verdiepingen.js)
+
+- Fog: THREE.Fog(CONFIG.colors.fog #d8d6d0, near 55, far 165) + achtergrond 0xdadbd6 → de noordelijke diepte vervaagt subtiel (schaalgevoel). Headless verify niet geraakt (geen renderer).
+- Zon (enige schaduwwerper): warmer 0xffe6c0, intensiteit 1.85, laag vanuit zuidoost (pos 86,46,-42 → doel 26,2,52) zodat het licht door de zuidgevel de hal in raakt.
+- Hemisphere koeler/​warme grond (0xdfe6ea/0x554d44, 0.5) + ambient verlaagd naar 0.09 → meer contrast, merkbaar donkerder onder de verdiepingen (noord).
+- 2 echte theaterspots op de kraanbrug boven de westtribune (warm 0xffe1ae, decay 0, géén schaduw → schaduwbudget blijft bij de zon). Posities al in wereld-x (gespiegelde wereld).
+- Emissieve LED-gloeilijnen (M.daklicht, hergebruik) langs de voorrand van elke vloerplak. Geen nieuw materiaal (25/25), ~54k tris.

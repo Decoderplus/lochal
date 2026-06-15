@@ -16,16 +16,19 @@ renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0xc9ced2); // voorlopige lucht (fase 4: fog/licht)
+// Fase 4 — lucht + subtiele fog: de noordelijke diepte vervaagt, geeft schaal.
+scene.background = new THREE.Color(0xdadbd6);
+scene.fog = new THREE.Fog(CONFIG.colors.fog, 55, 165);
 
 const camera = new THREE.PerspectiveCamera(
   70, window.innerWidth / window.innerHeight, 0.1, 300);
 
-// ── Voorlopige verlichting (definitief lichtontwerp = fase 4) ────────────
-// Eén echte schaduwwerper (CONFIG.renderer.maxShadowLights = 1): de zon.
-const zon = new THREE.DirectionalLight(0xfff0da, 1.6);
-zon.position.set(95, 55, -35);
-zon.target.position.set(25, 0, 45);
+// ── Definitief lichtontwerp (fase 4) ─────────────────────────────────────
+// Eén echte schaduwwerper (CONFIG.renderer.maxShadowLights = 1): de warme zon
+// die laag door de zuidgevel de hal in raakt.
+const zon = new THREE.DirectionalLight(0xffe6c0, 1.85);
+zon.position.set(86, 46, -42);
+zon.target.position.set(26, 2, 52);
 zon.castShadow = true;
 zon.shadow.mapSize.set(CONFIG.renderer.shadowMapSize, CONFIG.renderer.shadowMapSize);
 zon.shadow.camera.left = -55; zon.shadow.camera.right = 55;
@@ -33,8 +36,24 @@ zon.shadow.camera.top = 60; zon.shadow.camera.bottom = -60;
 zon.shadow.camera.near = 10; zon.shadow.camera.far = 220;
 zon.shadow.bias = -0.0015;
 scene.add(zon, zon.target);
-scene.add(new THREE.HemisphereLight(0xd8dde2, 0x6b6157, 0.65));
-scene.add(new THREE.AmbientLight(0xffffff, 0.12));
+// Koele hemel-/warme grondvulling + lage ambient → meer contrast, donkerder
+// onder de verdiepingen (noord).
+scene.add(new THREE.HemisphereLight(0xdfe6ea, 0x554d44, 0.5));
+scene.add(new THREE.AmbientLight(0xffffff, 0.09));
+
+// Twee echte theaterspots op de kraanbrug boven de westtribune (warm, géén
+// schaduw zodat het schaduwbudget bij de zon blijft). De wereld is gespiegeld
+// (x→60−x); deze posities staan al in wereld-x boven de tribune.
+for (const [pos, doel] of [
+  [[44, 10.6, 33], [44, 4, 27]],
+  [[51, 10.6, 31], [53, 3, 19]],
+]) {
+  const spot = new THREE.SpotLight(0xffe1ae, 2.4, 0, 0.6, 0.5, 0);
+  spot.position.set(...pos);
+  spot.target.position.set(...doel);
+  spot.castShadow = false;
+  scene.add(spot, spot.target);
+}
 
 // ── Wereld ────────────────────────────────────────────────────────────────
 const wereld = bouwWereld(scene);

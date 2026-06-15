@@ -29,6 +29,11 @@ export function bouwVerdiepingen() {
     onderkant.rotation.x = Math.PI / 2;          // kijkt omlaag
     onderkant.position.set(W / 2, topY - F.slabT - 0.02, midZ);
     groep.add(onderkant);
+
+    // emissieve LED-gloeilijn langs de voorrand van de vloerplak (fase 4)
+    const led = new THREE.Mesh(new THREE.BoxGeometry(W, 0.05, 0.06), M.daklicht);
+    led.position.set(W / 2, topY - F.slabT - 0.04, vanZ + 0.05);
+    groep.add(led);
   }
 
   // ── Balustrades langs de vide-rand (glas + eiken regel + staanders) ─────
