@@ -18,7 +18,7 @@ document.body.appendChild(renderer.domElement);
 const scene = new THREE.Scene();
 // Fase 4 — lucht + subtiele fog: de noordelijke diepte vervaagt, geeft schaal.
 scene.background = new THREE.Color(0xdadbd6);
-scene.fog = new THREE.Fog(CONFIG.colors.fog, 55, 165);
+scene.fog = new THREE.Fog(CONFIG.colors.fog, 42, 140);
 
 const camera = new THREE.PerspectiveCamera(
   70, window.innerWidth / window.innerHeight, 0.1, 300);

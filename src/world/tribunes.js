@@ -77,6 +77,19 @@ export function bouwTribunes() {
       sub.add(schinkel);
     }
 
+    // Amber gloedstrips langs de trapflanken + aan de voet (de warme gloed
+    // onder de eiken trap op de foto).
+    const rakHoek = -Math.atan2(yTop, Z_TOP_PLAT - zBottom);
+    for (const sx of [x0 + 0.12, x1 - 0.12]) {
+      const gloed = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.12, helLen), M.amberGloed);
+      gloed.rotation.x = rakHoek;
+      gloed.position.set(sx, yTop / 2 + 0.04, (Z_TOP_PLAT + zBottom) / 2);
+      sub.add(gloed);
+    }
+    const voet = new THREE.Mesh(new THREE.BoxGeometry(breed, 0.1, 0.1), M.amberGloed);
+    voet.position.set(xc, 0.12, zBottom + 0.05);
+    sub.add(voet);
+
     // Eiken zitblokken van wisselende breedte + kussens (zijtrap-stroken
     // van 1,3 m langs beide flanken blijven vrij)
     const kleuren = ['rood', 'blauw', 'oranje'];
@@ -203,7 +216,7 @@ export function bouwTribunes() {
 
   // ── Instanced geometrie over beide tribunes heen ────────────────────────
   const treden = new THREE.InstancedMesh(
-    new THREE.BoxGeometry(1, 1, 1), M.tred, tredePlekken.length);
+    new THREE.BoxGeometry(1, 1, 1), M.eik, tredePlekken.length);   // eiken trap (was beton)
   treden.name = 'tribuneTreden';
   treden.receiveShadow = true;
   tredePlekken.forEach((t, i) => {

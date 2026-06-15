@@ -19,6 +19,7 @@ import { bouwTribunes } from './tribunes.js';
 import { bouwZuidhal } from './zuidhal.js';
 import { bouwVerdieping1 } from './verdieping1.js';
 import { bouwLoopbrug } from './loopbrug.js';
+import { bouwNoordafsluiting } from './noordafsluiting.js';
 
 // Welke benoemde groepen er op dit moment gebouwd zijn (verify toetst deze;
 // casco/constructie/verdiepingen hebben geen CONFIG-vak en worden alleen op
@@ -75,6 +76,7 @@ export function bouwWereld(scene) {
     bouwZuidhal(),
     bouwVerdieping1(),
     bouwLoopbrug(),
+    bouwNoordafsluiting(),
     zaal,
   ];
   for (const d of delen) {

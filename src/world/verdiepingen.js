@@ -94,6 +94,37 @@ export function bouwVerdiepingen() {
   });
   groep.add(kasten);
 
+  // ── Afhangende planten over de vide-/galerijranden (LocHal-handtekening) ─
+  // Groene slierten die over de betonranden naar beneden hangen + over de
+  // centrale betonkolommen. Eén instanced familie (plantGroen).
+  const hangPlekken = [];
+  const hw = CONFIG.objects.tribuneWest.x, ho = CONFIG.objects.tribuneOost.x;
+  const inOpening = (x) => (x > hw[0] - 0.5 && x < hw[1] + 0.5) || (x > ho[0] - 0.5 && x < ho[1] + 0.5);
+  for (const [topY, vanZ] of [[F.f1, F.f1VanZ], [F.f2, F.f2VanZ], [F.f3, F.f3VanZ]]) {
+    for (let x = 3; x <= W - 3; x += 3.2) {
+      if (topY === F.f1 && inOpening(x)) continue;       // niet midden in de trapgaten
+      const len = 0.8 + ((x * 7) % 10) / 10 * 1.4;       // pseudo-variatie
+      hangPlekken.push([x, topY - F.slabT - len / 2, vanZ + 0.15, len]);
+    }
+  }
+  // over de centrale betonkolommen (x=30), op galerijhoogte
+  for (let z = CONFIG.floors.builtFromZ + 3; z <= D - 3; z += CONFIG.grid.baySpacing) {
+    hangPlekken.push([29.3, F.f2 - 1.2, z, 1.6]);
+    hangPlekken.push([30.7, F.f1 - 1.0, z + 1.5, 1.3]);
+  }
+  const hang = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(1, 0), M.plantGroen, hangPlekken.length);
+  hang.name = 'hangplanten';
+  hang.castShadow = true;
+  hangPlekken.forEach(([x, y, z, len], i) => {
+    dummy.position.set(x, y, z);
+    dummy.scale.set(0.45, len, 0.45);                    // smal en hangend
+    dummy.rotation.set(0, (i % 3) * 1.1, 0);
+    dummy.updateMatrix();
+    hang.setMatrixAt(i, dummy.matrix);
+  });
+  groep.add(hang);
+
   // Vloer 1 is het speelbare loopvlak van het noorddeel
   const surfaces = [
     { kind: 'vlak', x0: 0, x1: W, z0: F.builtFromZ, z1: D, y: F.f1 },

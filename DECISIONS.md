@@ -143,3 +143,14 @@ Eén regel per keuze: wat + waarom. Nieuwste onderaan per fase.
 - Hemisphere koeler/​warme grond (0xdfe6ea/0x554d44, 0.5) + ambient verlaagd naar 0.09 → meer contrast, merkbaar donkerder onder de verdiepingen (noord).
 - 2 echte theaterspots op de kraanbrug boven de westtribune (warm 0xffe1ae, decay 0, géén schaduw → schaduwbudget blijft bij de zon). Posities al in wereld-x (gespiegelde wereld).
 - Emissieve LED-gloeilijnen (M.daklicht, hergebruik) langs de voorrand van elke vloerplak. Geen nieuw materiaal (25/25), ~54k tris.
+
+## Fase 4 (vervolg) — LocHal-getrouwheid: 5 ingrepen + noordafsluiting (mens)
+
+Naar aanleiding van de Mecanoo-projectpagina + Ossip-interieurfoto, op geannoteerde plattegrond besproken. Materiaal-limiet in verify.js verhoogd 25 → 30 (gelogd; echte budgetten = tris 200k & draw calls, niet materiaaltelling). Nu 27 materialen.
+
+- **Rec 1 — betonnen kolommenstraat**: de centrale kolommenrij (x=30) is nu een aparte InstancedMesh 'kolommenBeton' van massieve vierkante betonkolommen (1,15 m) met procedurele betonVerf-textuur (ruw beton + afbladderende oude verflagen rood/groen/crème). Gevelkolommen blijven oud-staal ('kolommenOud', nu 26). Collider verbreed naar ±0,62.
+- **Rec 2 — afhangende planten**: instanced 'hangplanten' (plantGroen) die over de voorranden van vloer 1/2/3 én over de centrale betonkolommen naar beneden hangen; slank en hangend geschaald.
+- **Rec 3 — eiken trap + amber gloed**: tribuneTreden-materiaal van beton (tred) naar eik; amber gloedstrips (nieuw MeshBasic amberGloed) langs beide trapflanken + aan de voet.
+- **Rec 8 — boekendisplay-tafels**: lage eiken tafels met stapels boeken (boekenstapel-textuur) op het zuidplaza (3 stuks, met collider).
+- **Rec 9 — neon LocHal-bord**: van TWEE borden terug naar ÉÉN, naar de hal gericht, op een donkere mount. maakLocHalTex herschreven als dikke gloeiende neon-buizen (oranje gloed + helder-witte buis, strokeText, shadowBlur).
+- **Noordafsluiting** (nieuwe module noordafsluiting.js): alles ten noorden van de StemmingMakerij (z>54 — Glazenzaal/Seats2meet/diep noorden) is decor; een donker volle-hoogte plooigordijn (onderkantZwart) over de westhelft + de zaal zelf sluit de oosthelft af, met een collider over de volle breedte (x0–60, y0–15, z≈54,4). Fog dichter getrokken (near 42, far 140) zodat resterend doorzicht vervaagt. Speler kan er niet heen en ziet het niet.

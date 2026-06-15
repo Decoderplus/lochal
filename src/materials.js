@@ -162,6 +162,41 @@ export function maakBoekenstapelTex() {
   }, { w: 512, h: 512 });
 }
 
+// ── betonVerf: industriekolom — ruw beton met oude, afbladderende verflagen ──
+export function maakBetonVerfTex() {
+  return canvasTex((ctx, w, h) => {
+    const rng = maakRng(1923);
+    // ruwe betonbasis
+    ctx.fillStyle = '#b8b3aa'; ctx.fillRect(0, 0, w, h);
+    for (let i = 0; i < 1800; i++) {
+      const g = 150 + Math.floor(rng() * 60);
+      ctx.fillStyle = `rgba(${g},${g - 4},${g - 12},0.12)`;
+      ctx.fillRect(rng() * w, rng() * h, 3 + rng() * 16, 3 + rng() * 16);
+    }
+    // oude verflagen die deels zijn afgebladderd (cremewit, dofrood, dofgroen)
+    const lagen = ['#d8d2c2', '#9a4032', '#5f6e55', '#c9c2af'];
+    for (let i = 0; i < 26; i++) {
+      ctx.fillStyle = lagen[Math.floor(rng() * lagen.length)];
+      ctx.globalAlpha = 0.5 + rng() * 0.4;
+      const x = rng() * w, y = rng() * h, rw = 60 + rng() * 260, rh = 60 + rng() * 360;
+      ctx.beginPath();                              // grillige verfvlek
+      for (let k = 0; k <= 9; k++) {
+        const a = (k / 9) * Math.PI * 2, rr = 0.5 + rng() * 0.6;
+        const px = x + Math.cos(a) * rw * rr, py = y + Math.sin(a) * rh * rr;
+        k === 0 ? ctx.moveTo(px, py) : ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    // verticale uitloog-/regenstrepen
+    ctx.fillStyle = 'rgba(60,54,46,0.18)';
+    for (let i = 0; i < 50; i++) {
+      const x = rng() * w;
+      ctx.fillRect(x, rng() * h * 0.4, 2 + rng() * 4, h * (0.3 + rng() * 0.6));
+    }
+  }, { w: 512, h: 1024 });
+}
+
 // ── dambord: 50 cm vlakken in twee grijzen (TijdLab, fase 3) ────────────────
 export function maakDambordTex() {
   return canvasTex((ctx, w, h) => {
@@ -246,6 +281,11 @@ export function maakMaterialen() {
     dambord: maakDambordTex()
       ? new THREE.MeshStandardMaterial({ map: maakDambordTex(), roughness: 0.95 })
       : new THREE.MeshStandardMaterial({ color: 0x9a968e, roughness: 0.95 }),
+    betonVerf: maakBetonVerfTex()
+      ? new THREE.MeshStandardMaterial({ map: maakBetonVerfTex(), roughness: 0.95, metalness: 0.0 })
+      : new THREE.MeshStandardMaterial({ color: 0xb2ada3, roughness: 0.95 }),
+    // amberkleurige gloed onder de eiken traptreden
+    amberGloed: new THREE.MeshBasicMaterial({ color: 0xff8a2a, toneMapped: false }),
     doek: maakDoekPatroonTex()
       ? new THREE.MeshStandardMaterial({ map: maakDoekPatroonTex(), roughness: 1.0, side: THREE.DoubleSide })
       : new THREE.MeshStandardMaterial({ color: C.curtainWhite, roughness: 1.0, side: THREE.DoubleSide }),

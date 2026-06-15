@@ -16,11 +16,10 @@ export function bouwConstructie() {
   groep.name = 'constructie';
   const dummy = new THREE.Object3D();
 
-  // ── Oude vakwerk-kolommen (patina): middenrij + gevelrijen, 13 assen ────
+  // ── Oude gevel-vakwerkkolommen (patina) langs beide langsgevels ─────────
   const oudPlekken = [];
   for (let z = 0; z <= D + 0.01; z += stap) {
     const zc = Math.min(Math.max(z, 0.6), D - 0.6);
-    oudPlekken.push({ p: [CONFIG.grid.centerColX, SPANT_ONDER / 2, zc], s: [0.8, SPANT_ONDER, 0.8] });
     oudPlekken.push({ p: [0.5, EAVE_Y / 2, zc], s: [0.5, EAVE_Y, 0.5] });
     oudPlekken.push({ p: [W - 0.5, EAVE_Y / 2, zc], s: [0.5, EAVE_Y, 0.5] });
   }
@@ -36,6 +35,26 @@ export function bouwConstructie() {
     kolOud.setMatrixAt(i, dummy.matrix);
   });
   groep.add(kolOud);
+
+  // ── Centrale kolommenstraat: MASSIEVE betonkolommen met oude verflagen ──
+  // (het iconische LocHal-beeld; vierkant en zwaar, niet de slanke stalen).
+  const betonPlekken = [];
+  for (let z = 0; z <= D + 0.01; z += stap) {
+    const zc = Math.min(Math.max(z, 0.6), D - 0.6);
+    betonPlekken.push(zc);
+  }
+  const kolBeton = new THREE.InstancedMesh(
+    new THREE.BoxGeometry(1.15, SPANT_ONDER, 1.15), M.betonVerf, betonPlekken.length);
+  kolBeton.name = 'kolommenBeton';
+  kolBeton.castShadow = true; kolBeton.receiveShadow = true;
+  betonPlekken.forEach((zc, i) => {
+    dummy.position.set(CONFIG.grid.centerColX, SPANT_ONDER / 2, zc);
+    dummy.scale.set(1, 1, 1);
+    dummy.rotation.set(0, (i % 2) * Math.PI / 2, 0);
+    dummy.updateMatrix();
+    kolBeton.setMatrixAt(i, dummy.matrix);
+  });
+  groep.add(kolBeton);
 
   // ── Nieuwe slanke kolommen (Ø 0,35, mat zwart) onder de verdiepingen ────
   const nieuwPlekken = [];
@@ -106,8 +125,8 @@ export function bouwConstructie() {
   for (let z = 0; z <= D + 0.01; z += stap) {
     const zc = Math.min(Math.max(z, 0.6), D - 0.6);
     colliders.push({
-      x0: CONFIG.grid.centerColX - 0.55, x1: CONFIG.grid.centerColX + 0.55,
-      y0: 0, y1: SPANT_ONDER, z0: zc - 0.55, z1: zc + 0.55,
+      x0: CONFIG.grid.centerColX - 0.62, x1: CONFIG.grid.centerColX + 0.62,
+      y0: 0, y1: SPANT_ONDER, z0: zc - 0.62, z1: zc + 0.62,
     });
   }
 
