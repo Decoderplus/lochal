@@ -129,14 +129,33 @@ export function maakBetonMarkeringenTex() {
   }, { w: 2048, h: 2048 });
 }
 
-// ── mozaiek: 10 cm tegels, willekeurig rood/zwart 70/30 (fase 3) ────────────
+// ── mozaiek: 10 cm tegels in warm rood/oranje/goud (LocHal-café, foto 4) ────
 export function maakMozaiekTex() {
   return canvasTex((ctx, w, h) => {
     const rng = maakRng(1956);
+    const palet = ['#a32a22', '#c43a1e', '#d9651f', '#e08a22', '#caa23a',
+                   '#8f1f1c', '#b8541f', '#7a2018', '#e0a83a'];
     const n = 32, s = w / n;
     for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) {
-      ctx.fillStyle = hex(rng() < 0.7 ? C.mosaicRed : C.mosaicBlack);
+      ctx.fillStyle = rng() < 0.08 ? hex(C.mosaicBlack) : palet[Math.floor(rng() * palet.length)];
       ctx.fillRect(k * s + 1, r * s + 1, s - 2, s - 2);
+    }
+  }, { w: 512, h: 512 });
+}
+
+// ── baksteen: bakstenen plantenbak-bekleding op de galerijranden (foto 1/2) ──
+export function maakBakSteenTex() {
+  return canvasTex((ctx, w, h) => {
+    const rng = maakRng(1974);
+    ctx.fillStyle = '#5a4a42'; ctx.fillRect(0, 0, w, h);     // voegmortel
+    const bh = h / 10;
+    for (let r = 0; r < 10; r++) {
+      const off = (r % 2) * (w / 14);
+      for (let k = -1; k < 14; k++) {
+        const tint = 0.8 + rng() * 0.4;
+        ctx.fillStyle = `rgb(${Math.floor(150 * tint)},${Math.floor(74 * tint)},${Math.floor(54 * tint)})`;
+        ctx.fillRect(off + k * (w / 7) + 2, r * bh + 2, w / 7 - 4, bh - 4);
+      }
     }
   }, { w: 512, h: 512 });
 }
@@ -286,6 +305,9 @@ export function maakMaterialen() {
       : new THREE.MeshStandardMaterial({ color: 0xb2ada3, roughness: 0.95 }),
     // amberkleurige gloed onder de eiken traptreden
     amberGloed: new THREE.MeshBasicMaterial({ color: 0xff8a2a, toneMapped: false }),
+    baksteen: maakBakSteenTex()
+      ? new THREE.MeshStandardMaterial({ map: maakBakSteenTex(), roughness: 0.95 })
+      : new THREE.MeshStandardMaterial({ color: 0x8a4636, roughness: 0.95 }),
     doek: maakDoekPatroonTex()
       ? new THREE.MeshStandardMaterial({ map: maakDoekPatroonTex(), roughness: 1.0, side: THREE.DoubleSide })
       : new THREE.MeshStandardMaterial({ color: C.curtainWhite, roughness: 1.0, side: THREE.DoubleSide }),

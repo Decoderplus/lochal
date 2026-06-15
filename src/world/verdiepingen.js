@@ -112,6 +112,25 @@ export function bouwVerdiepingen() {
     hangPlekken.push([29.3, F.f2 - 1.2, z, 1.6]);
     hangPlekken.push([30.7, F.f1 - 1.0, z + 1.5, 1.3]);
   }
+
+  // ── Mezzanine langs de vide-rand van vloer 1: boekenwand + BAKSTENEN
+  //    plantenbak met overhangend groen (het LocHal-galerijbeeld, foto 1/2). ─
+  for (const [gx0, gx1] of [[0, hw[0]], [hw[1], ho[0]], [ho[1], W]]) {
+    if (gx1 - gx0 < 1) continue;
+    const mid = (gx0 + gx1) / 2, len = gx1 - gx0 - 0.4;
+    const kast = new THREE.Mesh(new THREE.BoxGeometry(len, 0.95, 0.42), M.boekenstapel);
+    kast.position.set(mid, F.f1 + 0.48, F.f1VanZ + 0.32);
+    kast.castShadow = true;
+    groep.add(kast);
+    const bak = new THREE.Mesh(new THREE.BoxGeometry(len, 0.5, 0.5), M.baksteen);
+    bak.position.set(mid, F.f1 + 1.2, F.f1VanZ + 0.28);
+    bak.castShadow = true;
+    groep.add(bak);
+    for (let x = gx0 + 1; x < gx1 - 0.5; x += 2.2) {       // groen spilt over de rand
+      hangPlekken.push([x, F.f1 + 0.85, F.f1VanZ + 0.04, 1.4]);
+    }
+  }
+
   const hang = new THREE.InstancedMesh(
     new THREE.IcosahedronGeometry(1, 0), M.plantGroen, hangPlekken.length);
   hang.name = 'hangplanten';
@@ -124,18 +143,6 @@ export function bouwVerdiepingen() {
     hang.setMatrixAt(i, dummy.matrix);
   });
   groep.add(hang);
-
-  // ── Mezzanine-boekenwand langs de vide-rand van vloer 1 ─────────────────
-  // De galerij kijkt uit over de zuidhal: een lage boekenkast met kleurrijke
-  // ruggen waar de hangplanten overheen vallen (het LocHal-galerijbeeld).
-  for (const [gx0, gx1] of [[0, hw[0]], [hw[1], ho[0]], [ho[1], W]]) {
-    if (gx1 - gx0 < 1) continue;
-    const kast = new THREE.Mesh(
-      new THREE.BoxGeometry(gx1 - gx0 - 0.4, 0.95, 0.42), M.boekenstapel);
-    kast.position.set((gx0 + gx1) / 2, F.f1 + 0.48, F.f1VanZ + 0.32);
-    kast.castShadow = true;
-    groep.add(kast);
-  }
 
   // Vloer 1 is het speelbare loopvlak van het noorddeel
   const surfaces = [

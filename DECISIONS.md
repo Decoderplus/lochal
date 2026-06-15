@@ -159,3 +159,13 @@ Naar aanleiding van de Mecanoo-projectpagina + Ossip-interieurfoto, op geannotee
 
 - **Rec 6 — mezzanine-galerij**: lage boekenkast met kleurrijke ruggen (boekenstapel, hergebruik) langs de vide-rand van vloer 1 (z=39), in de drie balustrade-segmenten naast de trapopeningen; de bestaande hangplanten vallen eroverheen → de galerij kijkt uit over de zuidhal. (De verdiepingen 2/3 liggen achter de noordafsluiting en zijn dus niet zichtbaar; de zichtbare mezzanine zit op de vloer-1-rand.)
 - **LocHal-bord**: mens vond de EERSTE versie het best → maakLocHalTex teruggedraaid naar het witte gebouw-silhouet + wit-ingevulde "LocHal" (lichtbalk-look), en het blijft ÉÉN enkel bord naar de hal gericht (neon-buizen + donkere mount verwijderd).
+
+## Fase 4 (vervolg 3) — meer LocHal-getrouwheid o.b.v. 4 Ossip-foto's (mens)
+
+Materiaal-budget nu 28/30 (baksteen toegevoegd).
+- **A — lichter & zonniger**: exposure 1.0→1.12, achtergrond lichter (0xe7eae8), fog subtiel (near 65, far 200; het noorden wordt al door het gordijn afgesloten), hemisphere 0.5→0.85, ambient 0.09→0.24, zon iets zachter (1.7).
+- **C — warme tafellampjes**: helper tafelLamp (emissieve daklicht-kap op dun stammetje) op de bar en op beide treintafels.
+- **D — treintafels op ECHTE bogies**: bouwTreintafels herbouwd → twee XXL-eiken bladen op treinbogies (frame + assen + 4 wielen op rails + bladveer-suggestie, oud-staal/roest), rode barkrukken, rails in de vloer.
+- **E — open mozaïek-bar**: bouwCafe herbouwd → U-vormige getegelde toonbank (warm rood/oranje/goud mozaïek, maakMozaiekTex herzien), HOL van binnen met werkende achterbar (flessenrij, tap); klanten ervoor op rode krukken; getegelde valans + LocHal-lichtbalk erboven. (Mens: "de binnenkant van het blok is leeg — het is een bar.")
+- **I — bakstenen plantenbakken**: nieuwe baksteen-textuur; bak bovenop de mezzanine-boekenwand langs de vide-rand met overhangend groen. Plus donkere textiel-slierten tussen de centrale kolommen (constructie.js).
+- **Blauw KennisMakerij-gordijn verwijderd** (verdieping1.js) op verzoek.

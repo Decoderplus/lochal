@@ -56,6 +56,18 @@ export function bouwConstructie() {
   });
   groep.add(kolBeton);
 
+  // Donkere textiel-slierten tussen de centrale kolommen (zuidhal) — de
+  // hangende stoffen verdelers uit de foto's.
+  for (const z of [15, 22.5, 30]) {
+    const sliert = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.0, 7.5, 8, 1), M.onderkantZwart);
+    const pp = sliert.geometry.attributes.position;
+    for (let i = 0; i < pp.count; i++) pp.setZ(i, Math.sin(pp.getX(i) * 3) * 0.12);
+    sliert.geometry.computeVertexNormals();
+    sliert.position.set(CONFIG.grid.centerColX, 5.5, z);
+    groep.add(sliert);
+  }
+
   // ── Nieuwe slanke kolommen (Ø 0,35, mat zwart) onder de verdiepingen ────
   const nieuwPlekken = [];
   const f3 = CONFIG.floors.f3 - CONFIG.floors.slabT;

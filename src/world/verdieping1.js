@@ -61,8 +61,6 @@ export function bouwVerdieping1() {
     }
     const header = add(box(22, 0.5, 0.12, M.eik));
     header.position.set(27, Y + 1.2, 41.6); header.castShadow = true;
-    // donkerblauw plooigordijn als achterwand (zuid van de zaal-plaza)
-    bouwGordijn(16, 44, 42.0, Y, Y + 3.6, M.kussenBlauw, 0.35);
     eindeSub();
   }
 
