@@ -44,7 +44,7 @@ export const CONFIG = {
     // kiosk: glazen bar + zwevende mozaïekdoos + LocHal-bord; 4 m richting het
     // midden (weg van de StemmingMakerij)
     cafe:            { x: [44, 53], z: [4, 11], kapH: 2.4 },
-    kroonluchter:    { cx: 39, cz: 16, count: 60, yMin: 4, yMax: 9, spreid: 5 },
+    kroonluchter:    { cx: 31, cz: 26, count: 95, yMin: 4, yMax: 10.5, spreid: 6 },
     stellage:        { x: [25, 33], z: [4, 23], liggerY: [4.5, 7.5] },
     // lange leestafels op rails, TEGENOVER de kiosk (westkant)
     treintafels:     { count: 3, maat: [11, 1.6, 1.05], z: [4, 11] },

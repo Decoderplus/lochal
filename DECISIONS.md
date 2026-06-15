@@ -169,3 +169,9 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - **E — open mozaïek-bar**: bouwCafe herbouwd → U-vormige getegelde toonbank (warm rood/oranje/goud mozaïek, maakMozaiekTex herzien), HOL van binnen met werkende achterbar (flessenrij, tap); klanten ervoor op rode krukken; getegelde valans + LocHal-lichtbalk erboven. (Mens: "de binnenkant van het blok is leeg — het is een bar.")
 - **I — bakstenen plantenbakken**: nieuwe baksteen-textuur; bak bovenop de mezzanine-boekenwand langs de vide-rand met overhangend groen. Plus donkere textiel-slierten tussen de centrale kolommen (constructie.js).
 - **Blauw KennisMakerij-gordijn verwijderd** (verdieping1.js) op verzoek.
+
+## Fase 4 (vervolg 4) — planters hoog/lang, verlichting terug, kroonluchter (mens)
+
+- **Verlichting teruggedraaid** naar de vorige (warm-moody) versie: exposure 1.0, achtergrond 0xdadbd6, fog 42/140, zon 1.85, hemisphere 0.5, ambient 0.09. (Mens vond de lichtere versie minder.)
+- **Bakstenen plantenbakken**: niet meer als lage rand op de boekenwand, maar als HOGE doorlopende bakken (y≈8) langs de lengte van de hal op x=15 en x=45 (z5–45), aan ophangkabels; de speler op vloer 1 loopt er onderdoor (geen collider). Groen cascadeert: kort boven vloer 1 (z≥39), lang in de vide (z<39). De lage boekenwand op de vide-rand blijft.
+- **Kroonluchter**: cx 39→31, cz 16→26 (centraler, boven de middengleuf, net noordelijk van de stellage); count 60→95; donkerdere/gedempte tinten; r-afhankelijke hoogte (in het hart hóger) + power-bias (dichter in het midden); en 3 zwakke warme PointLights (geen schaduw) want het zijn lampen.

@@ -9,7 +9,7 @@ const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.12;        // iets lichter/zonniger (fase 4b)
+renderer.toneMappingExposure = CONFIG.renderer.exposure;
 renderer.outputColorSpace = THREE.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
@@ -17,8 +17,8 @@ document.body.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 // Fase 4 — lucht + subtiele fog: de noordelijke diepte vervaagt, geeft schaal.
-scene.background = new THREE.Color(0xe7eae8);
-scene.fog = new THREE.Fog(CONFIG.colors.fog, 65, 200);   // subtiel; noorden wordt al door het gordijn afgesloten
+scene.background = new THREE.Color(0xdadbd6);
+scene.fog = new THREE.Fog(CONFIG.colors.fog, 42, 140);
 
 const camera = new THREE.PerspectiveCamera(
   70, window.innerWidth / window.innerHeight, 0.1, 300);
@@ -26,7 +26,7 @@ const camera = new THREE.PerspectiveCamera(
 // ── Definitief lichtontwerp (fase 4) ─────────────────────────────────────
 // Eén echte schaduwwerper (CONFIG.renderer.maxShadowLights = 1): de warme zon
 // die laag door de zuidgevel de hal in raakt.
-const zon = new THREE.DirectionalLight(0xffeacf, 1.7);
+const zon = new THREE.DirectionalLight(0xffe6c0, 1.85);
 zon.position.set(86, 46, -42);
 zon.target.position.set(26, 2, 52);
 zon.castShadow = true;
@@ -38,8 +38,8 @@ zon.shadow.bias = -0.0015;
 scene.add(zon, zon.target);
 // Koele hemel-/warme grondvulling + lage ambient → meer contrast, donkerder
 // onder de verdiepingen (noord).
-scene.add(new THREE.HemisphereLight(0xeaf1f5, 0x6f665a, 0.85));
-scene.add(new THREE.AmbientLight(0xffffff, 0.24));
+scene.add(new THREE.HemisphereLight(0xdfe6ea, 0x554d44, 0.5));
+scene.add(new THREE.AmbientLight(0xffffff, 0.09));
 
 // Twee echte theaterspots op de kraanbrug boven de westtribune (warm, géén
 // schaduw zodat het schaduwbudget bij de zon blijft). De wereld is gespiegeld

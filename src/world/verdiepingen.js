@@ -113,8 +113,8 @@ export function bouwVerdiepingen() {
     hangPlekken.push([30.7, F.f1 - 1.0, z + 1.5, 1.3]);
   }
 
-  // ── Mezzanine langs de vide-rand van vloer 1: boekenwand + BAKSTENEN
-  //    plantenbak met overhangend groen (het LocHal-galerijbeeld, foto 1/2). ─
+  // ── Lage boekenwand langs de vide-rand van vloer 1 (met wat overhangend
+  //    groen) — de galerij die op de zuidhal uitkijkt. ─────────────────────
   for (const [gx0, gx1] of [[0, hw[0]], [hw[1], ho[0]], [ho[1], W]]) {
     if (gx1 - gx0 < 1) continue;
     const mid = (gx0 + gx1) / 2, len = gx1 - gx0 - 0.4;
@@ -122,12 +122,26 @@ export function bouwVerdiepingen() {
     kast.position.set(mid, F.f1 + 0.48, F.f1VanZ + 0.32);
     kast.castShadow = true;
     groep.add(kast);
-    const bak = new THREE.Mesh(new THREE.BoxGeometry(len, 0.5, 0.5), M.baksteen);
-    bak.position.set(mid, F.f1 + 1.2, F.f1VanZ + 0.28);
-    bak.castShadow = true;
-    groep.add(bak);
-    for (let x = gx0 + 1; x < gx1 - 0.5; x += 2.2) {       // groen spilt over de rand
-      hangPlekken.push([x, F.f1 + 0.85, F.f1VanZ + 0.04, 1.4]);
+    for (let x = gx0 + 1; x < gx1 - 0.5; x += 2.4) hangPlekken.push([x, F.f1 + 0.85, F.f1VanZ + 0.04, 1.0]);
+  }
+
+  // ── HOGE bakstenen plantenbakken die over de hele lengte van de hal
+  //    doorlopen, op galerijhoogte (y≈8) — de speler op vloer 1 loopt er
+  //    ONDERDOOR. Groen cascadeert: kort boven vloer 1, lang in de vide. ─────
+  const bakY = 8.0, bakZ0 = 5, bakZ1 = 45;
+  for (const bx of [15, 45]) {
+    const trog = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, bakZ1 - bakZ0), M.baksteen);
+    trog.position.set(bx, bakY, (bakZ0 + bakZ1) / 2);
+    trog.castShadow = true;
+    groep.add(trog);
+    for (let z = bakZ0 + 4; z <= bakZ1 - 2; z += 9) {       // ophangkabels naar het dak
+      const kabel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 11 - bakY, 5), M.onderkantZwart);
+      kabel.position.set(bx, (bakY + 11) / 2, z);
+      groep.add(kabel);
+    }
+    for (let z = bakZ0 + 1; z <= bakZ1 - 1; z += 1.8) {     // cascaderend groen
+      const lang = z < F.f1VanZ ? 2.6 : 0.5;               // lang in de vide, kort boven vloer 1
+      hangPlekken.push([bx, (bakY - 0.3) - lang / 2, z, lang]);
     }
   }
 

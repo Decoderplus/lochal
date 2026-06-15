@@ -173,18 +173,32 @@ export function bouwZuidhal() {
     eindeSub();
   }
 
-  // ── Kroonluchter-wolk: pastel emissive bollen aan kabels ────────────────
+  // ── Kroonluchter-wolk: emissive bollampen aan kabels. Naar het midden, meer
+  //    bollen, iets donkerder; in het hart hangen ze hóger én dichter opeen,
+  //    en ze geven (als lampen) een minimale hoeveelheid warm licht. ─────────
   function bouwKroonluchter() {
     const K = O.kroonluchter;
-    const pastel = [0xf2a0c0, 0x8fb8e0, 0xf0a860, 0x9fd08a, 0xf0d878, 0xe8e0d0];
+    // iets donkerder/gedempter kleuren
+    const tinten = [0xc76a92, 0x5f87b4, 0xc77a36, 0x6fa055, 0xc7a838, 0xb8ad9a];
     const kabelPlekken = [];
     for (let i = 0; i < K.count; i++) {
-      const a = rng() * Math.PI * 2, r = rng() * K.spreid;
+      const a = rng() * Math.PI * 2;
+      const t = Math.pow(rng(), 1.7);            // bias naar het midden → dichter
+      const r = t * K.spreid;
       const x = K.cx + Math.cos(a) * r, z = K.cz + Math.sin(a) * r * 0.8;
-      const y = K.yMin + rng() * (K.yMax - K.yMin);
+      // in het hart (kleine r) hóger; naar buiten lager
+      const y = K.yMax - (r / K.spreid) * (K.yMax - K.yMin) + (rng() - 0.5) * 0.8;
       const rad = 0.12 + rng() * 0.08;
-      bolPlekken.push({ p: [x, y, z], s: rad, c: pastel[Math.floor(rng() * pastel.length)] });
+      bolPlekken.push({ p: [x, y, z], s: rad, c: tinten[Math.floor(rng() * tinten.length)] });
       kabelPlekken.push([x, y, z, rad]);
+    }
+    // de bollen ZIJN lampen → een paar zwakke warme puntlichten (geen schaduw)
+    for (const [lx, ly, lz] of [[K.cx, K.yMax - 0.5, K.cz],
+                                 [K.cx - 2.5, K.yMax - 2, K.cz + 2],
+                                 [K.cx + 2.5, K.yMax - 2, K.cz - 2]]) {
+      const lamp = new THREE.PointLight(0xffdca8, 2.2, 16, 2.0);
+      lamp.position.set(lx, ly, lz);
+      add(lamp);
     }
     // kabels als dunne instanced cilinders van de constructie (y≈11) omlaag
     const kabels = new THREE.InstancedMesh(
