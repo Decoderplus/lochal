@@ -107,12 +107,6 @@ export function bouwVerdiepingen() {
       hangPlekken.push([x, topY - F.slabT - len / 2, vanZ + 0.15, len]);
     }
   }
-  // over de centrale betonkolommen (x=30), op galerijhoogte
-  for (let z = CONFIG.floors.builtFromZ + 3; z <= D - 3; z += CONFIG.grid.baySpacing) {
-    hangPlekken.push([29.3, F.f2 - 1.2, z, 1.6]);
-    hangPlekken.push([30.7, F.f1 - 1.0, z + 1.5, 1.3]);
-  }
-
   // ── Lage boekenwand langs de vide-rand van vloer 1 (met wat overhangend
   //    groen) — de galerij die op de zuidhal uitkijkt. ─────────────────────
   for (const [gx0, gx1] of [[0, hw[0]], [hw[1], ho[0]], [ho[1], W]]) {
@@ -125,24 +119,17 @@ export function bouwVerdiepingen() {
     for (let x = gx0 + 1; x < gx1 - 0.5; x += 2.4) hangPlekken.push([x, F.f1 + 0.85, F.f1VanZ + 0.04, 1.0]);
   }
 
-  // ── HOGE bakstenen plantenbakken die over de hele lengte van de hal
-  //    doorlopen, op galerijhoogte (y≈8) — de speler op vloer 1 loopt er
-  //    ONDERDOOR. Groen cascadeert: kort boven vloer 1, lang in de vide. ─────
-  const bakY = 8.0, bakZ0 = 5, bakZ1 = 45;
-  for (const bx of [15, 45]) {
-    const trog = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.6, bakZ1 - bakZ0), M.baksteen);
-    trog.position.set(bx, bakY, (bakZ0 + bakZ1) / 2);
-    trog.castShadow = true;
-    groep.add(trog);
-    for (let z = bakZ0 + 4; z <= bakZ1 - 2; z += 9) {       // ophangkabels naar het dak
-      const kabel = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 11 - bakY, 5), M.onderkantZwart);
-      kabel.position.set(bx, (bakY + 11) / 2, z);
-      groep.add(kabel);
-    }
-    for (let z = bakZ0 + 1; z <= bakZ1 - 1; z += 1.8) {     // cascaderend groen
-      const lang = z < F.f1VanZ ? 2.6 : 0.5;               // lang in de vide, kort boven vloer 1
-      hangPlekken.push([bx, (bakY - 0.3) - lang / 2, z, lang]);
-    }
+  // ── ÉÉN doorlopende bakstenen plantenbak bovenin de CENTRALE betonpilaren
+  //    (x=30), over de hele lengte van de hal. De speler loopt er onderdoor;
+  //    groen cascadeert: kort boven vloer 1, lang in de vide. ────────────────
+  const cbX = CONFIG.grid.centerColX, cbY = 9.0, cbZ0 = 3, cbZ1 = 53;
+  const cTrog = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, cbZ1 - cbZ0), M.baksteen);
+  cTrog.position.set(cbX, cbY, (cbZ0 + cbZ1) / 2);
+  cTrog.castShadow = true;
+  groep.add(cTrog);
+  for (let z = cbZ0 + 1; z <= cbZ1 - 1; z += 1.7) {
+    const lang = z < F.f1VanZ ? 3.0 : 0.6;                 // lang in de vide, kort boven vloer 1
+    hangPlekken.push([cbX + (z % 3 - 1) * 0.25, (cbY - 0.3) - lang / 2, z, lang]);
   }
 
   const hang = new THREE.InstancedMesh(

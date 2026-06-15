@@ -175,3 +175,9 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - **Verlichting teruggedraaid** naar de vorige (warm-moody) versie: exposure 1.0, achtergrond 0xdadbd6, fog 42/140, zon 1.85, hemisphere 0.5, ambient 0.09. (Mens vond de lichtere versie minder.)
 - **Bakstenen plantenbakken**: niet meer als lage rand op de boekenwand, maar als HOGE doorlopende bakken (y≈8) langs de lengte van de hal op x=15 en x=45 (z5–45), aan ophangkabels; de speler op vloer 1 loopt er onderdoor (geen collider). Groen cascadeert: kort boven vloer 1 (z≥39), lang in de vide (z<39). De lage boekenwand op de vide-rand blijft.
 - **Kroonluchter**: cx 39→31, cz 16→26 (centraler, boven de middengleuf, net noordelijk van de stellage); count 60→95; donkerdere/gedempte tinten; r-afhankelijke hoogte (in het hart hóger) + power-bias (dichter in het midden); en 3 zwakke warme PointLights (geen schaduw) want het zijn lampen.
+
+## Fase 4 (vervolg 5) — planters centraal, kroonluchter terug, kiosk-dakje + barretje (mens)
+
+- **Plantenbakken**: de drie rijen teruggebracht naar ÉÉN doorlopende bakstenen bak bovenin de CENTRALE betonpilaren (x=30), over de hele lengte (z3–53), op y≈9. Speler op vloer 1 loopt er onderdoor; groen cascadeert kort boven vloer 1 en lang in de vide. Zijbakken (x15/x45) en losse kolom-hangertjes verwijderd.
+- **Kroonluchter**: positie terug naar de oude plek (cx 39, cz 16); de eerdere verbeteringen (95 bollen, donkerder, hoger/dichter in het hart, zwakke puntlichten) blijven.
+- **Kiosk**: oude 'dakje' terug — zwevende mozaïekdoos op 4 posten met de LocHal-lichtbalk erboven. De werkbar blijft hol (achterbar met flessen/tap). Nieuw: een APART eiken barretje aan de hal-zijde met rode barkrukken + tafellampjes.
