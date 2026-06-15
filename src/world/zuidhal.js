@@ -71,39 +71,30 @@ export function bouwZuidhal() {
       bordTex.wrapS = THREE.RepeatWrapping; bordTex.repeat.x = -1; bordTex.offset.x = 1;
     }
     const bordMat = bordTex
-      ? new THREE.MeshBasicMaterial({ map: bordTex, transparent: true, toneMapped: false })
-      : new THREE.MeshBasicMaterial({ color: 0xfff1d8, toneMapped: false });
-    // ÉÉN dikker neonbord, naar de hal (noord) gericht, op een donkere mount.
-    const bordW = bw + 1.8, bordH = bordW * 420 / 1024;
-    const bordY = doosBodem + doosH + bordH / 2 - 0.1, bz = z1 + 0.12;
-    const mount = add(box(bordW * 0.96, bordH * 0.92, 0.18, M.onderkantZwart));
-    mount.position.set(cx, bordY, z1 + 0.02);
+      ? new THREE.MeshBasicMaterial({ map: bordTex, transparent: true, side: THREE.DoubleSide })
+      : new THREE.MeshBasicMaterial({ color: 0xf4f1ea });
+    // ÉÉN enkele lichtbalk, naar de hal (noord) gericht.
+    const bordW = bw + 1.2, bordH = bordW * 420 / 1024;
     const bord = add(new THREE.Mesh(new THREE.PlaneGeometry(bordW, bordH), bordMat));
-    bord.position.set(cx, bordY, bz);
+    bord.position.set(cx, doosBodem + doosH + bordH / 2 - 0.15, z1 + 0.12);
     eindeSub();
   }
 
-  // canvas-textuur: LocHal-NEONbord — dikke gloeiende buizen op transparant
+  // canvas-textuur: LocHal-lichtbalk (eerste versie — gebouw-silhouet + helder
+  // wit-ingevulde tekst; leest als een verlichte lichtbak)
   function maakLocHalTex() {
     if (typeof document === 'undefined') return null;
     const c = document.createElement('canvas'); c.width = 1024; c.height = 420;
     const x = c.getContext('2d');
-    x.lineJoin = 'round'; x.lineCap = 'round';
+    x.strokeStyle = '#f4f1ea'; x.lineWidth = 16; x.lineJoin = 'round';
+    x.beginPath();                                   // hal-silhouet (getrapt geveltopje)
+    x.moveTo(34, 388); x.lineTo(34, 150); x.lineTo(600, 150);
+    x.lineTo(600, 78); x.lineTo(812, 28); x.lineTo(990, 78);
+    x.lineTo(990, 388); x.closePath(); x.stroke();
+    x.fillStyle = '#f4f1ea';
+    x.font = 'italic 700 210px Georgia, "Times New Roman", serif';
     x.textAlign = 'center'; x.textBaseline = 'middle';
-    // twee passes: brede oranje gloed eronder, helder-witte buis erbovenop
-    for (const [kleur, lw, blur] of [['#ff7a1a', 46, 34], ['#fff1d8', 22, 18]]) {
-      x.strokeStyle = kleur; x.fillStyle = kleur;
-      x.shadowColor = '#ff8a2a'; x.shadowBlur = blur;
-      x.lineWidth = lw * 0.7;
-      x.beginPath();                                 // hal-silhouet (getrapt geveltopje)
-      x.moveTo(40, 384); x.lineTo(40, 152); x.lineTo(596, 152);
-      x.lineTo(596, 80); x.lineTo(812, 26); x.lineTo(984, 80);
-      x.lineTo(984, 384);
-      x.stroke();
-      x.lineWidth = lw;                              // dikke neon-letters
-      x.font = 'italic 800 215px Georgia, "Times New Roman", serif';
-      x.strokeText('LocHal', 512, 268);
-    }
+    x.fillText('LocHal', 512, 280);
     const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace;
     t.anisotropy = 8;
     return t;

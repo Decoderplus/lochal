@@ -125,6 +125,18 @@ export function bouwVerdiepingen() {
   });
   groep.add(hang);
 
+  // ── Mezzanine-boekenwand langs de vide-rand van vloer 1 ─────────────────
+  // De galerij kijkt uit over de zuidhal: een lage boekenkast met kleurrijke
+  // ruggen waar de hangplanten overheen vallen (het LocHal-galerijbeeld).
+  for (const [gx0, gx1] of [[0, hw[0]], [hw[1], ho[0]], [ho[1], W]]) {
+    if (gx1 - gx0 < 1) continue;
+    const kast = new THREE.Mesh(
+      new THREE.BoxGeometry(gx1 - gx0 - 0.4, 0.95, 0.42), M.boekenstapel);
+    kast.position.set((gx0 + gx1) / 2, F.f1 + 0.48, F.f1VanZ + 0.32);
+    kast.castShadow = true;
+    groep.add(kast);
+  }
+
   // Vloer 1 is het speelbare loopvlak van het noorddeel
   const surfaces = [
     { kind: 'vlak', x0: 0, x1: W, z0: F.builtFromZ, z1: D, y: F.f1 },

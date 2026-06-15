@@ -154,3 +154,8 @@ Naar aanleiding van de Mecanoo-projectpagina + Ossip-interieurfoto, op geannotee
 - **Rec 8 — boekendisplay-tafels**: lage eiken tafels met stapels boeken (boekenstapel-textuur) op het zuidplaza (3 stuks, met collider).
 - **Rec 9 — neon LocHal-bord**: van TWEE borden terug naar ÉÉN, naar de hal gericht, op een donkere mount. maakLocHalTex herschreven als dikke gloeiende neon-buizen (oranje gloed + helder-witte buis, strokeText, shadowBlur).
 - **Noordafsluiting** (nieuwe module noordafsluiting.js): alles ten noorden van de StemmingMakerij (z>54 — Glazenzaal/Seats2meet/diep noorden) is decor; een donker volle-hoogte plooigordijn (onderkantZwart) over de westhelft + de zaal zelf sluit de oosthelft af, met een collider over de volle breedte (x0–60, y0–15, z≈54,4). Fog dichter getrokken (near 42, far 140) zodat resterend doorzicht vervaagt. Speler kan er niet heen en ziet het niet.
+
+## Fase 4 (vervolg 2) — mezzanine-boekenwand + LocHal-bord terug naar v1 (mens)
+
+- **Rec 6 — mezzanine-galerij**: lage boekenkast met kleurrijke ruggen (boekenstapel, hergebruik) langs de vide-rand van vloer 1 (z=39), in de drie balustrade-segmenten naast de trapopeningen; de bestaande hangplanten vallen eroverheen → de galerij kijkt uit over de zuidhal. (De verdiepingen 2/3 liggen achter de noordafsluiting en zijn dus niet zichtbaar; de zichtbare mezzanine zit op de vloer-1-rand.)
+- **LocHal-bord**: mens vond de EERSTE versie het best → maakLocHalTex teruggedraaid naar het witte gebouw-silhouet + wit-ingevulde "LocHal" (lichtbalk-look), en het blijft ÉÉN enkel bord naar de hal gericht (neon-buizen + donkere mount verwijderd).
