@@ -40,7 +40,7 @@ const vakken = {
 const TOL = 1.0;
 const hal = new THREE.Box3(
   new THREE.Vector3(-1.5, -0.3, -1.5),
-  new THREE.Vector3(61.5, 16.5, 91.5));
+  new THREE.Vector3(61.5, 20.5, 91.5));
 
 // De wereld kan over de lengteas gespiegeld zijn (CONFIG.spiegelX, x → W−x).
 // CONFIG-vakken beschrijven de plattegrond → spiegel het verwachte x-bereik.

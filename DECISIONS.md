@@ -197,3 +197,9 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 
 - **Betonnen wangen ook op de BOVEN-tier**: dezelfde lichtgrijze massief-beton zijwangen (M.tred) nu ook langs de oplopende boven-tier (wig op vloer 1, y5→y9, profiel incl. uitkijk-lip). (tribunes.js)
 - **Uitgang zonder muur erachter**: de zuidgevel-sokkel is opengeknipt bij de uitgang (x54–59) zodat er geen wand meer achter de deur zit; de twee schuifpanelen + het achterpaneel zijn nu allemaal voile (frosted), iets hoger (uTop 3,8). Je ziet daar nu alleen de gefogde deur met mist erachter. (casco.js + zuidhal.js)
+
+## Fase 4 (vervolg 10) — dak hoger, planten toplaag, kroonluchter (mens)
+
+- **Dak 1 verdieping hoger** (+4 m): hall.height 15→19, casco EAVE_Y 13→17, constructie EAVE_Y 13→17 + SPANT_ONDER 11→15, kraan.y 11→15, kroonluchter-kabels naar 15. Verify-halbox y-max 16,5→20,5.
+- **Planten**: geen hangende slierten meer; alleen een groene TOPLAAG (ronde bossen) bovenop de centrale bak, over de hele lengte. Vide-/galerij-hangplanten en boekenwand-slierten verwijderd; boekenwand blijft.
+- **Kroonluchter**: compacter (spreid 6→4,5) en een halve verdieping hoger (yMin 4→6, yMax 10,5→12,5).

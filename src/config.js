@@ -4,7 +4,7 @@
 // is en anders nooit in het vak past.
 export const CONFIG = {
   units: 'meters', // x: 0 west → 60 oost | z: 0 zuid → 90 noord | y: hoogte
-  hall: { width: 60, length: 90, height: 15, ridgeX: [15, 45],
+  hall: { width: 60, length: 90, height: 19, ridgeX: [15, 45],
           baseWallH: 4, glassGridX: 1.5, glassGridY: 2.0 },
   // f*VanZ = vanaf welke z de vloerplak ligt; 2 en 3 wijken terug zodat het
   // hoge open volume boven het trappenlandschap doorloopt (mens: wijds & hoog).
@@ -44,12 +44,12 @@ export const CONFIG = {
     // kiosk: glazen bar + zwevende mozaïekdoos + LocHal-bord; 4 m richting het
     // midden (weg van de StemmingMakerij)
     cafe:            { x: [44, 53], z: [4, 11], kapH: 2.4 },
-    kroonluchter:    { cx: 39, cz: 16, count: 95, yMin: 4, yMax: 10.5, spreid: 6 },
+    kroonluchter:    { cx: 39, cz: 16, count: 95, yMin: 6, yMax: 12.5, spreid: 4.5 },
     stellage:        { x: [25, 33], z: [4, 23], liggerY: [4.5, 7.5] },
     // lange leestafels op rails, TEGENOVER de kiosk (westkant)
     treintafels:     { count: 3, maat: [11, 1.6, 1.05], z: [4, 11] },
     expoWanden:      { x: [5, 16], z: [13, 22], count: 5, maat: [3, 4] },
-    kraan:           { spanX: [0, 30], y: 11, parkZ: 33, spots: 9 },
+    kraan:           { spanX: [0, 30], y: 15, parkZ: 33, spots: 9 },
     grootDoek:       { gevel: 'zuidwest', breedte: 28, hoogte: 14 },
   },
   player: { hoogte: 1.75, loopsnelheid: 4 },

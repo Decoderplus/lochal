@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { maakMaterialen } from '../materials.js';
 
-const EAVE_Y = 13;   // gootlijn (gevelglas tot hier; nok op hall.height = 15)
+const EAVE_Y = 17;   // gootlijn (gevelglas tot hier; nok op hall.height = 19) — dak 1 verdieping hoger
 
 export function bouwCasco() {
   const M = maakMaterialen();

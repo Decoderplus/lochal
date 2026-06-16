@@ -6,7 +6,7 @@ import * as THREE from 'three';
 import { CONFIG } from '../config.js';
 import { maakMaterialen } from '../materials.js';
 
-const EAVE_Y = 13, SPANT_ONDER = 11;
+const EAVE_Y = 17, SPANT_ONDER = 15;   // dak 1 verdieping hoger
 
 export function bouwConstructie() {
   const M = maakMaterialen();

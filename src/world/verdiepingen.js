@@ -94,21 +94,9 @@ export function bouwVerdiepingen() {
   });
   groep.add(kasten);
 
-  // ── Afhangende planten over de vide-/galerijranden (LocHal-handtekening) ─
-  // Groene slierten die over de betonranden naar beneden hangen + over de
-  // centrale betonkolommen. Eén instanced familie (plantGroen).
-  const hangPlekken = [];
   const hw = CONFIG.objects.tribuneWest.x, ho = CONFIG.objects.tribuneOost.x;
-  const inOpening = (x) => (x > hw[0] - 0.5 && x < hw[1] + 0.5) || (x > ho[0] - 0.5 && x < ho[1] + 0.5);
-  for (const [topY, vanZ] of [[F.f1, F.f1VanZ], [F.f2, F.f2VanZ], [F.f3, F.f3VanZ]]) {
-    for (let x = 3; x <= W - 3; x += 3.2) {
-      if (topY === F.f1 && inOpening(x)) continue;       // niet midden in de trapgaten
-      const len = 0.8 + ((x * 7) % 10) / 10 * 1.4;       // pseudo-variatie
-      hangPlekken.push([x, topY - F.slabT - len / 2, vanZ + 0.15, len]);
-    }
-  }
-  // ── Lage boekenwand langs de vide-rand van vloer 1 (met wat overhangend
-  //    groen) — de galerij die op de zuidhal uitkijkt. ─────────────────────
+  // ── Lage boekenwand langs de vide-rand van vloer 1 — de galerij die op de
+  //    zuidhal uitkijkt. ───────────────────────────────────────────────────
   for (const [gx0, gx1] of [[0, hw[0]], [hw[1], ho[0]], [ho[1], W]]) {
     if (gx1 - gx0 < 1) continue;
     const mid = (gx0 + gx1) / 2, len = gx1 - gx0 - 0.4;
@@ -116,34 +104,31 @@ export function bouwVerdiepingen() {
     kast.position.set(mid, F.f1 + 0.48, F.f1VanZ + 0.32);
     kast.castShadow = true;
     groep.add(kast);
-    for (let x = gx0 + 1; x < gx1 - 0.5; x += 2.4) hangPlekken.push([x, F.f1 + 0.85, F.f1VanZ + 0.04, 1.0]);
   }
 
   // ── ÉÉN doorlopende bakstenen plantenbak bovenin de CENTRALE betonpilaren
-  //    (x=30), over de hele lengte van de hal. De speler loopt er onderdoor;
-  //    groen cascadeert: kort boven vloer 1, lang in de vide. ────────────────
+  //    (x=30), over de hele lengte. Alleen een groene TOPLAAG — niets hangt. ─
   const cbX = CONFIG.grid.centerColX, cbY = 9.0, cbZ0 = 3, cbZ1 = 53;
-  const cTrog = new THREE.Mesh(new THREE.BoxGeometry(0.8, 0.6, cbZ1 - cbZ0), M.baksteen);
+  const cTrog = new THREE.Mesh(new THREE.BoxGeometry(0.85, 0.6, cbZ1 - cbZ0), M.baksteen);
   cTrog.position.set(cbX, cbY, (cbZ0 + cbZ1) / 2);
   cTrog.castShadow = true;
   groep.add(cTrog);
-  for (let z = cbZ0 + 1; z <= cbZ1 - 1; z += 1.7) {
-    const lang = z < F.f1VanZ ? 3.0 : 0.6;                 // lang in de vide, kort boven vloer 1
-    hangPlekken.push([cbX + (z % 3 - 1) * 0.25, (cbY - 0.3) - lang / 2, z, lang]);
+  const topPlekken = [];
+  for (let z = cbZ0 + 0.6; z <= cbZ1 - 0.6; z += 1.0) {
+    topPlekken.push([cbX + (((z * 7) % 3) - 1) * 0.26, cbY + 0.45, z, 0.5 + (((z * 5) % 4) / 4) * 0.45]);
   }
-
-  const hang = new THREE.InstancedMesh(
-    new THREE.IcosahedronGeometry(1, 0), M.plantGroen, hangPlekken.length);
-  hang.name = 'hangplanten';
-  hang.castShadow = true;
-  hangPlekken.forEach(([x, y, z, len], i) => {
+  const planten = new THREE.InstancedMesh(
+    new THREE.IcosahedronGeometry(1, 0), M.plantGroen, topPlekken.length);
+  planten.name = 'galerijPlanten';
+  planten.castShadow = true;
+  topPlekken.forEach(([x, y, z, r], i) => {
     dummy.position.set(x, y, z);
-    dummy.scale.set(0.45, len, 0.45);                    // smal en hangend
+    dummy.scale.set(r, r * 0.8, r);                       // ronde bossen, niet hangend
     dummy.rotation.set(0, (i % 3) * 1.1, 0);
     dummy.updateMatrix();
-    hang.setMatrixAt(i, dummy.matrix);
+    planten.setMatrixAt(i, dummy.matrix);
   });
-  groep.add(hang);
+  groep.add(planten);
 
   // Vloer 1 is het speelbare loopvlak van het noorddeel
   const surfaces = [

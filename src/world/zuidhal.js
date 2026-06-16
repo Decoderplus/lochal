@@ -213,7 +213,7 @@ export function bouwZuidhal() {
     const kabels = new THREE.InstancedMesh(
       new THREE.CylinderGeometry(0.006, 0.006, 1, 5), M.onderkantZwart, kabelPlekken.length);
     kabelPlekken.forEach(([x, y, z, rad], i) => {
-      const len = 11 - (y + rad);
+      const len = 15 - (y + rad);   // kabels naar de (hoger gelegen) spantonderrand
       dummy.position.set(x, (y + rad) + len / 2, z);
       dummy.scale.set(1, Math.max(len, 0.1), 1);
       dummy.rotation.set(0, 0, 0); dummy.updateMatrix();
