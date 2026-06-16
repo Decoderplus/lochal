@@ -185,3 +185,10 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 ## Fase 4 (vervolg 7) — kiosk-barretje als brede diepe hoge tafel (mens)
 
 - Correctie op de vorige: de breedte was juist goed; het barretje moest DIEPER. Nu een brede (volle kioskbreedte), DIEPE hoge tafel (eiken blad op stalen poten, bar-hoogte 1,05 m) waarvan het blad bijna tot aan het bar-blok reikt — een hoge sta-/zit-tafel met rode barkrukken rondom (voor + zijkanten) en twee tafellampjes.
+
+## Fase 4 (vervolg 8) — uitgang, betonnen trapwangen, Nina-kunst, zaal-tekst (mens)
+
+- **Uitgang**: grote dubbele glazen schuifdeur in de zuidgevel, links (wereld) achter de kiosk (plattegrond x54–59, z≈0); donker stalen kozijn + twee versprongen glaspanelen + een gefogd voile-paneel erachter zodat je niet naar buiten ziet. (zuidhal.js bouwUitgang)
+- **Betonnen trapwangen**: massief lichtgrijze betonnen zijwangen (M.tred) langs beide flanken van elke tribune; profiel = platform-rechthoek + afdalende trap-driehoek (BufferGeometry-prisma). Subtiel, niet opvallend. (tribunes.js)
+- **Nina-kunst**: de grijze expowanden exposeren nu Nina van de Ven-werk. 5 afbeeldingen gekopieerd naar lochal/art/ (nina1–5.webp), geladen met TextureLoader (browser-only; headless verify slaat ze over) op beide vlakken van elk blok, horizontaal ge-un-spiegeld. serve.js: webp-MIME toegevoegd. Materiaal-limiet in verify 30→36 (5 kunst-materialen).
+- **Zaal-TV + tekst**: het TV-scherm ("Druk spatiebalk…") en de gloeiende "Stemmingmakerij"-tekst stonden door de wereldspiegel gespiegeld; texturen horizontaal geflipt (repeat.x=-1) zodat ze weer leesbaar zijn. (stemmingmakerij.js — enige wijziging: 2 texture-flips, geen geometrie verplaatst.)

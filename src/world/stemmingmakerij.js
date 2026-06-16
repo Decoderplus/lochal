@@ -321,6 +321,7 @@ export function bouwStemmingMakerij() {
     ctx.fillText(regel2, c.width / 2, c.height / 2 + 55);
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
+    tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1; // un-spiegelen (wereldspiegel)
     return tex;
   }
 
@@ -357,6 +358,7 @@ export function bouwStemmingMakerij() {
     const tex = new THREE.CanvasTexture(c);
     tex.colorSpace = THREE.SRGBColorSpace;
     tex.anisotropy = 8;
+    tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1; // un-spiegelen (wereldspiegel)
     return tex;
   }
 

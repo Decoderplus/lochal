@@ -14,6 +14,7 @@ const MIME = {
   '.json': 'application/json',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
 };
 
 export function startServer(port = 8123) {

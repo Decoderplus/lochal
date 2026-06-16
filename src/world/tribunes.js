@@ -90,6 +90,24 @@ export function bouwTribunes() {
     voet.position.set(xc, 0.12, zBottom + 0.05);
     sub.add(voet);
 
+    // ── Massief-betonnen zijwangen langs beide flanken (lichtgrijs, subtiel):
+    //    profiel = platform-rechthoek + afdalende trap-driehoek. ─────────────
+    for (const [xf, dir] of [[x0, -1], [x1, 1]]) {
+      const xa = dir < 0 ? xf - 0.28 : xf, xb = dir < 0 ? xf : xf + 0.28;
+      const P = [[zBottom, 0], [zTop, 0], [zTop, yTop], [Z_TOP_PLAT, yTop]];
+      const pos = [];
+      for (const xx of [xb, xa]) for (const [z, y] of P) pos.push(xx, y, z);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setIndex([0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6,
+        0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5,
+        2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7]);
+      g.computeVertexNormals();
+      const wang = new THREE.Mesh(g, M.tred);
+      wang.castShadow = wang.receiveShadow = true;
+      sub.add(wang);
+    }
+
     // Eiken zitblokken van wisselende breedte + kussens (zijtrap-stroken
     // van 1,3 m langs beide flanken blijven vrij)
     const kleuren = ['rood', 'blauw', 'oranje'];

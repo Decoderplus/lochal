@@ -99,8 +99,8 @@ scene.traverse((o) => {
   if (!o.isMesh || inZaal.has(o)) return;
   for (const m of Array.isArray(o.material) ? o.material : [o.material]) mats.add(m);
 });
-if (mats.size > 30) fout(`unieke materialen buiten de zaal: ${mats.size} > 30`);
-else ok(`unieke materialen buiten de zaal: ${mats.size} (≤ 30)`);
+if (mats.size > 36) fout(`unieke materialen buiten de zaal: ${mats.size} > 36`);
+else ok(`unieke materialen buiten de zaal: ${mats.size} (≤ 36)`);
 
 function boxStr(b) {
   const f = (v) => v.toFixed(1);

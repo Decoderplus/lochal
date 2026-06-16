@@ -24,6 +24,7 @@ export function bouwZuidhal() {
   const dummy = new THREE.Object3D();
   const colliders = [];
   const rng = maakRng(2018);
+  const kunstLader = (typeof document !== 'undefined') ? new THREE.TextureLoader() : null;
 
   let doel = groep;                       // huidige (sub)groep waar add() in plaatst
   const add = (mesh) => { doel.add(mesh); return mesh; };
@@ -289,6 +290,19 @@ export function bouwZuidhal() {
       wand.castShadow = true;
       const dx = hoek === 0 ? w / 2 : 0.1, dz = hoek === 0 ? 0.1 : w / 2;
       colliders.push({ x0: wx - dx, x1: wx + dx, y0: 0, y1: h, z0: wz - dz, z1: wz + dz });
+      // geëxposeerde Nina-kunst op de grote vlakken van het grijze blok
+      if (kunstLader) {
+        const tex = kunstLader.load(`art/nina${(i % 5) + 1}.webp`);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.RepeatWrapping; tex.repeat.x = -1; tex.offset.x = 1;  // un-spiegelen
+        const mat = new THREE.MeshBasicMaterial({ map: tex });
+        const aw = w * 0.82, ah = h * 0.6;
+        for (const zijde of [1, -1]) {
+          const art = add(new THREE.Mesh(new THREE.PlaneGeometry(aw, ah), mat));
+          art.position.set(wx + (hoek === 0 ? 0 : zijde * 0.1), h * 0.52, wz + (hoek === 0 ? zijde * 0.1 : 0));
+          art.rotation.y = hoek + (zijde === -1 ? Math.PI : 0);
+        }
+      }
     }
     eindeSub();
   }
@@ -422,7 +436,25 @@ export function bouwZuidhal() {
     eindeSub();
   }
 
+  // ── Uitgang: grote dubbele glazen schuifdeur in de zuidgevel, links (wereld)
+  //    achter de kiosk; gefogd zodat je niet naar buiten ziet. ──────────────
+  function bouwUitgang() {
+    beginSub('uitgang');
+    const ux0 = 54, ux1 = 59, uTop = 3.2, uz = 0.34, mid = (ux0 + ux1) / 2, uw = ux1 - ux0;
+    for (const px of [ux0, mid, ux1]) {                        // donker stalen kozijn
+      add(box(0.12, uTop, 0.2, M.onderkantZwart)).position.set(px, uTop / 2, uz);
+    }
+    add(box(uw + 0.2, 0.18, 0.2, M.onderkantZwart)).position.set(mid, uTop, uz);
+    // twee glazen schuifpanelen (licht versprongen in z, als schuifdeuren)
+    add(box(uw / 2 - 0.12, uTop - 0.2, 0.05, M.glas)).position.set(mid - uw / 4 + 0.1, (uTop - 0.2) / 2, uz + 0.05);
+    add(box(uw / 2 - 0.12, uTop - 0.2, 0.05, M.glas)).position.set(mid + uw / 4 - 0.1, (uTop - 0.2) / 2, uz - 0.05);
+    // gefogd paneel erachter (kun je niet doorheen kijken)
+    add(box(uw, uTop, 0.04, M.voile)).position.set(mid, uTop / 2, uz - 0.16);
+    eindeSub();
+  }
+
   bouwCafe();
+  bouwUitgang();
   bouwBoekentafels();
   bouwStellage();
   bouwKroonluchter();
