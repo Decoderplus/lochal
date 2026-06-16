@@ -181,3 +181,7 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - **Plantenbakken**: de drie rijen teruggebracht naar ÉÉN doorlopende bakstenen bak bovenin de CENTRALE betonpilaren (x=30), over de hele lengte (z3–53), op y≈9. Speler op vloer 1 loopt er onderdoor; groen cascadeert kort boven vloer 1 en lang in de vide. Zijbakken (x15/x45) en losse kolom-hangertjes verwijderd.
 - **Kroonluchter**: positie terug naar de oude plek (cx 39, cz 16); de eerdere verbeteringen (95 bollen, donkerder, hoger/dichter in het hart, zwakke puntlichten) blijven.
 - **Kiosk**: oude 'dakje' terug — zwevende mozaïekdoos op 4 posten met de LocHal-lichtbalk erboven. De werkbar blijft hol (achterbar met flessen/tap). Nieuw: een APART eiken barretje aan de hal-zijde met rode barkrukken + tafellampjes.
+
+## Fase 4 (vervolg 7) — kiosk-barretje als brede diepe hoge tafel (mens)
+
+- Correctie op de vorige: de breedte was juist goed; het barretje moest DIEPER. Nu een brede (volle kioskbreedte), DIEPE hoge tafel (eiken blad op stalen poten, bar-hoogte 1,05 m) waarvan het blad bijna tot aan het bar-blok reikt — een hoge sta-/zit-tafel met rode barkrukken rondom (voor + zijkanten) en twee tafellampjes.

@@ -120,20 +120,28 @@ export function bouwCasco() {
   dakVlak(W / 2, EAVE_Y, ridgeX[1], NOK_Y);      // oost-beuk, westhelling
   dakVlak(ridgeX[1], NOK_Y, W, EAVE_Y);          // oost-beuk, oosthelling
 
-  // ── Daklichten: piramidekoepels langs de noklijnen (InstancedMesh) ──────
+  // ── Daklichten: doorlopende glazende daklicht-banen in de dakvlakken
+  //    (industriële north-light/zaagtand-look i.p.v. piramides) — heldere
+  //    emissieve stroken die over de hele lengte daglicht in de hal brengen. ─
   const dlPlekken = [];
-  for (const nx of ridgeX) {
-    for (let z = CONFIG.grid.baySpacing; z <= D - CONFIG.grid.baySpacing; z += CONFIG.grid.baySpacing) {
-      dlPlekken.push([nx, NOK_Y - 0.05, z]);
+  const dakHellingen = [
+    [0, EAVE_Y, ridgeX[0], NOK_Y], [ridgeX[0], NOK_Y, W / 2, EAVE_Y],
+    [W / 2, EAVE_Y, ridgeX[1], NOK_Y], [ridgeX[1], NOK_Y, W, EAVE_Y],
+  ];
+  for (const [xa, ya, xb, yb] of dakHellingen) {
+    const dx = xb - xa, dy = yb - ya, theta = Math.atan2(dy, dx);
+    for (const u of [0.28, 0.55, 0.82]) {            // 3 banen per dakhelling
+      const x = xa + u * dx, y = ya + u * dy - 0.18;  // net ónder het dakvlak (zichtbaar van binnen)
+      dlPlekken.push({ p: [x, y, D / 2], s: [1.8, 0.12, D - 3], rz: theta });
     }
   }
   const daklichten = new THREE.InstancedMesh(
-    new THREE.ConeGeometry(2.1, 1.4, 4), M.daklicht, dlPlekken.length);
+    new THREE.BoxGeometry(1, 1, 1), M.daklicht, dlPlekken.length);
   daklichten.name = 'daklichten';
-  dlPlekken.forEach((p, i) => {
-    dummy.position.set(...p);
-    dummy.scale.set(1, 1, 1);
-    dummy.rotation.set(0, Math.PI / 4, 0);   // vlakken haaks op de hal-assen
+  dlPlekken.forEach((d, i) => {
+    dummy.position.set(...d.p);
+    dummy.scale.set(...d.s);
+    dummy.rotation.set(0, 0, d.rz);
     dummy.updateMatrix();
     daklichten.setMatrixAt(i, dummy.matrix);
   });

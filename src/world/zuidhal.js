@@ -43,6 +43,11 @@ export function bouwZuidhal() {
     const kap = add(new THREE.Mesh(new THREE.ConeGeometry(0.16, 0.2, 12, 1, true), M.daklicht));
     kap.position.set(x, y + 0.4, z);
   }
+  // rode barkruk (zitting + stalen poot)
+  function krukRood(x, z) {
+    add(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 12), M.kussenRood)).position.set(x, 0.78, z);
+    add(new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.78, 6), M.nieuwStaal)).position.set(x, 0.39, z);
+  }
 
   // ── Kiosk (StadsCafé), naar de foto: glazen bar-onderbouw met houten
   //    toonbankblad, een ZWEVENDE rood-zwart-oranje mozaïekdoos op zwarte
@@ -92,19 +97,20 @@ export function bouwZuidhal() {
     const bord = add(new THREE.Mesh(new THREE.PlaneGeometry(bordW, bordH), bordMat));
     bord.position.set(bcx, doosBodem + doosH + bordH / 2 - 0.15, bz1 + 0.3);
 
-    // ── Apart barretje aan de voorkant (hal-zijde): los toonbankje + krukken ──
-    const fz = z1 - 1.2;
-    add(box(bbw, 1.05, 0.5, M.eik)).position.set(bcx, 0.5, fz);
-    add(box(bbw + 0.15, 0.08, 0.55, M.eik)).position.set(bcx, 1.07, fz);   // eiken blad
-    colliders.push({ x0: bx0, x1: bx1, y0: 0, y1: 1.1, z0: fz - 0.25, z1: fz + 0.25 });
-    for (let x = bx0 + 0.6; x <= bx1 - 0.4; x += 1.5) {
-      add(new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.12, 12), M.kussenRood))
-        .position.set(x, 0.78, fz + 0.8);
-      add(new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.04, 0.78, 6), M.nieuwStaal))
-        .position.set(x, 0.39, fz + 0.8);
+    // ── Apart barretje aan de voorkant: een brede, DIEPE hoge tafel waarvan
+    //    het blad bijna tot aan de kiosk reikt (een hoge sta-/zit-tafel). ──
+    const tBack = bz1 + 0.3, tFront = z1 - 0.3;          // van bijna-tegen-de-bar tot de hal
+    const tCz = (tBack + tFront) / 2, tD = tFront - tBack, tH = 1.05;
+    add(box(bbw, 0.1, tD, M.eik)).position.set(bcx, tH, tCz);          // hoog tafelblad
+    for (const px of [bx0 + 0.4, bcx, bx1 - 0.4]) for (const pz of [tBack + 0.3, tFront - 0.3]) {
+      add(box(0.08, tH, 0.08, M.nieuwStaal)).position.set(px, tH / 2, pz);
     }
-    tafelLamp(bx0 + 1.2, 1.1, fz);
-    tafelLamp(bx1 - 1.2, 1.1, fz);
+    colliders.push({ x0: bx0, x1: bx1, y0: 0, y1: tH, z0: tBack, z1: tFront });
+    // rode barkrukken langs de voorkant + de twee zijkanten
+    for (let x = bx0 + 0.7; x <= bx1 - 0.5; x += 1.5) krukRood(x, tFront + 0.7);
+    for (const pz of [tCz - 0.6, tCz + 0.6]) { krukRood(bx0 - 0.7, pz); krukRood(bx1 + 0.7, pz); }
+    tafelLamp(bcx - 2, tH + 0.05, tCz);
+    tafelLamp(bcx + 2, tH + 0.05, tCz);
     eindeSub();
   }
 
