@@ -192,3 +192,8 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - **Betonnen trapwangen**: massief lichtgrijze betonnen zijwangen (M.tred) langs beide flanken van elke tribune; profiel = platform-rechthoek + afdalende trap-driehoek (BufferGeometry-prisma). Subtiel, niet opvallend. (tribunes.js)
 - **Nina-kunst**: de grijze expowanden exposeren nu Nina van de Ven-werk. 5 afbeeldingen gekopieerd naar lochal/art/ (nina1–5.webp), geladen met TextureLoader (browser-only; headless verify slaat ze over) op beide vlakken van elk blok, horizontaal ge-un-spiegeld. serve.js: webp-MIME toegevoegd. Materiaal-limiet in verify 30→36 (5 kunst-materialen).
 - **Zaal-TV + tekst**: het TV-scherm ("Druk spatiebalk…") en de gloeiende "Stemmingmakerij"-tekst stonden door de wereldspiegel gespiegeld; texturen horizontaal geflipt (repeat.x=-1) zodat ze weer leesbaar zijn. (stemmingmakerij.js — enige wijziging: 2 texture-flips, geen geometrie verplaatst.)
+
+## Fase 4 (vervolg 9) — betonwangen boven-tier + gefogde uitgang zonder muur (mens)
+
+- **Betonnen wangen ook op de BOVEN-tier**: dezelfde lichtgrijze massief-beton zijwangen (M.tred) nu ook langs de oplopende boven-tier (wig op vloer 1, y5→y9, profiel incl. uitkijk-lip). (tribunes.js)
+- **Uitgang zonder muur erachter**: de zuidgevel-sokkel is opengeknipt bij de uitgang (x54–59) zodat er geen wand meer achter de deur zit; de twee schuifpanelen + het achterpaneel zijn nu allemaal voile (frosted), iets hoger (uTop 3,8). Je ziet daar nu alleen de gefogde deur met mist erachter. (casco.js + zuidhal.js)

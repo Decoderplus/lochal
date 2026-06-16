@@ -440,15 +440,15 @@ export function bouwZuidhal() {
   //    achter de kiosk; gefogd zodat je niet naar buiten ziet. ──────────────
   function bouwUitgang() {
     beginSub('uitgang');
-    const ux0 = 54, ux1 = 59, uTop = 3.2, uz = 0.34, mid = (ux0 + ux1) / 2, uw = ux1 - ux0;
+    const ux0 = 54, ux1 = 59, uTop = 3.8, uz = 0.34, mid = (ux0 + ux1) / 2, uw = ux1 - ux0;
     for (const px of [ux0, mid, ux1]) {                        // donker stalen kozijn
       add(box(0.12, uTop, 0.2, M.onderkantZwart)).position.set(px, uTop / 2, uz);
     }
     add(box(uw + 0.2, 0.18, 0.2, M.onderkantZwart)).position.set(mid, uTop, uz);
-    // twee glazen schuifpanelen (licht versprongen in z, als schuifdeuren)
-    add(box(uw / 2 - 0.12, uTop - 0.2, 0.05, M.glas)).position.set(mid - uw / 4 + 0.1, (uTop - 0.2) / 2, uz + 0.05);
-    add(box(uw / 2 - 0.12, uTop - 0.2, 0.05, M.glas)).position.set(mid + uw / 4 - 0.1, (uTop - 0.2) / 2, uz - 0.05);
-    // gefogd paneel erachter (kun je niet doorheen kijken)
+    // twee GEFOGDE schuifpanelen (licht versprongen in z, als schuifdeuren)
+    add(box(uw / 2 - 0.12, uTop - 0.2, 0.05, M.voile)).position.set(mid - uw / 4 + 0.1, (uTop - 0.2) / 2, uz + 0.05);
+    add(box(uw / 2 - 0.12, uTop - 0.2, 0.05, M.voile)).position.set(mid + uw / 4 - 0.1, (uTop - 0.2) / 2, uz - 0.05);
+    // extra fog-paneel erachter zodat je écht niets dan mist ziet (geen muur)
     add(box(uw, uTop, 0.04, M.voile)).position.set(mid, uTop / 2, uz - 0.16);
     eindeSub();
   }

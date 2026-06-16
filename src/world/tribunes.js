@@ -225,6 +225,24 @@ export function bouwTribunes() {
     balusR.position.set(xc, yB1 + 1.02, zB1 + 1.68);
     sub.add(balusR);
 
+    // ── Betonnen zijwangen ook langs de BOVEN-tier (wig op vloer 1, y5→y9) ──
+    const lipZ = zB1 + 1.6;
+    for (const [xf, dir] of [[x0, -1], [x1, 1]]) {
+      const xa = dir < 0 ? xf - 0.28 : xf, xb = dir < 0 ? xf : xf + 0.28;
+      const P = [[zB0, yB0], [lipZ, yB0], [lipZ, yB1], [zB1, yB1]];
+      const pos = [];
+      for (const xx of [xb, xa]) for (const [z, y] of P) pos.push(xx, y, z);
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+      g.setIndex([0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6,
+        0, 1, 5, 0, 5, 4, 1, 2, 6, 1, 6, 5,
+        2, 3, 7, 2, 7, 6, 3, 0, 4, 3, 4, 7]);
+      g.computeVertexNormals();
+      const wang = new THREE.Mesh(g, M.tred);
+      wang.castShadow = wang.receiveShadow = true;
+      sub.add(wang);
+    }
+
     groep.add(sub);
     return sub;
   }

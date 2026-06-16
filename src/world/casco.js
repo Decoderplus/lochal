@@ -35,7 +35,9 @@ export function bouwCasco() {
     glasStrook.position.set(cx, 2.7, cz);
     groep.add(glasStrook);
   }
-  sokkelWand(W / 2, DIKTE / 2, W, DIKTE);          // zuid
+  // zuid: opening (x 54–59) voor de gefogde uitgang-schuifdeur (zie zuidhal)
+  sokkelWand(27, DIKTE / 2, 54, DIKTE);            // zuid, links van de uitgang
+  sokkelWand(59.5, DIKTE / 2, 1, DIKTE);           // zuid, rechts van de uitgang
   sokkelWand(W / 2, D - DIKTE / 2, W, DIKTE);      // noord
   sokkelWand(DIKTE / 2, D / 2, DIKTE, D);          // west
   sokkelWand(W - DIKTE / 2, D / 2, DIKTE, D);      // oost
