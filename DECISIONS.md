@@ -203,3 +203,9 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - **Dak 1 verdieping hoger** (+4 m): hall.height 15→19, casco EAVE_Y 13→17, constructie EAVE_Y 13→17 + SPANT_ONDER 11→15, kraan.y 11→15, kroonluchter-kabels naar 15. Verify-halbox y-max 16,5→20,5.
 - **Planten**: geen hangende slierten meer; alleen een groene TOPLAAG (ronde bossen) bovenop de centrale bak, over de hele lengte. Vide-/galerij-hangplanten en boekenwand-slierten verwijderd; boekenwand blijft.
 - **Kroonluchter**: compacter (spreid 6→4,5) en een halve verdieping hoger (yMin 4→6, yMax 10,5→12,5).
+
+## Fase 4 (vervolg 11) — oost-trap op 1 lijn met de uitgang (mens)
+
+- tribuneOost x[33,48]→[39,54]: de onderste trap komt met zijn (wereld-)rand op 1 lijn met de uitgang (plattegrond x54–59). Mens koos: trap schuiven + bovendeel inkorten.
+- Boven-tier (oplopende deel) wordt ingekort tot vóór de StemmingMakerij: bvX1 = min(x1, stemmingMakerij.x[0]-1) = 47, zodat treden/wang/balustrade/collider de zaal niet raken. De onderste trap loopt wel volledig door tot x54.
+- loopbrug x[25,33]→[25,39] verlengd zodat hij de verschoven trap nog verbindt (blijft kolomvrij op z34).

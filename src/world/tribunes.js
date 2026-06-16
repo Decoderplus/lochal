@@ -189,45 +189,47 @@ export function bouwTribunes() {
     //    vloer 2 (y9), noordwaarts — dat maakt het volume hoog én wijd.
     //    Beloopbaar tot een uitkijk-lip aan de top; daarachter een balustrade
     //    (vloer 2 zelf is decor). ──
-    const zB0 = CONFIG.floors.bovenTierVanZ, zB1 = CONFIG.floors.f2VanZ;  // 42 → 51
+    const zB0 = CONFIG.floors.bovenTierVanZ, zB1 = CONFIG.floors.f2VanZ;
     const yB0 = yTop, yB1 = CONFIG.floors.f2;              // 5 → 9
+    // De boven-tier stopt vóór de StemmingMakerij (x ≥ 48): bij de naar de
+    // uitgang geschoven oost-trap wordt het oplopende bovendeel ingekort.
+    const bvX1 = Math.min(x1, CONFIG.objects.stemmingMakerij.x[0] - 1);
+    const bvXc = (x0 + bvX1) / 2, bvBreed = bvX1 - x0;
     const nB = 24;
     const stijgB = (yB1 - yB0) / nB, diepB = (zB1 - zB0) / nB;
     for (let i = 1; i <= nB; i++) {
       const yb = yB0 + i * stijgB;
       const zb = zB0 + (i - 0.5) * diepB;
-      tredePlekken.push({ p: [xc, yb - 0.045, zb], s: [breed, 0.09, diepB + 0.06] });
+      tredePlekken.push({ p: [bvXc, yb - 0.045, zb], s: [bvBreed, 0.09, diepB + 0.06] });
       tredePlekken.push({                                   // stootbord
-        p: [xc, yB0 + (i - 0.5) * stijgB, zB0 + (i - 1) * diepB + 0.02],
-        s: [breed, stijgB + 0.02, 0.05] });
+        p: [bvXc, yB0 + (i - 0.5) * stijgB, zB0 + (i - 1) * diepB + 0.02],
+        s: [bvBreed, stijgB + 0.02, 0.05] });
     }
     // zitblokken + kussens op de boven-tier
     for (let b = 0; b < 7; b++) {
       const i = 2 + Math.floor(rng() * (nB - 4));
       const w = 2 + rng() * 3;
-      const xMin = x0 + 1.3 + w / 2, xMax = x1 - 1.3 - w / 2;
+      const xMin = x0 + 1.3 + w / 2, xMax = bvX1 - 1.3 - w / 2;
       if (xMax <= xMin) continue;
       const bx = xMin + rng() * (xMax - xMin);
       const yb = yB0 + i * stijgB, zb = zB0 + (i - 0.5) * diepB;
       blokPlekken.push({ p: [bx, yb + 0.21, zb], s: [w, 0.42, 0.62] });
       kussenPlekken[kleuren[Math.floor(rng() * 3)]].push([bx, yb + 0.46, zb]);
     }
-    // (geen schinkels onder de boven-tier: die staat op vloer 1, niet boven
-    //  de open onderwereld — anders zweven er losse balken)
     // beloopbaar: helling omhoog + uitkijk-lip; balustrade sluit vloer-2-decor af
-    surfaces.push({ kind: 'helling', x0, x1, z0: zB0, z1: zB1, yBijZ0: yB0, yBijZ1: yB1 });
-    surfaces.push({ kind: 'vlak', x0, x1, z0: zB1, z1: zB1 + 1.6, y: yB1 });
-    colliders.push({ x0, x1, y0: yB1, y1: yB1 + 1.15, z0: zB1 + 1.6, z1: zB1 + 1.78 });
-    const balus = new THREE.Mesh(new THREE.BoxGeometry(breed, 1.0, 0.05), M.glas);
-    balus.position.set(xc, yB1 + 0.5, zB1 + 1.68);
+    surfaces.push({ kind: 'helling', x0, x1: bvX1, z0: zB0, z1: zB1, yBijZ0: yB0, yBijZ1: yB1 });
+    surfaces.push({ kind: 'vlak', x0, x1: bvX1, z0: zB1, z1: zB1 + 1.6, y: yB1 });
+    colliders.push({ x0, x1: bvX1, y0: yB1, y1: yB1 + 1.15, z0: zB1 + 1.6, z1: zB1 + 1.78 });
+    const balus = new THREE.Mesh(new THREE.BoxGeometry(bvBreed, 1.0, 0.05), M.glas);
+    balus.position.set(bvXc, yB1 + 0.5, zB1 + 1.68);
     sub.add(balus);
-    const balusR = new THREE.Mesh(new THREE.BoxGeometry(breed, 0.07, 0.07), M.eik);
-    balusR.position.set(xc, yB1 + 1.02, zB1 + 1.68);
+    const balusR = new THREE.Mesh(new THREE.BoxGeometry(bvBreed, 0.07, 0.07), M.eik);
+    balusR.position.set(bvXc, yB1 + 1.02, zB1 + 1.68);
     sub.add(balusR);
 
-    // ── Betonnen zijwangen ook langs de BOVEN-tier (wig op vloer 1, y5→y9) ──
+    // ── Betonnen zijwangen langs de (ingekorte) BOVEN-tier ──
     const lipZ = zB1 + 1.6;
-    for (const [xf, dir] of [[x0, -1], [x1, 1]]) {
+    for (const [xf, dir] of [[x0, -1], [bvX1, 1]]) {
       const xa = dir < 0 ? xf - 0.28 : xf, xb = dir < 0 ? xf : xf + 0.28;
       const P = [[zB0, yB0], [lipZ, yB0], [lipZ, yB1], [zB1, yB1]];
       const pos = [];
