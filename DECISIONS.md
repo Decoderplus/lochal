@@ -209,3 +209,9 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - tribuneOost x[33,48]→[39,54]: de onderste trap komt met zijn (wereld-)rand op 1 lijn met de uitgang (plattegrond x54–59). Mens koos: trap schuiven + bovendeel inkorten.
 - Boven-tier (oplopende deel) wordt ingekort tot vóór de StemmingMakerij: bvX1 = min(x1, stemmingMakerij.x[0]-1) = 47, zodat treden/wang/balustrade/collider de zaal niet raken. De onderste trap loopt wel volledig door tot x54.
 - loopbrug x[25,33]→[25,39] verlengd zodat hij de verschoven trap nog verbindt (blijft kolomvrij op z34).
+
+## Fase 4 (vervolg 12) — oost-trap weer ÉÉN doorlopende trap (mens)
+
+- Mens: "de trap loopt door — 1 trap, geen 2 kleinere." Het eerdere inkorten gaf een brede onder- + smalle boventier = oogt als 2 trappen.
+- Opgelost: tribuneOost x[39,54]→[33,47] zodat onder- én boventier dezelfde breedte hebben (bvX1 = min(47,47)=47 → geen inkorting meer) = één consistente, doorlopende trap. Rand op x47, net vóór de StemmingMakerij (x48). loopbrug terug naar x[25,33].
+- Gevolg/afweging: "op 1 lijn met de uitgang" (x54–59) en "1 doorlopende trap" gaan niet samen — de oplopende trap kan niet voorbij de zaal (x48). Gekozen voor de doorlopende trap; rand zit zo ver oost als kan.

@@ -39,10 +39,11 @@ export const CONFIG = {
     // loopbrug/kernen; oost stopt vóór de StemmingMakerij (x 48–60).
     // trappen uit elkaar: oost naar de StemmingMakerij, west 2 m naar buiten
     tribuneWest:     { x: [4, 25],  zTop: 39, zBottom: 26, yTop: 5 },
-    // oost-trap op 1 lijn met de uitgang (x54–59); bovendeel wordt vóór de
-    // StemmingMakerij (x48) ingekort (zie tribunes.js)
-    tribuneOost:     { x: [39, 54], zTop: 39, zBottom: 26, yTop: 5 },
-    loopbrug:        { x: [25, 39], z: 34, y: 5, breedte: 2 },
+    // oost-trap = ÉÉN doorlopende trap (onder- en boventier even breed), rand
+    // net vóór de StemmingMakerij (x48) — zo ver oost als kan zonder de zaal te
+    // raken; vandaar dat hij de uitgang (x54–59) niet helemaal bereikt.
+    tribuneOost:     { x: [33, 47], zTop: 39, zBottom: 26, yTop: 5 },
+    loopbrug:        { x: [25, 33], z: 34, y: 5, breedte: 2 },
     // kiosk: glazen bar + zwevende mozaïekdoos + LocHal-bord; 4 m richting het
     // midden (weg van de StemmingMakerij)
     cafe:            { x: [44, 53], z: [4, 11], kapH: 2.4 },
