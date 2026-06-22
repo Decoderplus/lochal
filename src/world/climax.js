@@ -69,6 +69,17 @@ let bord = null;                 // { mesh, mat }
 let sterren = null;              // THREE.Points sterrenhemel, zichtbaar tijdens nacht
 let bloomBasis = 0;              // basis bloom-strength (om naar terug te keren)
 
+// ── TV-aanmeld staat ──────────────────────────────────────────────────────
+let tvModus = false;             // true = speler typt op het bord
+let tvTekst = '';                // huidige invoertekst (gespiegeld op TV-canvas)
+let tvCursorAan = true;          // knipperende cursor
+let tvCursorTimer = 0;           // timer voor cursor-blink (0.5 s interval)
+let aanmeldCanvas = null;        // live canvas voor TV-tekstupdates
+let aanmeldTex = null;           // bijbehorende CanvasTexture
+
+// ── Camera-pan naar lampen ─────────────────────────────────────────────────
+let camLampenGedaan = false;     // eenmalig per sessie
+
 // animatie-toestanden (null = inactief)
 const A = { lamp: null, zon: null, deeltjes: null, bord: null, camLampen: null };
 
@@ -102,6 +113,8 @@ export function initClimax(deps) {
   bouwBord();
   bouwDeeltjes();
   bouwSterren();
+  // kloon daklichten-materiaal zodat we het 's nachts apart kunnen aanpassen
+  { const dl = D.scene.getObjectByName('daklichten'); if (dl) dl.material = dl.material.clone(); }
   bouwTestknoppen();
 
   // klik op het bord → open de link (na de flits)
@@ -149,12 +162,13 @@ export function startClimax() {
 export function faseLampen() {
   audioChimes();                           // sprankels bij start lampenspiraal (eenmalig)
 
-  // cinematische camerabeweging: speler kijkt langzaam naar de lampenplek
-  if (D.spelerEuler) {
+  // cinematische camerabeweging: eenmalig, pan naar de lampen + 1 sec vasthouden
+  if (D.spelerEuler && !camLampenGedaan) {
+    camLampenGedaan = true;
     const cam = D.camera.position;
     const dx = INSTELLINGEN.lampPositie.x - cam.x;
     const dz = INSTELLINGEN.lampPositie.z - cam.z;
-    A.camLampen = { t: 0, duur: 2.4,
+    A.camLampen = { t: 0, panDuur: 2.4, holdDuur: 1.0,
       startY: D.spelerEuler.y,
       doelY: Math.atan2(-dx, -dz),
     };
@@ -239,6 +253,7 @@ export function updateClimax(dt) {
   if (A.zon) updateZon(dt);
   if (A.deeltjes) updateDeeltjes(dt);
   if (A.bord) updateBord(dt);
+  if (tvModus) _updateTVCursor(dt);
 }
 
 function updateLampen(dt) {
@@ -308,6 +323,14 @@ function updateZon(dt) {
 
   // sterren: fade in zodra het donker wordt
   if (sterren) sterren.material.opacity = THREE.MathUtils.clamp((nacht - 0.25) / 0.5, 0, 1);
+  // daklichten: transparant bij nacht zodat sterren er doorheen zichtbaar zijn
+  { const dl = D.scene.getObjectByName('daklichten');
+    if (dl) {
+      dl.material.transparent = true;
+      dl.material.opacity = THREE.MathUtils.clamp(1 - nacht * 0.88, 0.12, 1);
+      dl.material.emissiveIntensity = THREE.MathUtils.lerp(0.65, 0.0, nacht);
+    }
+  }
 
   if (raw >= 1) { A.zon = null; faseDeeltjes(); }
 }
@@ -502,9 +525,78 @@ function updateCamLampen(dt) {
   if (!D.spelerEuler) { A.camLampen = null; return; }
   const c = A.camLampen;
   c.t += dt;
-  const alpha = smooth(Math.min(c.t / c.duur, 1));
-  D.spelerEuler.y = c.startY + (c.doelY - c.startY) * alpha;
-  if (c.t >= c.duur) A.camLampen = null;
+  if (c.t <= c.panDuur) {
+    // pan-fase: soepele draai naar de lampen
+    const alpha = smooth(c.t / c.panDuur);
+    D.spelerEuler.y = c.startY + (c.doelY - c.startY) * alpha;
+  }
+  // hold-fase: euler.y blijft op doelY (niets aanpassen), gewoon wachten
+  if (c.t >= c.panDuur + c.holdDuur) A.camLampen = null;
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TV-aanmeld systeem: canvas-textuur op het bord met live invoer + cursor
+// ─────────────────────────────────────────────────────────────────────────
+export function activeerTVAanmeld() {
+  if (!bord || typeof document === 'undefined') return;
+  tvModus = true; tvTekst = ''; tvCursorAan = true; tvCursorTimer = 0;
+  aanmeldCanvas = document.createElement('canvas');
+  aanmeldCanvas.width = 1024; aanmeldCanvas.height = 600;
+  _tekenAanmeld();
+  aanmeldTex = new THREE.CanvasTexture(aanmeldCanvas);
+  aanmeldTex.colorSpace = THREE.SRGBColorSpace;
+  bord.mat.map = aanmeldTex; bord.mat.emissiveMap = aanmeldTex;
+  bord.mat.emissiveIntensity = 0.5; bord.mat.needsUpdate = true;
+}
+
+export function updateTVTekst(tekst) {
+  tvTekst = tekst;
+  if (!tvModus || !aanmeldCanvas) return;
+  _tekenAanmeld();
+  if (aanmeldTex) aanmeldTex.needsUpdate = true;
+}
+
+export function bevestigTV() {
+  tvModus = false;
+  if (!aanmeldCanvas) return;
+  const ctx = aanmeldCanvas.getContext('2d');
+  ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, 1024, 600);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#a0d8ff'; ctx.shadowColor = '#3aa0ff'; ctx.shadowBlur = 30;
+  ctx.font = 'bold 96px sans-serif'; ctx.fillText('✓', 512, 220);
+  ctx.shadowBlur = 10; ctx.font = '40px Georgia, serif';
+  ctx.fillStyle = '#dfeaff'; ctx.fillText('Bedankt!', 512, 360);
+  if (aanmeldTex) aanmeldTex.needsUpdate = true;
+}
+
+function _tekenAanmeld() {
+  const ctx = aanmeldCanvas.getContext('2d');
+  ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, 1024, 600);
+  // koptekst
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#dfeaff'; ctx.shadowColor = '#3aa0ff'; ctx.shadowBlur = 22;
+  ctx.font = 'bold 62px sans-serif'; ctx.fillText('MELD JE AAN', 512, 148);
+  // invoerveld
+  ctx.shadowBlur = 0;
+  ctx.fillStyle = 'rgba(10,18,36,0.82)'; ctx.fillRect(60, 258, 904, 92);
+  ctx.strokeStyle = '#3aa0ff66'; ctx.lineWidth = 1.5; ctx.strokeRect(60, 258, 904, 92);
+  // getypte tekst + cursor
+  ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#dfeaff'; ctx.shadowColor = '#3aa0ff'; ctx.shadowBlur = 6;
+  ctx.font = '44px Georgia, serif';
+  ctx.fillText((tvTekst || '') + (tvCursorAan ? '|' : ''), 84, 304);
+  // hint
+  ctx.shadowBlur = 0; ctx.textAlign = 'center';
+  ctx.fillStyle = 'rgba(160,190,255,0.38)'; ctx.font = '22px system-ui, sans-serif';
+  ctx.fillText('↵  bevestigen', 512, 438);
+}
+
+function _updateTVCursor(dt) {
+  tvCursorTimer += dt;
+  if (tvCursorTimer >= 0.5) {
+    tvCursorTimer = 0; tvCursorAan = !tvCursorAan;
+    if (aanmeldCanvas) { _tekenAanmeld(); if (aanmeldTex) aanmeldTex.needsUpdate = true; }
+  }
 }
 
 // ─────────────────────────────────────────────────────────────────────────

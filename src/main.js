@@ -7,7 +7,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { CONFIG } from './config.js';
 import { bouwWereld, MIRROR } from './world/index.js';
 import { Speler } from './player.js';
-import { initClimax, updateClimax, INSTELLINGEN, bordIsActief } from './world/climax.js';
+import { initClimax, updateClimax, INSTELLINGEN, bordIsActief,
+         activeerTVAanmeld, updateTVTekst, bevestigTV } from './world/climax.js';
 import { initAudio, onDeurGeopend, audioDeurKlik, audioKlik, audioKlaar } from './world/audio.js';
 
 // ── Renderer volgens CONFIG.renderer ─────────────────────────────────────
@@ -143,33 +144,23 @@ if (params.get('climax')) {
   bordVoorPos.y = 0;
   const bordEulerY = Math.atan2(bordN.x, bordN.z); // kijkrichting: recht op het bord
 
-  const tvOverlay = document.createElement('div');
-  tvOverlay.style.cssText =
-    'display:none;position:fixed;bottom:12%;left:50%;transform:translateX(-50%);z-index:80;' +
-    'background:rgba(6,6,12,0.90);border:1px solid rgba(58,160,255,0.25);border-radius:8px;' +
-    'padding:18px 22px;font:15px Georgia,serif;color:#dfeaff;text-align:center;' +
-    'box-shadow:0 0 32px rgba(58,160,255,0.14);min-width:320px;';
-  tvOverlay.innerHTML =
-    '<div style="font-size:11px;letter-spacing:3px;opacity:0.55;margin-bottom:12px;">SCHRIJF JE NAAM OF GEDACHTE</div>' +
-    '<div style="display:flex;gap:8px;">' +
-      '<input id="tvInput" type="text" placeholder="..." autocomplete="off" ' +
-        'style="flex:1;background:#08080f;border:1px solid rgba(58,160,255,0.4);' +
-               'border-radius:4px;padding:8px 12px;color:#dfeaff;font:15px Georgia,serif;outline:none;"/>' +
-      '<button id="tvVerzend" style="background:#0e1f45;border:1px solid rgba(58,160,255,0.5);' +
-               'border-radius:4px;padding:8px 18px;color:#dfeaff;cursor:pointer;font:15px Georgia,serif;">→</button>' +
-    '</div>';
-  document.body.appendChild(tvOverlay);
-  const tvInput = tvOverlay.querySelector('#tvInput');
-  const tvVerzend = tvOverlay.querySelector('#tvVerzend');
-  tvInput.addEventListener('keydown', () => audioKlik());
-  function tvVerzenden() {
-    if (!tvInput.value.trim()) return;
-    audioKlaar();
-    tvVerzend.textContent = '✓'; tvVerzend.style.color = '#a0d8ff';
-    setTimeout(() => { window.open(INSTELLINGEN.bordLink, '_blank', 'noopener'); tvOverlay.style.display = 'none'; }, 700);
-  }
-  tvVerzend.addEventListener('click', tvVerzenden);
-  tvInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tvVerzenden(); });
+  // Verborgen input: vangt toetsaanslagen op terwijl de TV-invoer actief is.
+  // Zichtbaar alleen op het TV-canvas zelf (via activeerTVAanmeld/updateTVTekst).
+  const tvInputEl = document.createElement('input');
+  tvInputEl.type = 'text'; tvInputEl.autocomplete = 'off';
+  tvInputEl.style.cssText = 'position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;';
+  document.body.appendChild(tvInputEl);
+  tvInputEl.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      if (!tvInputEl.value.trim()) return;
+      audioKlaar();
+      bevestigTV();
+      setTimeout(() => window.open(INSTELLINGEN.bordLink, '_blank', 'noopener'), 700);
+    } else if (!e.ctrlKey && !e.metaKey && !e.altKey) {
+      audioKlik();
+    }
+  });
+  tvInputEl.addEventListener('input', () => updateTVTekst(tvInputEl.value));
 
   let trekNaarTV = null;
   wereld.interactables.push({
@@ -306,8 +297,9 @@ if (params.get('climax')) {
       camera.quaternion.setFromEuler(speler.euler);
       if (trekNaarTV.t >= trekNaarTV.duur) {
         trekNaarTV = null;
-        tvOverlay.style.display = 'block';
-        setTimeout(() => tvInput.focus(), 120);
+        activeerTVAanmeld();
+        tvInputEl.value = '';
+        setTimeout(() => tvInputEl.focus(), 100);
       }
     }
     wereld.update(dt);
