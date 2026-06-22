@@ -227,3 +227,10 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - Bord: emissive-flits (bordFlitsKracht→bordGloed), klikbaar → bordLink in nieuw tabblad (raycaster, geen 3D-formulier).
 - Integratie main.js: EffectComposer + RenderPass + UnrealBloomPass + OutputPass (bloom voor de hele app). `?climax=1` test/screenshotmodus (vrije camera, window.__climax-knoppen + handmatig sturen). Testknoppen onderin (Climax/Lampen/Zon/Deeltjes).
 - Headless: software-rendering (swiftshader) is traag → climax-modus gebruikt een ruime dt-cap (0,5) en de shot-tool pollt window.__climax._debug() i.p.v. op de klok.
+
+## Climax-keten — verfijning (mens)
+
+- faseLampen: per bol 1 s puls met fade in + fade uit (sin), in een spiraal NAAR HET MIDDEN (afstand + hoek). De spiraal-golf herhaalt lampRondes keer; elke ronde lampVersnelling× sneller (sweep én puls). Settings: lampPulsDuur/lampRondes/lampVersnelling/lampSpiraalSlagen.
+- faseZonsondergang: nu een cyclus NACHT → DAG → NACHT (h01 = sin(π·warp)); merkbare versnelling via warp = raw^zonVersnelling. Kleur op zonhoogte (nacht→goud→dag), exposure/fog volgen de hoogte. goudUurMoment = zonhoogte van het goud.
+- Bord: aan de WESTMUUR links van de uitgang, op ooghoogte, halverwege trap en kiosk (bordPositie 0.7,1.9,18), via lookAt de hal in gericht.
+- Deeltjes: convergeren nu strak op het bord (smallere aEind-spreiding) met een kleine slingerende omweg — sinus langs twee loodrechte assen (uZij/uOp), dovend aan begin/eind zodat ze tóch op het bord landen. Setting: deeltjesKronkel.

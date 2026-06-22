@@ -10,8 +10,12 @@ import * as THREE from 'three';
 // ALLE regelbare waarden — pas hier aan.
 // ─────────────────────────────────────────────────────────────────────────
 export const INSTELLINGEN = {
-  // ── Lampen (spiraal-golf) ──────────────────────────────────────────────
-  lampDuur: 3.0,                 // seconden waarover alle bollen sequentieel ontsteken
+  // ── Lampen (spiraal-golf, herhaalt 3 rondes, elke ronde sneller) ───────
+  lampDuur: 3.0,                 // duur van de EERSTE spiraalronde (s)
+  lampPulsDuur: 1.0,             // hoe lang één bol oplicht: fade in + fade uit (s)
+  lampRondes: 3,                 // aantal spiraalrondes
+  lampVersnelling: 2,            // elke volgende ronde dit keer sneller (2 = dubbel zo snel)
+  lampSpiraalSlagen: 2.5,        // aantal slagen van de spiraal naar het midden
   lampKleur: 0xffe6b0,           // kleur waarmee elke kroonluchterbol oplicht (warm)
 
   // ── Start van de keten ─────────────────────────────────────────────────
@@ -25,8 +29,9 @@ export const INSTELLINGEN = {
   zonKleurDag: 0xffe6c0,         // lichtkleur overdag
   zonKleurGoud: 0xff6a1c,        // lichtkleur tijdens het gouden uur
   zonKleurNacht: 0x223a5e,       // lichtkleur 's nachts (koel donkerblauw)
-  goudUurMoment: 0.6,            // moment (0–1) in de overgang waarop het goud het sterkst is
-  dagNachtDuur: 12.0,            // seconden voor de hele zonsondergang-overgang
+  goudUurMoment: 0.45,           // zonhoogte (0–1) waarop het goud het sterkst is
+  dagNachtDuur: 13.0,            // seconden voor de hele cyclus: nacht → dag → nacht
+  zonVersnelling: 1.8,           // >1 = merkbare versnelling (het eind gaat sneller dan het begin)
   nachtExposure: 0.45,           // renderer-exposure aan het eind (nacht)
   nachtFogKleur: 0x0e1422,       // fog-kleur 's nachts
   schaduwMeebewegen: true,       // true = schaduwkaart elk frame updaten tijdens de overgang; false = bevriezen
@@ -37,6 +42,7 @@ export const INSTELLINGEN = {
   deeltjesDuur: 6.0,             // seconden voor de vlucht van de lampen naar het bord
   padBochtigheid: 6.0,           // hoe sterk het pad buigt via het controlepunt (meters)
   deeltjesSpreiding: 3.0,        // spreiding van de zwerm (meters, via aRuis)
+  deeltjesKronkel: 1.6,          // amplitude van de kleine slingerende omweg (meters)
 
   // ── Bord ───────────────────────────────────────────────────────────────
   bordFlitsKracht: 6.0,          // emissive-piek bij de landing
@@ -46,7 +52,7 @@ export const INSTELLINGEN = {
 
   // ── Posities (wereld-coördinaten) ──────────────────────────────────────
   lampPositie: new THREE.Vector3(21, 9, 16),  // centrum van de kroonluchterlampen — deeltjes-start
-  bordPositie: new THREE.Vector3(34, 6, 9),   // positie van het bord — deeltjes-eind
+  bordPositie: new THREE.Vector3(0.7, 1.9, 18), // westmuur, links van de uitgang, op ooghoogte (deeltjes-eind)
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -128,7 +134,7 @@ export function faseLampen() {
   const n = kroon.count;
   const m = new THREE.Matrix4(), p = new THREE.Vector3();
 
-  // centroïde van de bollen (lokaal; spiegeling doet er voor de volgorde niet toe)
+  // centroïde (xz) van de bollen
   const centrum = new THREE.Vector3();
   const pos = [];
   for (let i = 0; i < n; i++) {
@@ -136,36 +142,30 @@ export function faseLampen() {
   }
   centrum.multiplyScalar(1 / Math.max(n, 1));
 
-  // sorteersleutel: laag (kleine y) + buiten (grote afstand) eerst → hoog/binnen laatst,
-  // met een hoekterm zodat het licht naar binnen/omhoog kríngelt (spiraal).
-  let yMin = Infinity, yMax = -Infinity, dMax = 0;
-  const ruw = pos.map((q) => {
+  // spiraal NAAR HET MIDDEN: buiten → binnen, roterend (afstand + hoek)
+  let dMax = 0;
+  const info = pos.map((q) => {
     const dx = q.x - centrum.x, dz = q.z - centrum.z;
-    const d = Math.hypot(dx, dz), hoek = Math.atan2(dz, dx);
-    yMin = Math.min(yMin, q.y); yMax = Math.max(yMax, q.y); dMax = Math.max(dMax, d);
-    return { d, hoek, y: q.y };
+    const d = Math.hypot(dx, dz); dMax = Math.max(dMax, d);
+    return { d, hoek: Math.atan2(dz, dx) };
   });
-  const volgorde = pos.map((_, i) => i).sort((a, b) => {
-    const A1 = sleutel(ruw[a]), B1 = sleutel(ruw[b]); return A1 - B1;
-  });
-  function sleutel(r) {
-    const hN = (r.y - yMin) / Math.max(yMax - yMin, 0.001);   // 0 laag … 1 hoog
-    const dN = r.d / Math.max(dMax, 0.001);                   // 0 binnen … 1 buiten
-    const aN = (r.hoek + Math.PI) / (2 * Math.PI);            // spiraal-veeg
-    return (hN - dN) + aN * 0.15;                             // laag+buiten eerst
-  }
+  const spiraal = (r) => (1 - r.d / Math.max(dMax, 0.001)) * Math.PI * 2 * INSTELLINGEN.lampSpiraalSlagen + r.hoek;
+  const volgorde = pos.map((_, i) => i).sort((a, b) => spiraal(info[a]) - spiraal(info[b]));
+  const rang = new Array(n);
+  volgorde.forEach((bol, plek) => { rang[bol] = plek; });
 
-  // bewaar originele kleuren
+  // bewaar originele kleuren (om elke puls vanaf te animeren en aan het eind te herstellen)
   const origineel = [];
   const c = new THREE.Color();
   for (let i = 0; i < n; i++) {
     if (kroon.instanceColor) kroon.getColorAt(i, c); else c.set(0xffffff);
     origineel.push(c.clone());
   }
-  lampen = {
-    origineel,
-    tijd: volgorde.map((idx, rang) => ({ i: idx, t: (rang / Math.max(n - 1, 1)) * INSTELLINGEN.lampDuur })),
-  };
+  // totale duur = som van alle (steeds snellere) rondes
+  let totaal = 0;
+  for (let r = 0; r < INSTELLINGEN.lampRondes; r++) totaal += INSTELLINGEN.lampDuur / Math.pow(INSTELLINGEN.lampVersnelling, r);
+
+  lampen = { origineel, rang, n, totaal };
   A.lamp = { t: 0 };
 }
 
@@ -210,50 +210,70 @@ export function updateClimax(dt) {
 
 function updateLampen(dt) {
   A.lamp.t += dt;
-  const kroon = D.kroon, c = new THREE.Color(), doel = new THREE.Color(INSTELLINGEN.lampKleur);
-  for (const { i, t } of lampen.tijd) {
-    const f = THREE.MathUtils.clamp((A.lamp.t - t) / 0.5, 0, 1);   // 0,5 s fade-in per bol
-    if (f <= 0) continue;
-    c.copy(lampen.origineel[i]).lerp(doel, f * 0.85).multiplyScalar(1 + f * 1.6); // oplichten (bloom)
+  const I = INSTELLINGEN, n = lampen.n, kroon = D.kroon;
+  const c = new THREE.Color(), fel = new THREE.Color(I.lampKleur);
+
+  // huidige (steeds snellere) ronde + lokale tijd + puls-/sweepduur
+  let start = 0, sweep = I.lampDuur, puls = I.lampPulsDuur, lokaal = A.lamp.t;
+  for (let r = 0; r < I.lampRondes; r++) {
+    const dur = I.lampDuur / Math.pow(I.lampVersnelling, r);
+    if (A.lamp.t < start + dur || r === I.lampRondes - 1) {
+      sweep = dur; puls = I.lampPulsDuur / Math.pow(I.lampVersnelling, r); lokaal = A.lamp.t - start; break;
+    }
+    start += dur;
+  }
+
+  // elke bol pulst (sin = fade in + fade uit) op zijn spiraal-ontsteektijd
+  for (let i = 0; i < n; i++) {
+    const ontsteek = (lampen.rang[i] / Math.max(n - 1, 1)) * Math.max(sweep - puls, 0.001);
+    const tau = lokaal - ontsteek;
+    const f = (tau >= 0 && tau <= puls) ? Math.sin(Math.PI * (tau / puls)) : 0;
+    c.copy(lampen.origineel[i]).lerp(fel, f * 0.9).multiplyScalar(1 + f * 1.8);
     kroon.setColorAt(i, c);
   }
   if (kroon.instanceColor) kroon.instanceColor.needsUpdate = true;
-  if (A.lamp.t >= INSTELLINGEN.lampDuur + 0.5) { A.lamp = null; faseZonsondergang(); }
+
+  if (A.lamp.t >= lampen.totaal) {                 // alle rondes klaar → herstel + volgende fase
+    for (let i = 0; i < n; i++) kroon.setColorAt(i, lampen.origineel[i]);
+    if (kroon.instanceColor) kroon.instanceColor.needsUpdate = true;
+    A.lamp = null; faseZonsondergang();
+  }
 }
 
 function updateZon(dt) {
   A.zon.t += dt;
-  const t01 = THREE.MathUtils.clamp(A.zon.t / INSTELLINGEN.dagNachtDuur, 0, 1);
   const I = INSTELLINGEN;
-
-  // (één waarde) zonhoogte
-  const hoogte = THREE.MathUtils.lerp(I.zonHoogteStart, I.zonHoogteEind, t01);
+  const raw = THREE.MathUtils.clamp(A.zon.t / I.dagNachtDuur, 0, 1);
+  const warp = Math.pow(raw, I.zonVersnelling);        // merkbare versnelling (eind sneller)
+  // één waarde, h01: 0 nacht → 1 dag → 0 nacht (cyclus)
+  const h01 = Math.sin(Math.PI * warp);
+  const hoogte = THREE.MathUtils.lerp(I.zonHoogteEind, I.zonHoogteStart, h01);  // nacht-hoogte ↔ dag-hoogte
+  const nacht = smooth(1 - h01);                       // 1 's nachts, 0 overdag
 
   // (a) directional light langs een boog (hoogte + azimut) → schaduwen verlengen/draaien
   if (D.zon) {
-    const el = hoogte * Math.PI * 0.45;          // elevatiehoek
+    const el = hoogte * Math.PI * 0.45;
     const dir = new THREE.Vector3(
       Math.cos(el) * Math.cos(I.zonAzimut), Math.sin(el), Math.cos(el) * Math.sin(I.zonAzimut));
     const doel = new THREE.Vector3(30, 1, 45);
     D.zon.position.copy(doel).addScaledVector(dir, 95);
     D.zon.target.position.copy(doel); D.zon.target.updateMatrixWorld();
-    // (b) lichtkleur dag → goud → nacht (dip door het goud)
-    D.zon.color.copy(zonKleurOp(t01));
-    D.zon.intensity = THREE.MathUtils.lerp(dagZonIntensiteit, 0.12, smooth(t01)) *
-      (1 + 0.5 * Math.exp(-Math.pow((t01 - I.goudUurMoment) / 0.16, 2)));   // gouden opflakkering
-    // schaduw mee laten bewegen of bevriezen
-    D.zon.shadow.autoUpdate = (I.schaduwMeebewegen && t01 < 1);
+    // (b) lichtkleur op zonhoogte: nacht → goud → dag (en omgekeerd bij het zakken)
+    D.zon.color.copy(zonKleurOpHoogte(h01));
+    D.zon.intensity = THREE.MathUtils.lerp(0.12, dagZonIntensiteit, smooth(h01)) *
+      (1 + 0.4 * Math.exp(-Math.pow((h01 - I.goudUurMoment) / 0.14, 2)));   // gouden opflakkering
+    D.zon.shadow.autoUpdate = (I.schaduwMeebewegen && raw < 1);
     if (I.schaduwMeebewegen) D.zon.shadow.needsUpdate = true;
   }
 
-  // (c) exposure + fog naar nacht
-  D.renderer.toneMappingExposure = THREE.MathUtils.lerp(dagExposure, I.nachtExposure, smooth(t01));
+  // (c) exposure + fog: dag ↔ nacht
+  D.renderer.toneMappingExposure = THREE.MathUtils.lerp(dagExposure, I.nachtExposure, nacht);
   if (D.scene.fog) {
-    D.scene.fog.color.copy(dagFogKleur).lerp(new THREE.Color(I.nachtFogKleur), smooth(t01));
+    D.scene.fog.color.copy(dagFogKleur).lerp(new THREE.Color(I.nachtFogKleur), nacht);
     if (D.scene.background && D.scene.background.isColor) D.scene.background.copy(D.scene.fog.color);
   }
 
-  if (t01 >= 1) { A.zon = null; faseDeeltjes(); }
+  if (raw >= 1) { A.zon = null; faseDeeltjes(); }
 }
 
 function updateDeeltjes(dt) {
@@ -298,9 +318,10 @@ function bouwBord() {
     map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.04,
     transparent: true, roughness: 0.5, metalness: 0.0,
   });
-  const breed = 5.6, hoog = breed * 0.42;
+  const breed = 4.0, hoog = breed * 0.42;
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(breed, hoog), mat);
   mesh.position.copy(INSTELLINGEN.bordPositie);   // wereld-coördinaten (climax hangt niet onder de spiegel)
+  mesh.lookAt(30, INSTELLINGEN.bordPositie.y, 30); // richt het bord vanaf de muur de hal in
   mesh.name = 'climaxBord';
   D.scene.add(mesh);
   bord = { mesh, mat, actief: false };
@@ -332,9 +353,9 @@ function bouwDeeltjes() {
     aStart[i * 3] = L.x + (Math.random() - 0.5) * 3.0;
     aStart[i * 3 + 1] = L.y + (Math.random() - 0.5) * 2.5;
     aStart[i * 3 + 2] = L.z + (Math.random() - 0.5) * 3.0;
-    aEind[i * 3] = B.x + (Math.random() - 0.5) * 2.6;
-    aEind[i * 3 + 1] = B.y + (Math.random() - 0.5) * 1.2;
-    aEind[i * 3 + 2] = B.z + (Math.random() - 0.5) * 0.6;
+    aEind[i * 3] = B.x + (Math.random() - 0.5) * 0.8;       // tegen de muur → smal in x
+    aEind[i * 3 + 1] = B.y + (Math.random() - 0.5) * 1.0;
+    aEind[i * 3 + 2] = B.z + (Math.random() - 0.5) * 2.4;   // langs de bordbreedte
     aVertraging[i] = Math.random();
     aRuis[i * 3] = (Math.random() - 0.5) * 2 * sp;
     aRuis[i * 3 + 1] = (Math.random() - 0.5) * 2 * sp;
@@ -346,9 +367,10 @@ function bouwDeeltjes() {
   geo.setAttribute('aVertraging', new THREE.BufferAttribute(aVertraging, 1));
   geo.setAttribute('aRuis', new THREE.BufferAttribute(aRuis, 3));
 
-  // controlepunt-richting (buiging): omhoog + zijwaarts t.o.v. de lijn lamp→bord
+  // controlepunt-richting (buiging) + loodrechte assen voor de slinger-omweg
   const dir = B.clone().sub(L).normalize();
   const zij = new THREE.Vector3().crossVectors(dir, new THREE.Vector3(0, 1, 0)).normalize();
+  const opVec = new THREE.Vector3().crossVectors(zij, dir).normalize();
   const bend = new THREE.Vector3(0, 1, 0).multiplyScalar(INSTELLINGEN.padBochtigheid)
     .addScaledVector(zij, INSTELLINGEN.padBochtigheid * 0.35);
 
@@ -358,12 +380,16 @@ function bouwDeeltjes() {
       uProgress: { value: 0 },
       uOpacity: { value: 1 },
       uBend: { value: bend },
+      uZij: { value: zij },
+      uOp: { value: opVec },
+      uKronkel: { value: INSTELLINGEN.deeltjesKronkel },
       uSize: { value: 38.0 },
       uPixelRatio: { value: Math.min(typeof window !== 'undefined' ? window.devicePixelRatio : 1, 2) },
       uColor: { value: new THREE.Color(INSTELLINGEN.deeltjesKleur) },
     },
     vertexShader: `
-      uniform float uProgress; uniform vec3 uBend; uniform float uSize; uniform float uPixelRatio;
+      uniform float uProgress; uniform vec3 uBend; uniform vec3 uZij; uniform vec3 uOp;
+      uniform float uKronkel; uniform float uSize; uniform float uPixelRatio;
       attribute vec3 aStart; attribute vec3 aEind; attribute float aVertraging; attribute vec3 aRuis;
       varying float vA;
       void main(){
@@ -372,6 +398,11 @@ function bouwDeeltjes() {
         vec3 a = mix(aStart, ctrl, t);
         vec3 b = mix(ctrl, aEind, t);
         vec3 p = mix(a, b, t);
+        // kleine slingerende omweg, dovend aan begin/eind zodat ze tóch op het bord landen
+        float w = sin(3.14159 * t);
+        float fase = aVertraging * 6.2831;
+        p += uZij * sin(t * 9.0 + fase) * uKronkel * w;
+        p += uOp  * cos(t * 6.0 + fase) * uKronkel * 0.55 * w;
         p += aRuis * (1.0 - t);                                   // spreiding, dovend naar de landing
         vec4 mv = modelViewMatrix * vec4(p, 1.0);
         gl_Position = projectionMatrix * mv;
@@ -399,10 +430,11 @@ function bouwDeeltjes() {
 // Hulp
 // ─────────────────────────────────────────────────────────────────────────
 function smooth(t) { return t * t * (3 - 2 * t); }
-function zonKleurOp(t01) {
+// kleur op zonhoogte h01 (0 nacht … 1 dag): nacht → goud (rond goudUurMoment) → dag
+function zonKleurOpHoogte(h01) {
   const I = INSTELLINGEN, g = I.goudUurMoment, c = new THREE.Color();
-  if (t01 <= g) c.set(I.zonKleurDag).lerp(new THREE.Color(I.zonKleurGoud), smooth(t01 / Math.max(g, 0.001)));
-  else c.set(I.zonKleurGoud).lerp(new THREE.Color(I.zonKleurNacht), smooth((t01 - g) / Math.max(1 - g, 0.001)));
+  if (h01 <= g) c.set(I.zonKleurNacht).lerp(new THREE.Color(I.zonKleurGoud), smooth(h01 / Math.max(g, 0.001)));
+  else c.set(I.zonKleurGoud).lerp(new THREE.Color(I.zonKleurDag), smooth((h01 - g) / Math.max(1 - g, 0.001)));
   return c;
 }
 
