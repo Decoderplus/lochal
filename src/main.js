@@ -1,8 +1,13 @@
 // LocHal — app-schil: renderer (CONFIG is wet), wereld, speler, shot-modus.
 import * as THREE from 'three';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { CONFIG } from './config.js';
 import { bouwWereld, MIRROR } from './world/index.js';
 import { Speler } from './player.js';
+import { initClimax, updateClimax } from './world/climax.js';
 
 // ── Renderer volgens CONFIG.renderer ─────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -22,6 +27,15 @@ scene.fog = new THREE.Fog(CONFIG.colors.fog, 42, 140);
 
 const camera = new THREE.PerspectiveCamera(
   70, window.innerWidth / window.innerHeight, 0.1, 300);
+
+// ── Post-processing: EffectComposer + bloom (door de climax hergebruikt) ──
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+const bloomPass = new UnrealBloomPass(
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.55, 0.5, 0.85);
+composer.addPass(bloomPass);
+composer.addPass(new OutputPass());
+const renderFrame = () => composer.render();
 
 // ── Definitief lichtontwerp (fase 4) ─────────────────────────────────────
 // Eén echte schaduwwerper (CONFIG.renderer.maxShadowLights = 1): de warme zon
@@ -69,7 +83,27 @@ const vrij = shotNaam === 'vrij' && params.get('pos') && params.get('kijk')
   ? [params.get('pos').split(',').map(Number), params.get('kijk').split(',').map(Number)]
   : null;
 
-if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
+if (params.get('climax')) {
+  // ── Climax-test/-screenshotmodus: vrije camera, doorlopende lus, fasen via
+  //    window.__climax (knoppen + handmatig). Geen speler/pointer-lock. ──────
+  const cPos = params.get('pos') ? params.get('pos').split(',').map(Number) : [44, 8, 4];
+  const cKijk = params.get('kijk') ? params.get('kijk').split(',').map(Number) : [24, 7, 18];
+  camera.position.set(...cPos);
+  camera.lookAt(...cKijk);
+  document.getElementById('hint').style.display = 'none';
+  document.getElementById('startuitleg').style.display = 'none';
+  initClimax({
+    scene, camera, renderer, zon, bloomPass,
+    kroon: scene.getObjectByName('kroonluchter'),
+    getSpelerPositie: () => ({ x: -99, y: 0, z: -99 }),   // buiten trapZone → handmatig sturen
+  });
+  renderer.setAnimationLoop(() => {
+    const dt = Math.min(klok.getDelta(), 0.5);   // ruime cap: climax-test draait op echte tijd, ook bij trage (software-)rendering
+    wereld.update(dt);
+    updateClimax(dt);
+    renderFrame();
+  });
+} else if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
   const [pos, kijk] = vrij ?? CONFIG.cameras[shotNaam];
   camera.position.set(...pos);
   camera.lookAt(...kijk);
@@ -78,11 +112,17 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
   let frames = 0;
   renderer.setAnimationLoop(() => {
     wereld.update(klok.getDelta());
-    renderer.render(scene, camera);
+    renderFrame();
     if (++frames >= 8) { window.__shotReady = true; renderer.setAnimationLoop(null); }
   });
 } else {
   const speler = new Speler(camera, renderer.domElement, wereld);
+  // ── Climax-effectketen: aansluiten met de speler als trapZone-trigger ────
+  initClimax({
+    scene, camera, renderer, zon, bloomPass,
+    kroon: scene.getObjectByName('kroonluchter'),
+    getSpelerPositie: () => speler.voeten,
+  });
   const hint = document.getElementById('hint');
 
   // ── Debugtoetsen (ijking StemmingMakerij-referentiekader) ───────────────
@@ -199,11 +239,12 @@ if (vrij || (shotNaam && CONFIG.cameras[shotNaam])) {
     const dt = Math.min(klok.getDelta(), 0.05);
     wereld.update(dt);
     speler.update(dt);
+    updateClimax(dt);
     const h = speler.hintTekst();
     hint.textContent = h;
     hint.style.display = h ? 'block' : 'none';
     if (kaartAan) tekenKaart();
-    renderer.render(scene, camera);
+    renderFrame();
   });
 }
 
@@ -211,4 +252,6 @@ window.addEventListener('resize', () => {
   camera.aspect = window.innerWidth / window.innerHeight;
   camera.updateProjectionMatrix();
   renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  bloomPass.setSize(window.innerWidth, window.innerHeight);
 });

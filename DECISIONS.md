@@ -215,3 +215,15 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - Mens: "de trap loopt door — 1 trap, geen 2 kleinere." Het eerdere inkorten gaf een brede onder- + smalle boventier = oogt als 2 trappen.
 - Opgelost: tribuneOost x[39,54]→[33,47] zodat onder- én boventier dezelfde breedte hebben (bvX1 = min(47,47)=47 → geen inkorting meer) = één consistente, doorlopende trap. Rand op x47, net vóór de StemmingMakerij (x48). loopbrug terug naar x[25,33].
 - Gevolg/afweging: "op 1 lijn met de uitgang" (x54–59) en "1 doorlopende trap" gaan niet samen — de oplopende trap kan niet voorbij de zaal (x48). Gekozen voor de doorlopende trap; rand zit zo ver oost als kan.
+
+## Climax-effectketen (src/world/climax.js) — v2
+
+- Zelfstandige module: alle regelbare waarden bovenaan in `INSTELLINGEN` (NL-namen, comment per regel, incl. lampPositie/bordPositie). Hergebruikt de bestaande renderer + bloom (via initClimax-parameters), leest geen andere modules in.
+- Fasen los aanroepbaar én auto-ketenend: faseLampen() → faseZonsondergang() → faseDeeltjes() → bord; startClimax() start alles. faseZonsondergang apart aanroepbaar (later door video te triggeren).
+- TIJDELIJKE START: speler in trapZone → timer startVertraging → startClimax() (gemarkeerd in code; later hologram/video-trigger).
+- faseLampen: spiraal-golf over de kroonluchter-InstancedMesh, gesorteerd op hoogte − afstand + hoekterm (laag/buiten → hoog/binnen), per bol setColorAt.
+- faseZonsondergang: één zonhoogte stuurt boog (azimut) + kleur (dag→goud→nacht met dip via goudUurMoment) + exposure + fog; schaduw meebewegend/bevroren (1 werker, kaart 1024).
+- faseDeeltjes: één THREE.Points (3000), additive, depthWrite false, ronde punten; vertex-shader doet alles (aStart→aEind via bezier-controlepunt + aRuis), JS animeert alléén uProgress. Eén draw call, geen per-frame attribuutupdates.
+- Bord: emissive-flits (bordFlitsKracht→bordGloed), klikbaar → bordLink in nieuw tabblad (raycaster, geen 3D-formulier).
+- Integratie main.js: EffectComposer + RenderPass + UnrealBloomPass + OutputPass (bloom voor de hele app). `?climax=1` test/screenshotmodus (vrije camera, window.__climax-knoppen + handmatig sturen). Testknoppen onderin (Climax/Lampen/Zon/Deeltjes).
+- Headless: software-rendering (swiftshader) is traag → climax-modus gebruikt een ruime dt-cap (0,5) en de shot-tool pollt window.__climax._debug() i.p.v. op de klok.
