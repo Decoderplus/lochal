@@ -7,8 +7,8 @@ import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { CONFIG } from './config.js';
 import { bouwWereld, MIRROR } from './world/index.js';
 import { Speler } from './player.js';
-import { initClimax, updateClimax } from './world/climax.js';
-import { initAudio, onDeurGeopend } from './world/audio.js';
+import { initClimax, updateClimax, INSTELLINGEN, bordIsActief } from './world/climax.js';
+import { initAudio, onDeurGeopend, audioDeurKlik, audioKlik, audioKlaar } from './world/audio.js';
 
 // ── Renderer volgens CONFIG.renderer ─────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -123,6 +123,7 @@ if (params.get('climax')) {
     scene, camera, renderer, zon, bloomPass,
     kroon: scene.getObjectByName('kroonluchter'),
     getSpelerPositie: () => speler.voeten,
+    spelerEuler: speler.euler,
   });
 
   // ── Audio-laag: ontgrendelen + achtergrond starten via E-druk op de deur ──
@@ -131,8 +132,57 @@ if (params.get('climax')) {
     (it) => typeof it.label === 'function' && it.label().includes('deur'));
   if (deurIt) {
     const origInteract = deurIt.onInteract;
-    deurIt.onInteract = () => { origInteract(); onDeurGeopend(); };
+    deurIt.onInteract = () => { origInteract(); audioDeurKlik(); onDeurGeopend(); };
   }
+
+  // ── Bord: E trekt speler cinematisch naar de TV + invoerveld verschijnt ──
+  const sm = (t) => t * t * (3 - 2 * t);
+  const bordN = new THREE.Vector3(
+    Math.sin(INSTELLINGEN.bordRotatieY), 0, Math.cos(INSTELLINGEN.bordRotatieY));
+  const bordVoorPos = INSTELLINGEN.bordPositie.clone().addScaledVector(bordN, 2.5);
+  bordVoorPos.y = 0;
+  const bordEulerY = Math.atan2(bordN.x, bordN.z); // kijkrichting: recht op het bord
+
+  const tvOverlay = document.createElement('div');
+  tvOverlay.style.cssText =
+    'display:none;position:fixed;bottom:12%;left:50%;transform:translateX(-50%);z-index:80;' +
+    'background:rgba(6,6,12,0.90);border:1px solid rgba(58,160,255,0.25);border-radius:8px;' +
+    'padding:18px 22px;font:15px Georgia,serif;color:#dfeaff;text-align:center;' +
+    'box-shadow:0 0 32px rgba(58,160,255,0.14);min-width:320px;';
+  tvOverlay.innerHTML =
+    '<div style="font-size:11px;letter-spacing:3px;opacity:0.55;margin-bottom:12px;">SCHRIJF JE NAAM OF GEDACHTE</div>' +
+    '<div style="display:flex;gap:8px;">' +
+      '<input id="tvInput" type="text" placeholder="..." autocomplete="off" ' +
+        'style="flex:1;background:#08080f;border:1px solid rgba(58,160,255,0.4);' +
+               'border-radius:4px;padding:8px 12px;color:#dfeaff;font:15px Georgia,serif;outline:none;"/>' +
+      '<button id="tvVerzend" style="background:#0e1f45;border:1px solid rgba(58,160,255,0.5);' +
+               'border-radius:4px;padding:8px 18px;color:#dfeaff;cursor:pointer;font:15px Georgia,serif;">→</button>' +
+    '</div>';
+  document.body.appendChild(tvOverlay);
+  const tvInput = tvOverlay.querySelector('#tvInput');
+  const tvVerzend = tvOverlay.querySelector('#tvVerzend');
+  tvInput.addEventListener('keydown', () => audioKlik());
+  function tvVerzenden() {
+    if (!tvInput.value.trim()) return;
+    audioKlaar();
+    tvVerzend.textContent = '✓'; tvVerzend.style.color = '#a0d8ff';
+    setTimeout(() => { window.open(INSTELLINGEN.bordLink, '_blank', 'noopener'); tvOverlay.style.display = 'none'; }, 700);
+  }
+  tvVerzend.addEventListener('click', tvVerzenden);
+  tvInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') tvVerzenden(); });
+
+  let trekNaarTV = null;
+  wereld.interactables.push({
+    x: INSTELLINGEN.bordPositie.x + bordN.x * 3,
+    z: INSTELLINGEN.bordPositie.z + bordN.z * 3,
+    radius: 7,
+    label: () => bordIsActief() ? 'E — meld je aan' : '',
+    onInteract: () => {
+      if (trekNaarTV || !bordIsActief()) return;
+      if (document.exitPointerLock) document.exitPointerLock();
+      trekNaarTV = { t: 0, duur: 1.6, startVoeten: speler.voeten.clone(), startEulerY: speler.euler.y };
+    },
+  });
 
   const hint = document.getElementById('hint');
 
@@ -248,6 +298,18 @@ if (params.get('climax')) {
 
   renderer.setAnimationLoop(() => {
     const dt = Math.min(klok.getDelta(), 0.05);
+    if (trekNaarTV) {
+      trekNaarTV.t += dt;
+      const alpha = sm(Math.min(trekNaarTV.t / trekNaarTV.duur, 1));
+      speler.voeten.lerpVectors(trekNaarTV.startVoeten, bordVoorPos, alpha);
+      speler.euler.y = trekNaarTV.startEulerY + (bordEulerY - trekNaarTV.startEulerY) * alpha;
+      camera.quaternion.setFromEuler(speler.euler);
+      if (trekNaarTV.t >= trekNaarTV.duur) {
+        trekNaarTV = null;
+        tvOverlay.style.display = 'block';
+        setTimeout(() => tvInput.focus(), 120);
+      }
+    }
     wereld.update(dt);
     speler.update(dt);
     updateClimax(dt);

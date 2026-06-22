@@ -7,7 +7,7 @@
 
 // ── GELUIDEN-configuratie ────────────────────────────────────────────────────
 const GELUIDEN = {
-  achtergrond: { pad: 'Achtergrond.mp3', volume: 0.16 }, // sfeerloop, laag volume, loopt de hele ervaring
+  achtergrond: { pad: 'Achtergrond.mp3', volume: 1.1  }, // sfeerloop, loopt de hele ervaring
   chimes:      { pad: 'Chimes.mp3',      volume: 0.65 }, // sprankels bij de start van de lampenspiraal
   nacht:       { pad: 'nacht.mp3',       volume: 0.72 }, // omslaggeluid bij het begin van de dag→nacht-overgang
   klik:        { pad: 'klik.mp3',        volume: 0.42 }, // toetsaanslag in het bordinvoerveld (per aanslag nieuw)
@@ -82,6 +82,15 @@ export function audioKlik() {
 // Klaar: bij verzenden bord
 export function audioKlaar() {
   speelGeluid('klaar');
+}
+
+// Deur-klik: gebruikt new Audio() zodat het meteen speelt zonder preloading
+export function audioDeurKlik() {
+  try {
+    const a = new Audio('klik.mp3');
+    a.volume = Math.min(GELUIDEN.klik.volume, 1.0);
+    a.play().catch(() => {});
+  } catch (_) {}
 }
 
 // ── Mute-knop ─────────────────────────────────────────────────────────────────

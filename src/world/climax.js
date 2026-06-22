@@ -5,7 +5,7 @@
 // Elke fase is los aanroepbaar maar ketent standaard automatisch door.
 // startClimax() start de hele keten. updateClimax(dt) draait per frame.
 import * as THREE from 'three';
-import { audioChimes, audioNacht, audioKlik, audioKlaar } from './audio.js';
+import { audioChimes, audioNacht } from './audio.js';
 
 // ─────────────────────────────────────────────────────────────────────────
 // ALLE regelbare waarden — pas hier aan.
@@ -50,7 +50,7 @@ export const INSTELLINGEN = {
   // ── Bord ───────────────────────────────────────────────────────────────
   bordFlitsKracht: 6.0,          // emissive-piek bij de landing
   bordGloed: 1.2,                // emissive-niveau waarop het bord daarna blijft gloeien
-  bordTekst: 'DOE MEE',          // korte tekst op het bord
+  bordTekst: 'Meld je aan',       // korte tekst op het bord
   bordLink: 'https://www.lochal.nl/', // URL die het bord opent (nieuw tabblad)
 
   // ── Posities (wereld-coördinaten) ──────────────────────────────────────
@@ -66,11 +66,11 @@ let D = null;                    // dependencies (scene, camera, renderer, zon, 
 let lampen = null;               // { volgorde:[{i, tijd}], origineel:[Color] }
 let deeltjes = null;             // THREE.Points
 let bord = null;                 // { mesh, mat }
-let bordOverlay = null;          // DOM-overlay met invoerveld (klik/klaar geluid)
+let sterren = null;              // THREE.Points sterrenhemel, zichtbaar tijdens nacht
 let bloomBasis = 0;              // basis bloom-strength (om naar terug te keren)
 
 // animatie-toestanden (null = inactief)
-const A = { lamp: null, zon: null, deeltjes: null, bord: null };
+const A = { lamp: null, zon: null, deeltjes: null, bord: null, camLampen: null };
 
 // zon/sfeer-uitgangswaarden (om vloeiend vanaf de HUIDIGE stand te animeren)
 let dagExposure = 1.0, dagZonIntensiteit = 1.85;
@@ -101,6 +101,7 @@ export function initClimax(deps) {
 
   bouwBord();
   bouwDeeltjes();
+  bouwSterren();
   bouwTestknoppen();
 
   // klik op het bord → open de link (na de flits)
@@ -135,6 +136,8 @@ export function initClimax(deps) {
 // ─────────────────────────────────────────────────────────────────────────
 // Overkoepelende start
 // ─────────────────────────────────────────────────────────────────────────
+export function bordIsActief() { return !!(bord && bord.actief); }
+
 export function startClimax() {
   ketenGestart = true;
   faseLampen();
@@ -145,6 +148,18 @@ export function startClimax() {
 // ─────────────────────────────────────────────────────────────────────────
 export function faseLampen() {
   audioChimes();                           // sprankels bij start lampenspiraal (eenmalig)
+
+  // cinematische camerabeweging: speler kijkt langzaam naar de lampenplek
+  if (D.spelerEuler) {
+    const cam = D.camera.position;
+    const dx = INSTELLINGEN.lampPositie.x - cam.x;
+    const dz = INSTELLINGEN.lampPositie.z - cam.z;
+    A.camLampen = { t: 0, duur: 2.4,
+      startY: D.spelerEuler.y,
+      doelY: Math.atan2(-dx, -dz),
+    };
+  }
+
   const kroon = D.kroon;
   if (!kroon || !kroon.isInstancedMesh) { faseZonsondergang(); return; }
   const n = kroon.count;
@@ -219,6 +234,7 @@ export function updateClimax(dt) {
     } else { inZoneSinds = -1; }
   }
 
+  if (A.camLampen) updateCamLampen(dt);
   if (A.lamp) updateLampen(dt);
   if (A.zon) updateZon(dt);
   if (A.deeltjes) updateDeeltjes(dt);
@@ -290,6 +306,9 @@ function updateZon(dt) {
     if (D.scene.background && D.scene.background.isColor) D.scene.background.copy(D.scene.fog.color);
   }
 
+  // sterren: fade in zodra het donker wordt
+  if (sterren) sterren.material.opacity = THREE.MathUtils.clamp((nacht - 0.25) / 0.5, 0, 1);
+
   if (raw >= 1) { A.zon = null; faseDeeltjes(); }
 }
 
@@ -318,12 +337,6 @@ function faseBordFlits() {
   if (!bord) return;
   bord.actief = true;
   A.bord = { t: 0 };
-  // toon het DOM-invoerveld; verlaat pointer-lock zodat de speler kan typen
-  if (bordOverlay) {
-    bordOverlay.style.display = 'block';
-    if (typeof document !== 'undefined' && document.exitPointerLock) document.exitPointerLock();
-    setTimeout(() => { const inp = document.getElementById('bordInput'); if (inp) inp.focus(); }, 120);
-  }
 }
 function updateBord(dt) {
   A.bord.t += dt;
@@ -359,7 +372,6 @@ function bouwBord() {
   mesh.name = 'climaxBord';
   D.scene.add(mesh);
   bord = { mesh, mat, actief: false };
-  _bouwBordOverlay();
 }
 
 function bordTextuur(tekst) {
@@ -462,48 +474,37 @@ function bouwDeeltjes() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────
-// Bord-overlay: DOM-invoerveld bovenop de 3D-scene (klik + klaar geluid)
+// Sterrenhemel (zichtbaar door de dakramen tijdens de nachtfase)
 // ─────────────────────────────────────────────────────────────────────────
-function _bouwBordOverlay() {
-  if (typeof document === 'undefined') return;
-  const div = document.createElement('div');
-  div.id = 'bordOverlay';
-  div.style.cssText =
-    'display:none;position:fixed;bottom:12%;left:50%;transform:translateX(-50%);z-index:80;' +
-    'background:rgba(6,6,12,0.90);border:1px solid rgba(58,160,255,0.25);border-radius:8px;' +
-    'padding:16px 20px;font:15px Georgia,serif;color:#dfeaff;text-align:center;' +
-    'box-shadow:0 0 28px rgba(58,160,255,0.12);min-width:300px;';
-  div.innerHTML =
-    '<div style="font-size:11px;letter-spacing:3px;opacity:0.55;margin-bottom:10px;">SCHRIJF JE NAAM OF GEDACHTE</div>' +
-    '<div style="display:flex;gap:8px;">' +
-      '<input id="bordInput" type="text" placeholder="..." autocomplete="off" ' +
-        'style="flex:1;background:#08080f;border:1px solid rgba(58,160,255,0.4);border-radius:4px;' +
-               'padding:8px 12px;color:#dfeaff;font:15px Georgia,serif;outline:none;"/>' +
-      '<button id="bordVerzend" ' +
-        'style="background:#0e1f45;border:1px solid rgba(58,160,255,0.5);border-radius:4px;' +
-               'padding:8px 16px;color:#dfeaff;cursor:pointer;font:15px Georgia,serif;">→</button>' +
-    '</div>';
-  document.body.appendChild(div);
-
-  const input = div.querySelector('#bordInput');
-  const verzend = div.querySelector('#bordVerzend');
-
-  input.addEventListener('keydown', () => audioKlik());
-
-  function verzenden() {
-    if (!input.value.trim()) return;
-    audioKlaar();
-    verzend.textContent = '✓';
-    verzend.style.color = '#a0d8ff';
-    setTimeout(() => {
-      window.open(INSTELLINGEN.bordLink, '_blank', 'noopener');
-      div.style.display = 'none';
-    }, 700);
+function bouwSterren() {
+  const N = 900;
+  const geo = new THREE.BufferGeometry();
+  const pos = new Float32Array(N * 3);
+  for (let i = 0; i < N; i++) {
+    pos[i * 3]     = (Math.random() - 0.5) * 220;
+    pos[i * 3 + 1] = 28 + Math.random() * 50;     // boven de hal (y 28–78)
+    pos[i * 3 + 2] = (Math.random() - 0.5) * 220;
   }
-  verzend.addEventListener('click', verzenden);
-  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') verzenden(); });
+  geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+  const mat = new THREE.PointsMaterial({
+    color: 0xf0f4ff, size: 0.28, transparent: true, opacity: 0,
+    depthWrite: false, sizeAttenuation: true,
+  });
+  sterren = new THREE.Points(geo, mat);
+  sterren.frustumCulled = false;
+  D.scene.add(sterren);
+}
 
-  bordOverlay = div;
+// ─────────────────────────────────────────────────────────────────────────
+// Cinematische camera-pan naar de lampen
+// ─────────────────────────────────────────────────────────────────────────
+function updateCamLampen(dt) {
+  if (!D.spelerEuler) { A.camLampen = null; return; }
+  const c = A.camLampen;
+  c.t += dt;
+  const alpha = smooth(Math.min(c.t / c.duur, 1));
+  D.spelerEuler.y = c.startY + (c.doelY - c.startY) * alpha;
+  if (c.t >= c.duur) A.camLampen = null;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
