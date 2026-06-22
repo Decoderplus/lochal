@@ -8,6 +8,7 @@ import { CONFIG } from './config.js';
 import { bouwWereld, MIRROR } from './world/index.js';
 import { Speler } from './player.js';
 import { initClimax, updateClimax } from './world/climax.js';
+import { initAudio, onDeurGeopend } from './world/audio.js';
 
 // ── Renderer volgens CONFIG.renderer ─────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -123,6 +124,16 @@ if (params.get('climax')) {
     kroon: scene.getObjectByName('kroonluchter'),
     getSpelerPositie: () => speler.voeten,
   });
+
+  // ── Audio-laag: ontgrendelen + achtergrond starten via E-druk op de deur ──
+  initAudio();
+  const deurIt = wereld.interactables.find(
+    (it) => typeof it.label === 'function' && it.label().includes('deur'));
+  if (deurIt) {
+    const origInteract = deurIt.onInteract;
+    deurIt.onInteract = () => { origInteract(); onDeurGeopend(); };
+  }
+
   const hint = document.getElementById('hint');
 
   // ── Debugtoetsen (ijking StemmingMakerij-referentiekader) ───────────────

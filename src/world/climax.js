@@ -5,6 +5,7 @@
 // Elke fase is los aanroepbaar maar ketent standaard automatisch door.
 // startClimax() start de hele keten. updateClimax(dt) draait per frame.
 import * as THREE from 'three';
+import { audioChimes, audioNacht, audioKlik, audioKlaar } from './audio.js';
 
 // ─────────────────────────────────────────────────────────────────────────
 // ALLE regelbare waarden — pas hier aan.
@@ -65,6 +66,7 @@ let D = null;                    // dependencies (scene, camera, renderer, zon, 
 let lampen = null;               // { volgorde:[{i, tijd}], origineel:[Color] }
 let deeltjes = null;             // THREE.Points
 let bord = null;                 // { mesh, mat }
+let bordOverlay = null;          // DOM-overlay met invoerveld (klik/klaar geluid)
 let bloomBasis = 0;              // basis bloom-strength (om naar terug te keren)
 
 // animatie-toestanden (null = inactief)
@@ -142,6 +144,7 @@ export function startClimax() {
 // FASE 1 — Lampen: spiraal-golf van laag/buiten naar hoog/binnen.
 // ─────────────────────────────────────────────────────────────────────────
 export function faseLampen() {
+  audioChimes();                           // sprankels bij start lampenspiraal (eenmalig)
   const kroon = D.kroon;
   if (!kroon || !kroon.isInstancedMesh) { faseZonsondergang(); return; }
   const n = kroon.count;
@@ -186,6 +189,7 @@ export function faseLampen() {
 // FASE 2 — Zonsondergang: één bewegende zonhoogte stuurt boog + kleur + sfeer.
 // ─────────────────────────────────────────────────────────────────────────
 export function faseZonsondergang() {
+  audioNacht();                            // omslaggeluid bij dag→nacht (eenmalig)
   A.zon = { t: 0 };
   if (D.zon) D.zon.shadow.mapSize.set(1024, 1024);   // één schaduwwerper, kaart 1024
 }
@@ -314,6 +318,12 @@ function faseBordFlits() {
   if (!bord) return;
   bord.actief = true;
   A.bord = { t: 0 };
+  // toon het DOM-invoerveld; verlaat pointer-lock zodat de speler kan typen
+  if (bordOverlay) {
+    bordOverlay.style.display = 'block';
+    if (typeof document !== 'undefined' && document.exitPointerLock) document.exitPointerLock();
+    setTimeout(() => { const inp = document.getElementById('bordInput'); if (inp) inp.focus(); }, 120);
+  }
 }
 function updateBord(dt) {
   A.bord.t += dt;
@@ -349,6 +359,7 @@ function bouwBord() {
   mesh.name = 'climaxBord';
   D.scene.add(mesh);
   bord = { mesh, mat, actief: false };
+  _bouwBordOverlay();
 }
 
 function bordTextuur(tekst) {
@@ -448,6 +459,51 @@ function bouwDeeltjes() {
   deeltjes.visible = false;
   deeltjes.name = 'climaxDeeltjes';
   D.scene.add(deeltjes);
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// Bord-overlay: DOM-invoerveld bovenop de 3D-scene (klik + klaar geluid)
+// ─────────────────────────────────────────────────────────────────────────
+function _bouwBordOverlay() {
+  if (typeof document === 'undefined') return;
+  const div = document.createElement('div');
+  div.id = 'bordOverlay';
+  div.style.cssText =
+    'display:none;position:fixed;bottom:12%;left:50%;transform:translateX(-50%);z-index:80;' +
+    'background:rgba(6,6,12,0.90);border:1px solid rgba(58,160,255,0.25);border-radius:8px;' +
+    'padding:16px 20px;font:15px Georgia,serif;color:#dfeaff;text-align:center;' +
+    'box-shadow:0 0 28px rgba(58,160,255,0.12);min-width:300px;';
+  div.innerHTML =
+    '<div style="font-size:11px;letter-spacing:3px;opacity:0.55;margin-bottom:10px;">SCHRIJF JE NAAM OF GEDACHTE</div>' +
+    '<div style="display:flex;gap:8px;">' +
+      '<input id="bordInput" type="text" placeholder="..." autocomplete="off" ' +
+        'style="flex:1;background:#08080f;border:1px solid rgba(58,160,255,0.4);border-radius:4px;' +
+               'padding:8px 12px;color:#dfeaff;font:15px Georgia,serif;outline:none;"/>' +
+      '<button id="bordVerzend" ' +
+        'style="background:#0e1f45;border:1px solid rgba(58,160,255,0.5);border-radius:4px;' +
+               'padding:8px 16px;color:#dfeaff;cursor:pointer;font:15px Georgia,serif;">→</button>' +
+    '</div>';
+  document.body.appendChild(div);
+
+  const input = div.querySelector('#bordInput');
+  const verzend = div.querySelector('#bordVerzend');
+
+  input.addEventListener('keydown', () => audioKlik());
+
+  function verzenden() {
+    if (!input.value.trim()) return;
+    audioKlaar();
+    verzend.textContent = '✓';
+    verzend.style.color = '#a0d8ff';
+    setTimeout(() => {
+      window.open(INSTELLINGEN.bordLink, '_blank', 'noopener');
+      div.style.display = 'none';
+    }, 700);
+  }
+  verzend.addEventListener('click', verzenden);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') verzenden(); });
+
+  bordOverlay = div;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
