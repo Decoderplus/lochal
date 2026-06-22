@@ -30,8 +30,10 @@ export const INSTELLINGEN = {
   zonKleurGoud: 0xff6a1c,        // lichtkleur tijdens het gouden uur
   zonKleurNacht: 0x223a5e,       // lichtkleur 's nachts (koel donkerblauw)
   goudUurMoment: 0.45,           // zonhoogte (0–1) waarop het goud het sterkst is
-  dagNachtDuur: 13.0,            // seconden voor de hele cyclus: nacht → dag → nacht
+  dagNachtDuur: 13.0,            // seconden voor de hele cyclus
   zonVersnelling: 1.8,           // >1 = merkbare versnelling (het eind gaat sneller dan het begin)
+  zonZwaaien: 3,                 // halve dag-nacht-slagen; ONEVEN = eindigt 's nachts (start vanaf de
+                                 //   HUIDIGE dag-stand → dag→nacht→dag→nacht, vloeiend, geen sprong)
   nachtExposure: 0.45,           // renderer-exposure aan het eind (nacht)
   nachtFogKleur: 0x0e1422,       // fog-kleur 's nachts
   schaduwMeebewegen: true,       // true = schaduwkaart elk frame updaten tijdens de overgang; false = bevriezen
@@ -53,6 +55,7 @@ export const INSTELLINGEN = {
   // ── Posities (wereld-coördinaten) ──────────────────────────────────────
   lampPositie: new THREE.Vector3(21, 9, 16),  // centrum van de kroonluchterlampen — deeltjes-start
   bordPositie: new THREE.Vector3(0.7, 1.9, 18), // westmuur, links van de uitgang, op ooghoogte (deeltjes-eind)
+  bordRotatieY: Math.PI / 2,     // draaiing zodat het bord PLAT op de muur hangt (π/2 = westmuur, naar de hal)
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -67,9 +70,10 @@ let bloomBasis = 0;              // basis bloom-strength (om naar terug te keren
 // animatie-toestanden (null = inactief)
 const A = { lamp: null, zon: null, deeltjes: null, bord: null };
 
-// zon/sfeer-uitgangswaarden (om vanaf te animeren)
+// zon/sfeer-uitgangswaarden (om vloeiend vanaf de HUIDIGE stand te animeren)
 let dagExposure = 1.0, dagZonIntensiteit = 1.85;
 const dagFogKleur = new THREE.Color(0xd8d6d0);
+let dagZon = null;               // { el, az, afstand, doel } — de zon zoals hij al stond
 
 // trap-trigger
 let inZoneSinds = -1, ketenGestart = false;
@@ -80,7 +84,16 @@ let inZoneSinds = -1, ketenGestart = false;
 export function initClimax(deps) {
   D = deps;
   dagExposure = D.renderer.toneMappingExposure;
-  if (D.zon) dagZonIntensiteit = D.zon.intensity;
+  if (D.zon) {
+    dagZonIntensiteit = D.zon.intensity;
+    const dir = D.zon.position.clone().sub(D.zon.target.position).normalize();
+    dagZon = {
+      el: Math.asin(THREE.MathUtils.clamp(dir.y, -1, 1)),
+      az: Math.atan2(dir.z, dir.x),
+      afstand: D.zon.position.distanceTo(D.zon.target.position),
+      doel: D.zon.target.position.clone(),
+    };
+  }
   if (D.scene.fog) dagFogKleur.copy(D.scene.fog.color);
   bloomBasis = D.bloomPass ? D.bloomPass.strength : 0;
 
@@ -245,20 +258,20 @@ function updateZon(dt) {
   const I = INSTELLINGEN;
   const raw = THREE.MathUtils.clamp(A.zon.t / I.dagNachtDuur, 0, 1);
   const warp = Math.pow(raw, I.zonVersnelling);        // merkbare versnelling (eind sneller)
-  // één waarde, h01: 0 nacht → 1 dag → 0 nacht (cyclus)
-  const h01 = Math.sin(Math.PI * warp);
-  const hoogte = THREE.MathUtils.lerp(I.zonHoogteEind, I.zonHoogteStart, h01);  // nacht-hoogte ↔ dag-hoogte
+  // h01: 1 = dag, 0 = nacht. Start op 1 (de HUIDIGE dag-stand → geen sprong) en
+  // eindigt op 0 (nacht), via dag→nacht→dag→nacht (zonZwaaien = oneven).
+  const h01 = 0.5 + 0.5 * Math.cos(Math.PI * warp * I.zonZwaaien);
   const nacht = smooth(1 - h01);                       // 1 's nachts, 0 overdag
 
-  // (a) directional light langs een boog (hoogte + azimut) → schaduwen verlengen/draaien
-  if (D.zon) {
-    const el = hoogte * Math.PI * 0.45;
-    const dir = new THREE.Vector3(
-      Math.cos(el) * Math.cos(I.zonAzimut), Math.sin(el), Math.cos(el) * Math.sin(I.zonAzimut));
-    const doel = new THREE.Vector3(30, 1, 45);
-    D.zon.position.copy(doel).addScaledVector(dir, 95);
-    D.zon.target.position.copy(doel); D.zon.target.updateMatrixWorld();
-    // (b) lichtkleur op zonhoogte: nacht → goud → dag (en omgekeerd bij het zakken)
+  // (a) directional light: vertrekt vanaf de huidige stand (dagZon) en draait/
+  //     zakt mee → schaduwen verlengen en bewegen.
+  if (D.zon && dagZon) {
+    const el = THREE.MathUtils.lerp(I.zonHoogteEind * 0.45 * Math.PI, dagZon.el, h01); // dag-elevatie ↔ nacht (onder horizon)
+    const az = dagZon.az + warp * I.zonAzimut;          // de zon draait gestaag weg
+    const dir = new THREE.Vector3(Math.cos(el) * Math.cos(az), Math.sin(el), Math.cos(el) * Math.sin(az));
+    D.zon.position.copy(dagZon.doel).addScaledVector(dir, dagZon.afstand);
+    D.zon.target.position.copy(dagZon.doel); D.zon.target.updateMatrixWorld();
+    // (b) lichtkleur op zonhoogte: dag → goud → nacht (en terug)
     D.zon.color.copy(zonKleurOpHoogte(h01));
     D.zon.intensity = THREE.MathUtils.lerp(0.12, dagZonIntensiteit, smooth(h01)) *
       (1 + 0.4 * Math.exp(-Math.pow((h01 - I.goudUurMoment) / 0.14, 2)));   // gouden opflakkering
@@ -313,15 +326,26 @@ function updateBord(dt) {
 }
 
 function bouwBord() {
+  // Zelfde verschijning als de TV in de StemmingMakerij: donker kader + glanzend
+  // scherm met gloeiende tekst — PLAT op de muur.
+  const P = INSTELLINGEN.bordPositie, ry = INSTELLINGEN.bordRotatieY;
+  const normaal = new THREE.Vector3(Math.sin(ry), 0, Math.cos(ry));   // schermrichting
+  const breed = 2.6, hoog = 1.55;
+
+  const kader = new THREE.Mesh(
+    new THREE.BoxGeometry(breed + 0.18, hoog + 0.18, 0.12),
+    new THREE.MeshStandardMaterial({ color: 0x080808, roughness: 0.7 }));
+  kader.position.copy(P); kader.rotation.y = ry;
+  D.scene.add(kader);
+
   const tex = bordTextuur(INSTELLINGEN.bordTekst);
   const mat = new THREE.MeshStandardMaterial({
-    map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.04,
-    transparent: true, roughness: 0.5, metalness: 0.0,
+    map: tex, emissive: 0xffffff, emissiveMap: tex, emissiveIntensity: 0.06,
+    roughness: 0.4, metalness: 0.0,
   });
-  const breed = 4.0, hoog = breed * 0.42;
   const mesh = new THREE.Mesh(new THREE.PlaneGeometry(breed, hoog), mat);
-  mesh.position.copy(INSTELLINGEN.bordPositie);   // wereld-coördinaten (climax hangt niet onder de spiegel)
-  mesh.lookAt(30, INSTELLINGEN.bordPositie.y, 30); // richt het bord vanaf de muur de hal in
+  mesh.position.copy(P).addScaledVector(normaal, 0.07);   // net vóór het kader
+  mesh.rotation.y = ry;                                    // plat op de muur
   mesh.name = 'climaxBord';
   D.scene.add(mesh);
   bord = { mesh, mat, actief: false };
@@ -329,12 +353,12 @@ function bouwBord() {
 
 function bordTextuur(tekst) {
   if (typeof document === 'undefined') return null;
-  const c = document.createElement('canvas'); c.width = 1024; c.height = 460;
+  const c = document.createElement('canvas'); c.width = 1024; c.height = 600;
   const x = c.getContext('2d');
-  x.fillStyle = '#4a230c'; x.fillRect(0, 0, c.width, c.height);   // warm, gloeit mee
-  x.strokeStyle = '#ffc480'; x.lineWidth = 16; x.strokeRect(24, 24, c.width - 48, c.height - 48);
-  x.fillStyle = '#fff3df'; x.textAlign = 'center'; x.textBaseline = 'middle';
-  x.font = 'bold 150px Georgia, serif';
+  x.fillStyle = '#0a0a0a'; x.fillRect(0, 0, c.width, c.height);       // donker scherm (zoals de TV)
+  x.textAlign = 'center'; x.textBaseline = 'middle';
+  x.fillStyle = '#dfeaff'; x.shadowColor = '#3aa0ff'; x.shadowBlur = 26;
+  x.font = 'bold 150px sans-serif';
   x.fillText(tekst, c.width / 2, c.height / 2);
   const t = new THREE.CanvasTexture(c); t.colorSpace = THREE.SRGBColorSpace; t.anisotropy = 8;
   return t;

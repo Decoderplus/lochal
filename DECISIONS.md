@@ -234,3 +234,8 @@ Materiaal-budget nu 28/30 (baksteen toegevoegd).
 - faseZonsondergang: nu een cyclus NACHT → DAG → NACHT (h01 = sin(π·warp)); merkbare versnelling via warp = raw^zonVersnelling. Kleur op zonhoogte (nacht→goud→dag), exposure/fog volgen de hoogte. goudUurMoment = zonhoogte van het goud.
 - Bord: aan de WESTMUUR links van de uitgang, op ooghoogte, halverwege trap en kiosk (bordPositie 0.7,1.9,18), via lookAt de hal in gericht.
 - Deeltjes: convergeren nu strak op het bord (smallere aEind-spreiding) met een kleine slingerende omweg — sinus langs twee loodrechte assen (uZij/uOp), dovend aan begin/eind zodat ze tóch op het bord landen. Setting: deeltjesKronkel.
+
+## Climax — vloeiende zon-start + TV-bord (mens)
+
+- Geen harde sprong meer naar nacht: faseZonsondergang vertrekt vanaf de HUIDIGE dag-stand. De zonstand (elevatie/azimut/afstand/doel) wordt bij initClimax vastgelegd; h01 = 0.5+0.5·cos(π·warp·zonZwaaien) start op 1 (dag) en eindigt op 0 (nacht) → dag→nacht→dag→nacht, vloeiend. De zon draait gestaag weg (az = dagAz + warp·zonAzimut). Settings: zonZwaaien (oneven = eindigt 's nachts).
+- Bord ziet er nu uit als de TV in de StemmingMakerij: donker kader (box) + glanzend scherm met gloeiende tekst (#0a0a0a + #dfeaff/blauwe gloed). Hangt PLAT op de muur via bordRotatieY (π/2 = westmuur) i.p.v. de schuine lookAt.
