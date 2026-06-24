@@ -557,6 +557,13 @@ export function updateTVTekst(tekst) {
 }
 
 export function bevestigTV() {
+  // sla aanmelding op in localStorage
+  try {
+    const lijst = JSON.parse(localStorage.getItem('lochal_aanmeldingen') || '[]');
+    lijst.push({ tekst: tvTekst, tijd: new Date().toISOString() });
+    localStorage.setItem('lochal_aanmeldingen', JSON.stringify(lijst));
+  } catch (_) {}
+
   tvModus = false;
   if (!aanmeldCanvas) return;
   const ctx = aanmeldCanvas.getContext('2d');
@@ -572,23 +579,32 @@ export function bevestigTV() {
 function _tekenAanmeld() {
   const ctx = aanmeldCanvas.getContext('2d');
   ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, 1024, 600);
+
   // koptekst
   ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#dfeaff'; ctx.shadowColor = '#3aa0ff'; ctx.shadowBlur = 22;
-  ctx.font = 'bold 62px sans-serif'; ctx.fillText('MELD JE AAN', 512, 148);
+  ctx.font = 'bold 58px sans-serif'; ctx.fillText('MELD JE AAN', 512, 110);
+
   // invoerveld
   ctx.shadowBlur = 0;
-  ctx.fillStyle = 'rgba(10,18,36,0.82)'; ctx.fillRect(60, 258, 904, 92);
-  ctx.strokeStyle = '#3aa0ff66'; ctx.lineWidth = 1.5; ctx.strokeRect(60, 258, 904, 92);
+  ctx.fillStyle = 'rgba(10,18,36,0.82)'; ctx.fillRect(60, 195, 904, 88);
+  ctx.strokeStyle = '#3aa0ff55'; ctx.lineWidth = 1.5; ctx.strokeRect(60, 195, 904, 88);
+
   // getypte tekst + cursor
   ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
   ctx.fillStyle = '#dfeaff'; ctx.shadowColor = '#3aa0ff'; ctx.shadowBlur = 6;
   ctx.font = '44px Georgia, serif';
-  ctx.fillText((tvTekst || '') + (tvCursorAan ? '|' : ''), 84, 304);
-  // hint
-  ctx.shadowBlur = 0; ctx.textAlign = 'center';
-  ctx.fillStyle = 'rgba(160,190,255,0.38)'; ctx.font = '22px system-ui, sans-serif';
-  ctx.fillText('↵  bevestigen', 512, 438);
+  ctx.fillText((tvTekst || '') + (tvCursorAan ? '|' : ''), 84, 239);
+
+  // verstuur-knop (prominent, blauw, gloed)
+  ctx.shadowColor = '#3aa0ff'; ctx.shadowBlur = 22;
+  ctx.fillStyle = '#0e2d5e'; ctx.fillRect(60, 332, 904, 96);
+  ctx.strokeStyle = '#60b0ff'; ctx.lineWidth = 2.5; ctx.strokeRect(60, 332, 904, 96);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.fillStyle = '#ffffff'; ctx.font = 'bold 44px sans-serif';
+  ctx.fillText('VERSTUUR  →', 512, 380);
+
+  ctx.shadowBlur = 0;
 }
 
 function _updateTVCursor(dt) {
