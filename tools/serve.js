@@ -16,6 +16,7 @@ const MIME = {
   '.jpg': 'image/jpeg',
   '.webp': 'image/webp',
   '.mp3': 'audio/mpeg',
+  '.mp4': 'video/mp4',
 };
 
 export function startServer(port = 8123) {

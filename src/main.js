@@ -10,6 +10,7 @@ import { Speler } from './player.js';
 import { initClimax, updateClimax, INSTELLINGEN, bordIsActief,
          activeerTVAanmeld, updateTVTekst, bevestigTV } from './world/climax.js';
 import { initAudio, onDeurGeopend, audioDeurKlik, audioKlik, audioKlaar } from './world/audio.js';
+import { bouwHologram } from './world/hologram.js';
 
 // ── Renderer volgens CONFIG.renderer ─────────────────────────────────────
 const renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -74,6 +75,11 @@ for (const [pos, doel] of [
 // ── Wereld ────────────────────────────────────────────────────────────────
 const wereld = bouwWereld(scene);
 
+// ── Hologram-karakter (billboard, draait mee met de speler) ──────────────
+// Hangt direct aan de scene (buiten de gespiegelde wereld-Group) in echte
+// wereld-coördinaten; in elke render-lus updaten met de camera.
+const hologram = bouwHologram(scene);
+
 // ── Shot-modus: ?shot=<cameranaam> → vaste camera, geen besturing ────────
 const params = new URLSearchParams(location.search);
 const shotNaam = params.get('shot');
@@ -102,6 +108,7 @@ if (params.get('climax')) {
   renderer.setAnimationLoop(() => {
     const dt = Math.min(klok.getDelta(), 0.5);   // ruime cap: climax-test draait op echte tijd, ook bij trage (software-)rendering
     wereld.update(dt);
+    hologram.update(camera, dt);
     updateClimax(dt);
     renderFrame();
   });
@@ -113,7 +120,9 @@ if (params.get('climax')) {
   document.getElementById('startuitleg').style.display = 'none';
   let frames = 0;
   renderer.setAnimationLoop(() => {
-    wereld.update(klok.getDelta());
+    const dt = klok.getDelta();
+    wereld.update(dt);
+    hologram.update(camera, dt);
     renderFrame();
     if (++frames >= 8) { window.__shotReady = true; renderer.setAnimationLoop(null); }
   });
@@ -304,6 +313,7 @@ if (params.get('climax')) {
     }
     wereld.update(dt);
     speler.update(dt);
+    hologram.update(camera, dt);
     updateClimax(dt);
     const h = speler.hintTekst();
     hint.textContent = h;
