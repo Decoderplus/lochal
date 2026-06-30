@@ -19,7 +19,7 @@ import * as THREE from 'three';
 export const HOLO = {
   bestand: 'hologram.mp4',                       // videopad (projecthoofdmap)
   positie: new THREE.Vector3(4.0, 0.0, 15.0),    // wereld-coördinaten, op de vloer naast de bar/TV
-  hoogte: 2.2,                                   // hoogte van de figuur (m); breedte volgt uit de video-aspect
+  hoogte: 11.0,                                  // hoogte van de figuur (m); breedte volgt uit de video-aspect
   zweef: 0.12,                                   // hoe ver de figuur boven de voet zweeft (m)
   kleur: 0x6fd2ff,                               // holografische tint (cyaan-blauw)
   tintKracht: 0.42,                              // 0 = originele kleuren, 1 = volledig getint
@@ -31,7 +31,7 @@ export const HOLO = {
   opaciteit: 0.92,                               // algehele doorzichtigheid van de figuur
   voetStraal: 0.55,                              // straal van de gloeiende projectorvoet (m)
   lichtKracht: 1.4,                              // intensiteit van het cyaan sfeerlicht aan de voet
-  geluid: false,                                 // true = de stem van het hologram hoorbaar (ontgrendelt bij eerste klik)
+  geluid: true,                                  // true = de stem van het hologram hoorbaar (ontgrendelt bij eerste klik)
 };
 
 // ─────────────────────────────────────────────────────────────────────────
