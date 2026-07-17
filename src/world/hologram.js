@@ -34,7 +34,9 @@ export const HOLO = {
   opaciteit: 0.92,                               // algehele doorzichtigheid van de figuur
   voetStraal: 0.55,                              // straal van de gloeiende projectorvoet (m)
   lichtKracht: 1.4,                              // intensiteit van het cyaan sfeerlicht aan de voet
-  geluid: true,                                  // true = de stem van het hologram hoorbaar (ontgrendelt bij eerste klik)
+  geluid: true,                                  // true = de stem van het hologram hoorbaar
+  geluidNabij: 5.0,                              // volle stem binnen deze afstand (m)
+  geluidVer: 34.0,                               // stem onhoorbaar vanaf deze afstand (m)
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -211,6 +213,10 @@ export function bouwHologram(scene) {
       const dx = camera.position.x - groep.position.x;
       const dz = camera.position.z - groep.position.z;
       vlak.rotation.y = Math.atan2(dx, dz);     // vlak (+z) wijst naar de speler
+      // stem-volume zakt met de afstand tot het hologram
+      const dy = camera.position.y - groep.position.y;
+      const dist = Math.hypot(dx, dy, dz);
+      video.volume = Math.max(0, Math.min(1, 1 - (dist - HOLO.geluidNabij) / (HOLO.geluidVer - HOLO.geluidNabij)));
     }
     // lichte pulsatie in de voetgloed
     const puls = 0.5 + 0.18 * Math.sin(tijd * 2.2);

@@ -178,6 +178,7 @@ if (params.get('climax')) {
     }
     // (2) trap af → hologram afspelen (t = 0 voor de rest van de sequentie)
     if (seq.deurUit && !seq.videoGestart && p.y < TRAP_AF_Y) {
+      if (wereld.stopTV) wereld.stopTV();      // nooit tegelijk met de TV
       hologram.speelAf(); seq.videoGestart = true;
     }
     if (!seq.videoGestart) return;
@@ -234,9 +235,11 @@ if (params.get('climax')) {
   });
 
   // ── TV in de StemmingMakerij: start 3 s na binnenkomst óf op spatie ──────
-  setTimeout(() => wereld.startTV && wereld.startTV(), 3000);
+  // Nooit tegelijk met het hologram: als het hologram speelt, geen TV.
+  const magTVStarten = () => wereld.startTV && !hologram.speeltAf();
+  setTimeout(() => { if (magTVStarten()) wereld.startTV(); }, 3000);
   document.addEventListener('keydown', (e) => {
-    if (e.code === 'Space' && wereld.startTV) wereld.startTV();
+    if (e.code === 'Space' && magTVStarten()) wereld.startTV();
   });
 
   const hint = document.getElementById('hint');
@@ -370,6 +373,7 @@ if (params.get('climax')) {
     speler.update(dt);
     updateSequentie(dt);
     hologram.update(camera, dt);
+    if (wereld.updateTVGeluid) wereld.updateTVGeluid(camera.position);
     updateClimax(dt);
     const h = speler.hintTekst();
     hint.textContent = h;

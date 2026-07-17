@@ -97,5 +97,8 @@ export function bouwWereld(scene) {
     zaalRotatie: zaal.rotatie,
     zaalBox: zaal.zaalBox,
     startTV: zaal.startTV,
+    stopTV: zaal.stopTV,
+    tvSpeelt: zaal.tvSpeelt,
+    updateTVGeluid: zaal.updateTVGeluid,
   };
 }

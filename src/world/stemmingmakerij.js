@@ -341,32 +341,47 @@ export function bouwStemmingMakerij() {
   scene.add(schermLicht);
 
   // ── Video op de tv (TV 1.mp4): start 3 s na binnenkomst of op spatie ─────
-  // Eénmalig: de canvas-prompt wordt vervangen door een lopende videotextuur.
-  let tvGestart = false, tvVideo = null;
-  function startTV() {
-    if (tvGestart || HEADLESS) return;
-    tvGestart = true;
+  // Speelt 1x af (geen loop) en stopt; met spatie opnieuw. Bij de start altijd
+  // vanaf het begin (currentTime 0) én meteen met geluid. Het volume zakt met de
+  // afstand tot het scherm (updateTVGeluid). De canvas-prompt wordt bij de eerste
+  // start vervangen door de videotextuur.
+  const TV_NABIJ = 2.5, TV_VER = 13;    // volume 1 binnen NABIJ m, 0 vanaf VER m
+  const tvWereldPos = new THREE.Vector3();
+  let tvVideo = null;
+  function _maakTVVideo() {
     tvVideo = document.createElement('video');
     tvVideo.src = 'tv1.mp4';
-    tvVideo.loop = true;
-    tvVideo.muted = true;                 // muted = autoplay toegestaan
+    tvVideo.loop = false;               // 1x afspelen, dan stoppen (spatie = opnieuw)
     tvVideo.playsInline = true;
     tvVideo.setAttribute('playsinline', '');
-    tvVideo.play().catch(() => {});
     const vtex = new THREE.VideoTexture(tvVideo);
     vtex.colorSpace = THREE.SRGBColorSpace;
     vtex.minFilter = THREE.LinearFilter; vtex.magFilter = THREE.LinearFilter;
     vtex.wrapS = THREE.RepeatWrapping; vtex.repeat.x = -1; vtex.offset.x = 1; // un-spiegelen (wereldspiegel)
     matScherm.map = vtex; matScherm.needsUpdate = true;
     schermLicht.intensity = 1.6;
-    // geluid ontgrendelen bij de eerste gebruikersinteractie
-    const ontgrendel = () => {
-      tvVideo.muted = false; tvVideo.play().catch(() => {});
-      window.removeEventListener('click', ontgrendel);
-      window.removeEventListener('keydown', ontgrendel);
-    };
-    window.addEventListener('click', ontgrendel);
-    window.addEventListener('keydown', ontgrendel);
+  }
+  function startTV() {
+    if (HEADLESS) return;
+    if (!tvVideo) _maakTVVideo();
+    try { tvVideo.currentTime = 0; } catch (_) {}   // altijd vanaf het begin
+    tvVideo.muted = false;                          // meteen geluid
+    const afspelen = () => tvVideo.play().catch(() => {
+      // geen gebruikersinteractie geweest → muted starten en bij eerste klik ontdempen
+      tvVideo.muted = true; tvVideo.play().catch(() => {});
+      const ont = () => { tvVideo.muted = false; window.removeEventListener('click', ont); window.removeEventListener('keydown', ont); };
+      window.addEventListener('click', ont); window.addEventListener('keydown', ont);
+    });
+    afspelen();
+  }
+  function stopTV() { if (tvVideo) tvVideo.pause(); }
+  function tvSpeelt() { return !!tvVideo && !tvVideo.paused && !tvVideo.ended; }
+  // volume zakt met de afstand tot het scherm
+  function updateTVGeluid(camPos) {
+    if (!tvVideo || tvVideo.paused) return;
+    schermVlak.getWorldPosition(tvWereldPos);
+    const d = tvWereldPos.distanceTo(camPos);
+    tvVideo.volume = Math.max(0, Math.min(1, 1 - (d - TV_NABIJ) / (TV_VER - TV_NABIJ)));
   }
 
   // ── Lichtgevende cursieve tekst 'Stemmingmakerij' ─────────────────────
@@ -585,7 +600,9 @@ export function bouwStemmingMakerij() {
 
   // Deur-interactie + spawn in lokale coördinaten
   const deurLokaal = { lx: B/2, lz: (GD0 + GD1) / 2 };      // midden glazen deur
-  const spawnLokaal = { lx: 0, lz: 2.1 };                   // in de kamer, bij het tapijt
+  // spawn: tegen de raamwand (+x), zo ver mogelijk van de TV, uitgelijnd op het scherm
+  const spawnLokaal = { lx: B/2 - 0.6, lz: schermZ };
+  const tvLokaal = { lx: schermX, lz: schermZ };            // TV-scherm (gordijnwand, -x)
   const interactable = {
     x: 0, y: y0 + 1.2, z: 0, radius: 2.2,
     label: () => glasDeur.open ? 'E — glazen deur sluiten' : 'E — glazen deur openen',
@@ -607,7 +624,8 @@ export function bouwStemmingMakerij() {
     groep.userData.deurNormaal = [nx, 0, nz];
     // spawn: in de kamer, kijkend richting de deur
     const [sx, sz] = mapPunt(spawnLokaal.lx, spawnLokaal.lz, rotatie);
-    const dLok = { dx: deurLokaal.lx - spawnLokaal.lx, dz: deurLokaal.lz - spawnLokaal.lz };
+    // kijkrichting: naar de TV toe (i.p.v. naar de deur)
+    const dLok = { dx: tvLokaal.lx - spawnLokaal.lx, dz: tvLokaal.lz - spawnLokaal.lz };
     const len = Math.hypot(dLok.dx, dLok.dz);
     const [kx, kz] = mapRichting(dLok.dx / len, dLok.dz / len, rotatie);
     spawn.pos = [sx, y0, sz];
@@ -631,7 +649,7 @@ export function bouwStemmingMakerij() {
 
   return {
     groep, colliders, surfaces, interactables: [interactable], update,
-    spawn, zetRotatie, rotatie: () => rotatie, startTV,
+    spawn, zetRotatie, rotatie: () => rotatie, startTV, stopTV, tvSpeelt, updateTVGeluid,
     zaalBox: () => mapBox(kamerLokaal, rotatie),
   };
 }
