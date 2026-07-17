@@ -21,6 +21,7 @@ export const HOLO = {
   positie: new THREE.Vector3(4.0, 0.0, 15.0),    // wereld-coördinaten, op de vloer naast de bar/TV
   hoogte: 11.0,                                  // hoogte van de figuur (m); breedte volgt uit de video-aspect
   zweef: 0.12,                                   // hoe ver de figuur boven de voet zweeft (m)
+  verschuifY: -4.2,                              // extra verticale verschuiving van het vlak (m); negatief = omlaag (persoon zit hoog in dit videokader)
   kleur: 0x6fd2ff,                               // holografische tint (cyaan-blauw)
   tintKracht: 0.42,                              // 0 = originele kleuren, 1 = volledig getint
   keyLaag: 0.08,                                 // luma waaronder pixels volledig doorzichtig zijn (achtergrond weg)
@@ -111,7 +112,7 @@ export function bouwHologram(scene) {
       }`,
   });
   const vlak = new THREE.Mesh(geo, mat);
-  vlak.position.y = HOLO.zweef + HOLO.hoogte / 2;
+  vlak.position.y = HOLO.zweef + HOLO.hoogte / 2 + HOLO.verschuifY;
   vlak.frustumCulled = false;
   vlak.name = 'hologramVlak';
   groep.add(vlak);
@@ -122,7 +123,7 @@ export function bouwHologram(scene) {
       const breedte = HOLO.hoogte * (video.videoWidth / video.videoHeight);
       vlak.geometry.dispose();
       vlak.geometry = new THREE.PlaneGeometry(breedte, HOLO.hoogte);
-      vlak.position.y = HOLO.zweef + HOLO.hoogte / 2;
+      vlak.position.y = HOLO.zweef + HOLO.hoogte / 2 + HOLO.verschuifY;
     }
   });
 
