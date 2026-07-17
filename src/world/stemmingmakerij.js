@@ -340,6 +340,35 @@ export function bouwStemmingMakerij() {
   schermLicht.position.set(schermX + 0.6, schermY, schermZ);
   scene.add(schermLicht);
 
+  // ── Video op de tv (TV 1.mp4): start 3 s na binnenkomst of op spatie ─────
+  // Eénmalig: de canvas-prompt wordt vervangen door een lopende videotextuur.
+  let tvGestart = false, tvVideo = null;
+  function startTV() {
+    if (tvGestart || HEADLESS) return;
+    tvGestart = true;
+    tvVideo = document.createElement('video');
+    tvVideo.src = 'tv1.mp4';
+    tvVideo.loop = true;
+    tvVideo.muted = true;                 // muted = autoplay toegestaan
+    tvVideo.playsInline = true;
+    tvVideo.setAttribute('playsinline', '');
+    tvVideo.play().catch(() => {});
+    const vtex = new THREE.VideoTexture(tvVideo);
+    vtex.colorSpace = THREE.SRGBColorSpace;
+    vtex.minFilter = THREE.LinearFilter; vtex.magFilter = THREE.LinearFilter;
+    vtex.wrapS = THREE.RepeatWrapping; vtex.repeat.x = -1; vtex.offset.x = 1; // un-spiegelen (wereldspiegel)
+    matScherm.map = vtex; matScherm.needsUpdate = true;
+    schermLicht.intensity = 1.6;
+    // geluid ontgrendelen bij de eerste gebruikersinteractie
+    const ontgrendel = () => {
+      tvVideo.muted = false; tvVideo.play().catch(() => {});
+      window.removeEventListener('click', ontgrendel);
+      window.removeEventListener('keydown', ontgrendel);
+    };
+    window.addEventListener('click', ontgrendel);
+    window.addEventListener('keydown', ontgrendel);
+  }
+
   // ── Lichtgevende cursieve tekst 'Stemmingmakerij' ─────────────────────
   function maakTekstVlak(tekst) {
     const c = document.createElement('canvas');
@@ -602,7 +631,7 @@ export function bouwStemmingMakerij() {
 
   return {
     groep, colliders, surfaces, interactables: [interactable], update,
-    spawn, zetRotatie, rotatie: () => rotatie,
+    spawn, zetRotatie, rotatie: () => rotatie, startTV,
     zaalBox: () => mapBox(kamerLokaal, rotatie),
   };
 }

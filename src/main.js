@@ -30,6 +30,7 @@ scene.fog = new THREE.Fog(CONFIG.colors.fog, 42, 140);
 
 const camera = new THREE.PerspectiveCamera(
   70, window.innerWidth / window.innerHeight, 0.1, 300);
+if (typeof window !== 'undefined') { window.__scene = scene; window.__camera = camera; }
 
 // ── Post-processing: EffectComposer + bloom (door de climax hergebruikt) ──
 const composer = new EffectComposer(renderer);
@@ -74,6 +75,7 @@ for (const [pos, doel] of [
 
 // ── Wereld ────────────────────────────────────────────────────────────────
 const wereld = bouwWereld(scene);
+if (typeof window !== 'undefined') window.__wereld = wereld;
 
 // ── Hologram-karakter (billboard, draait mee met de speler) ──────────────
 // Hangt direct aan de scene (buiten de gespiegelde wereld-Group) in echte
@@ -182,6 +184,12 @@ if (params.get('climax')) {
       if (document.exitPointerLock) document.exitPointerLock();
       trekNaarTV = { t: 0, duur: 1.6, startVoeten: speler.voeten.clone(), startEulerY: speler.euler.y };
     },
+  });
+
+  // ── TV in de StemmingMakerij: start 3 s na binnenkomst óf op spatie ──────
+  setTimeout(() => wereld.startTV && wereld.startTV(), 3000);
+  document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space' && wereld.startTV) wereld.startTV();
   });
 
   const hint = document.getElementById('hint');
