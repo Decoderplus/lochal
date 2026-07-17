@@ -17,7 +17,7 @@ import * as THREE from 'three';
 // Regelbare waarden
 // ─────────────────────────────────────────────────────────────────────────
 export const HOLO = {
-  bestand: 'hologram.mp4',                       // videopad (projecthoofdmap)
+  bestand: 'hologram4.mp4',                      // videopad (projecthoofdmap)
   positie: new THREE.Vector3(4.0, 0.0, 15.0),    // wereld-coördinaten, op de vloer naast de bar/TV
   hoogte: 11.0,                                  // hoogte van de figuur (m); breedte volgt uit de video-aspect
   zweef: 0.12,                                   // hoe ver de figuur boven de voet zweeft (m)
