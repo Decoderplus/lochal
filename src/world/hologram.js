@@ -19,9 +19,9 @@ import * as THREE from 'three';
 export const HOLO = {
   bestand: 'hologram4.mp4',                      // videopad (projecthoofdmap)
   positie: new THREE.Vector3(4.0, 0.0, 15.0),    // wereld-coördinaten, op de vloer naast de bar/TV
-  hoogte: 19.8,                                  // hoogte van de figuur (m); breedte volgt uit de video-aspect
+  hoogte: 23.76,                                 // hoogte van de figuur (m); breedte volgt uit de video-aspect
   zweef: 0.12,                                   // hoe ver de figuur boven de voet zweeft (m)
-  verschuifY: -6.8,                              // extra verticale verschuiving van het vlak (m); negatief = omlaag (persoon zit hoog in dit videokader)
+  verschuifY: -7.9,                              // extra verticale verschuiving van het vlak (m); negatief = omlaag (persoon zit hoog in dit videokader)
   kleur: 0x6fd2ff,                               // holografische tint (cyaan-blauw)
   tintKracht: 0.42,                              // 0 = originele kleuren, 1 = volledig getint
   keyLaag: 0.08,                                 // luma waaronder pixels volledig doorzichtig zijn (achtergrond weg)
