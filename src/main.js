@@ -8,7 +8,8 @@ import { CONFIG } from './config.js';
 import { bouwWereld, MIRROR } from './world/index.js';
 import { Speler } from './player.js';
 import { initClimax, updateClimax, INSTELLINGEN, bordIsActief,
-         activeerTVAanmeld, updateTVTekst, bevestigTV } from './world/climax.js';
+         activeerTVAanmeld, updateTVTekst, bevestigTV,
+         faseLampen, faseZonsondergang, faseDeeltjes } from './world/climax.js';
 import { initAudio, onDeurGeopend, audioDeurKlik, audioKlik, audioKlaar } from './world/audio.js';
 import { bouwHologram } from './world/hologram.js';
 
@@ -81,6 +82,7 @@ if (typeof window !== 'undefined') window.__wereld = wereld;
 // Hangt direct aan de scene (buiten de gespiegelde wereld-Group) in echte
 // wereld-coördinaten; in elke render-lus updaten met de camera.
 const hologram = bouwHologram(scene);
+if (typeof window !== 'undefined') window.__hologram = hologram;
 
 // ── Shot-modus: ?shot=<cameranaam> → vaste camera, geen besturing ────────
 const params = new URLSearchParams(location.search);
@@ -145,6 +147,51 @@ if (params.get('climax')) {
   if (deurIt) {
     const origInteract = deurIt.onInteract;
     deurIt.onInteract = () => { origInteract(); audioDeurKlik(); onDeurGeopend(); };
+  }
+
+  // ── Climax-sequentie ─────────────────────────────────────────────────────
+  // 1) speler verlaat de zaal → na 1 s: lampenanimatie (camera richt erop);
+  // 2) speler loopt de trap af → hologram start met afspelen (t = 0);
+  // 3) 11 s na videostart → dag-nachtovergang;
+  // 4) 12 s na videostart → hologram pauzeert 7 s (met wobbel), hervat daarna;
+  // 5) 2 s voor het einde van de video → deeltjes vliegen naar de TV;
+  // 6) na afloop keert het hologram terug naar de pauzestand (speelt niet opnieuw).
+  const zaalBox = wereld.zaalBox();
+  const TRAP_AF_Y = 4.0;         // voethoogte waaronder de speler 'de trap af' is (zaal ligt op f1 ≈ 5)
+  const seq = {
+    deurUit: false, lampTimer: 0, lampenGedaan: false,
+    videoGestart: false, tVideo: 0,
+    zonGedaan: false, pauzeGedaan: false, hervatGedaan: false, deeltjesGedaan: false,
+  };
+  function buitenZaal(p) {
+    return p.x < zaalBox.x0 - 0.3 || p.x > zaalBox.x1 + 0.3 ||
+           p.z < zaalBox.z0 - 0.3 || p.z > zaalBox.z1 + 0.3;
+  }
+  function updateSequentie(dt) {
+    const p = speler.voeten;
+    // (1) zaal verlaten
+    if (!seq.deurUit && buitenZaal(p)) seq.deurUit = true;
+    // (1b) 1 s na verlaten → lampen
+    if (seq.deurUit && !seq.lampenGedaan) {
+      seq.lampTimer += dt;
+      if (seq.lampTimer >= 1) { faseLampen(); seq.lampenGedaan = true; }
+    }
+    // (2) trap af → hologram afspelen (t = 0 voor de rest van de sequentie)
+    if (seq.deurUit && !seq.videoGestart && p.y < TRAP_AF_Y) {
+      hologram.speelAf(); seq.videoGestart = true;
+    }
+    if (!seq.videoGestart) return;
+    seq.tVideo += dt;
+    // (3) 11 s → dag-nacht
+    if (!seq.zonGedaan && seq.tVideo >= 11) { faseZonsondergang(); seq.zonGedaan = true; }
+    // (4) 12 s → 7 s pauze, daarna hervatten
+    if (!seq.pauzeGedaan && seq.tVideo >= 12) { hologram.pauzeer(); seq.pauzeGedaan = true; }
+    if (seq.pauzeGedaan && !seq.hervatGedaan && seq.tVideo >= 19) { hologram.hervat(); seq.hervatGedaan = true; }
+    // (5) 2 s voor het einde van de video → deeltjes (robuust t.o.v. de pauze)
+    if (!seq.deeltjesGedaan && seq.hervatGedaan) {
+      const duur = hologram.duur();
+      if (duur > 0 && hologram.tijd() >= duur - 2) { faseDeeltjes(); seq.deeltjesGedaan = true; }
+    }
   }
 
   // ── Bord: E trekt speler cinematisch naar de TV + invoerveld verschijnt ──
@@ -321,6 +368,7 @@ if (params.get('climax')) {
     }
     wereld.update(dt);
     speler.update(dt);
+    updateSequentie(dt);
     hologram.update(camera, dt);
     updateClimax(dt);
     const h = speler.hintTekst();

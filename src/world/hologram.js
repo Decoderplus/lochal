@@ -29,6 +29,8 @@ export const HOLO = {
   scanDichtheid: 620.0,                          // aantal scanlijnen over de hoogte
   scanSnelheid: 5.0,                             // hoe snel de scanlijnen omhoog rollen
   flikker: 0.10,                                 // sterkte van de subtiele helderheidsflikker (0–1)
+  wobbelBasis: 0.0016,                           // horizontale hologram-wobbel tijdens afspelen
+  wobbelPauze: 0.006,                            // extra wobbel wanneer gepauzeerd (gepauzeerd star-wars-hologram)
   opaciteit: 0.92,                               // algehele doorzichtigheid van de figuur
   voetStraal: 0.55,                              // straal van de gloeiende projectorvoet (m)
   lichtKracht: 1.4,                              // intensiteit van het cyaan sfeerlicht aan de voet
@@ -39,7 +41,10 @@ export const HOLO = {
 // Opbouw
 // ─────────────────────────────────────────────────────────────────────────
 export function bouwHologram(scene) {
-  if (typeof document === 'undefined') return { groep: new THREE.Group(), update() {} };
+  if (typeof document === 'undefined') return {
+    groep: new THREE.Group(), update() {}, speelAf() {}, pauzeer() {}, hervat() {},
+    terugNaarPauze() {}, tijd: () => 0, duur: () => 0, speeltAf: () => false,
+  };
 
   const groep = new THREE.Group();
   groep.name = 'hologram';
@@ -47,14 +52,36 @@ export function bouwHologram(scene) {
   scene.add(groep);
 
   // ── Video-element + textuur ──────────────────────────────────────────────
+  // Start GEPAUZEERD (op frame 0). De sequentie in main.js bepaalt wanneer de
+  // video afspeelt/pauzeert. De shader blijft altijd shimmeren (scanlijnen,
+  // flikker, wobbel) zodat een gepauzeerd hologram tóch leeft.
   const video = document.createElement('video');
   video.src = HOLO.bestand;
-  video.loop = true;
-  video.muted = true;            // muted = autoplay is toegestaan door de browser
+  video.loop = false;            // niet loopen; na afloop terug naar de pauzestand
+  video.muted = true;            // muted = autoplay/decoderen toegestaan
   video.playsInline = true;
+  video.preload = 'auto';
   video.crossOrigin = 'anonymous';
   video.setAttribute('playsinline', '');
-  video.play().catch(() => {});  // negeer autoplay-afwijzing; we proberen het opnieuw bij interactie
+
+  let staat = 'laden';           // 'laden' | 'pauze' | 'speelt'
+  // decodeer één frame en pauzeer meteen → een zichtbare gepauzeerde figuur
+  let eersteFrame = false;
+  function pauzeerOpEersteFrame() {
+    if (eersteFrame) return; eersteFrame = true;
+    video.pause(); staat = 'pauze';        // currentTime blijft ~0 (frame 0 zichtbaar)
+  }
+  video.addEventListener('loadeddata', () => {
+    video.play().then(() => {
+      if ('requestVideoFrameCallback' in video) video.requestVideoFrameCallback(() => pauzeerOpEersteFrame());
+      else setTimeout(pauzeerOpEersteFrame, 60);
+    }).catch(() => { staat = 'pauze'; });
+  });
+  // na afloop: NIET opnieuw spelen, terug naar de pauzestand vóór het begin
+  video.addEventListener('ended', () => {
+    video.pause(); try { video.currentTime = 0; } catch (_) {}
+    staat = 'pauze';
+  });
 
   const tex = new THREE.VideoTexture(video);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -79,6 +106,8 @@ export function bouwHologram(scene) {
       uScanS: { value: HOLO.scanSnelheid },
       uFlik: { value: HOLO.flikker },
       uOpacity: { value: HOLO.opaciteit },
+      uWobbel: { value: HOLO.wobbelBasis },   // huidige horizontale wobbel (main.js/staat past aan)
+      uPauze: { value: 1.0 },                 // 1 = gepauzeerd (extra flikker), 0 = speelt
     },
     vertexShader: `
       varying vec2 vUv;
@@ -91,9 +120,14 @@ export function bouwHologram(scene) {
       uniform vec3 uColor; uniform float uTint;
       uniform float uKeyLo; uniform float uKeyHi;
       uniform float uScanD; uniform float uScanS; uniform float uFlik; uniform float uOpacity;
+      uniform float uWobbel; uniform float uPauze;
       varying vec2 vUv;
       void main(){
-        vec4 t = texture2D(uTex, vUv);
+        // horizontale hologram-wobbel (sterker in pauze) — verschuift de bemonstering
+        vec2 uv = vUv;
+        uv.x += sin(vUv.y * 26.0 + uTime * 3.0) * uWobbel
+              + sin(vUv.y * 90.0 - uTime * 7.0) * uWobbel * 0.4;
+        vec4 t = texture2D(uTex, uv);
         float luma = dot(t.rgb, vec3(0.299, 0.587, 0.114));
         // luma-key: donkere achtergrond → doorzichtig
         float a = smoothstep(uKeyLo, uKeyHi, luma);
@@ -103,8 +137,8 @@ export function bouwHologram(scene) {
         // scanlijnen die omhoog rollen
         float scan = 0.5 + 0.5 * sin(vUv.y * uScanD - uTime * uScanS);
         col *= 0.78 + 0.22 * scan;
-        // subtiele helderheidsflikker
-        col *= 1.0 - uFlik * (0.5 + 0.5 * sin(uTime * 38.0) * sin(uTime * 11.0));
+        // subtiele helderheidsflikker (extra tijdens pauze)
+        col *= 1.0 - (uFlik + uPauze * 0.10) * (0.5 + 0.5 * sin(uTime * 38.0) * sin(uTime * 11.0));
         // brede interferentieband die langzaam over de figuur trekt
         float band = 1.0 - smoothstep(0.0, 0.05, abs(fract(vUv.y * 2.0 - uTime * 0.25) - 0.5));
         col += uColor * 0.12 * band;
@@ -150,21 +184,29 @@ export function bouwHologram(scene) {
   licht.castShadow = false;
   groep.add(licht);
 
-  // ── Geluid ontgrendelen bij de eerste gebruikersinteractie ───────────────
-  function ontgrendel() {
-    if (HOLO.geluid) video.muted = false;
-    video.play().catch(() => {});
-    window.removeEventListener('click', ontgrendel);
-    window.removeEventListener('keydown', ontgrendel);
+  // ── Afspeel-API (aangestuurd door de sequentie in main.js) ───────────────
+  function speelAf() {                          // start van frame 0 met geluid
+    try { video.currentTime = 0; } catch (_) {}
+    video.muted = !HOLO.geluid;
+    staat = 'speelt';
+    video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
   }
-  window.addEventListener('click', ontgrendel);
-  window.addEventListener('keydown', ontgrendel);
+  function pauzeer() { video.pause(); staat = 'pauze'; }   // vriezen (shader blijft shimmeren)
+  function hervat() { staat = 'speelt'; video.play().catch(() => {}); }
+  function terugNaarPauze() { video.pause(); try { video.currentTime = 0; } catch (_) {} staat = 'pauze'; }
+  const tijdVan = () => video.currentTime || 0;
+  const duurVan = () => (isFinite(video.duration) ? video.duration : 0);
+  const speeltAf = () => staat === 'speelt' && !video.paused;
 
   // ── Per-frame: billboard (alleen yaw) + shaderklok + ringpuls ────────────
   let tijd = 0;
   function update(camera, dt = 0) {
     tijd += dt;
     mat.uniforms.uTime.value = tijd;
+    // wobbel + flikker sterker wanneer gepauzeerd
+    const gepauzeerd = staat !== 'speelt';
+    mat.uniforms.uPauze.value = gepauzeerd ? 1.0 : 0.0;
+    mat.uniforms.uWobbel.value = gepauzeerd ? HOLO.wobbelPauze : HOLO.wobbelBasis;
     if (camera) {
       const dx = camera.position.x - groep.position.x;
       const dz = camera.position.z - groep.position.z;
@@ -176,5 +218,6 @@ export function bouwHologram(scene) {
     licht.intensity = HOLO.lichtKracht * (0.85 + 0.15 * Math.sin(tijd * 2.2));
   }
 
-  return { groep, update };
+  return { groep, update, speelAf, pauzeer, hervat, terugNaarPauze,
+           tijd: tijdVan, duur: duurVan, speeltAf };
 }

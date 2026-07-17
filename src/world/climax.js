@@ -236,18 +236,8 @@ export function faseDeeltjes() {
 // Per-frame update
 // ─────────────────────────────────────────────────────────────────────────
 export function updateClimax(dt) {
-  // ── TIJDELIJKE START — later vervangen door hologram/video-trigger ──────
-  if (!ketenGestart && D.getSpelerPositie) {
-    const p = D.getSpelerPositie();
-    const z = INSTELLINGEN.trapZone;
-    const inZone = p && p.x >= z.x[0] && p.x <= z.x[1] && p.z >= z.z[0] && p.z <= z.z[1]
-      && p.y >= z.y[0] && p.y <= z.y[1];
-    if (inZone) {
-      if (inZoneSinds < 0) inZoneSinds = 0; else inZoneSinds += dt;
-      if (inZoneSinds >= INSTELLINGEN.startVertraging) startClimax();
-    } else { inZoneSinds = -1; }
-  }
-
+  // De fasen worden aangestuurd door de sequentie-orkestratie in main.js
+  // (deur verlaten → lampen; trap af → hologram; en getimede fasen daarna).
   if (A.camLampen) updateCamLampen(dt);
   if (A.lamp) updateLampen(dt);
   if (A.zon) updateZon(dt);
@@ -281,10 +271,10 @@ function updateLampen(dt) {
   }
   if (kroon.instanceColor) kroon.instanceColor.needsUpdate = true;
 
-  if (A.lamp.t >= lampen.totaal) {                 // alle rondes klaar → herstel + volgende fase
+  if (A.lamp.t >= lampen.totaal) {                 // alle rondes klaar → herstel (geen auto-keten)
     for (let i = 0; i < n; i++) kroon.setColorAt(i, lampen.origineel[i]);
     if (kroon.instanceColor) kroon.instanceColor.needsUpdate = true;
-    A.lamp = null; faseZonsondergang();
+    A.lamp = null;
   }
 }
 
@@ -332,7 +322,7 @@ function updateZon(dt) {
     }
   }
 
-  if (raw >= 1) { A.zon = null; faseDeeltjes(); }
+  if (raw >= 1) { A.zon = null; }                  // klaar (geen auto-keten naar deeltjes)
 }
 
 function updateDeeltjes(dt) {
@@ -530,6 +520,8 @@ function updateCamLampen(dt) {
     const alpha = smooth(c.t / c.panDuur);
     D.spelerEuler.y = c.startY + (c.doelY - c.startY) * alpha;
   }
+  // camera wordt op de lampen gericht (pan + hold), zodat de speler het ziet
+  if (D.camera) D.camera.quaternion.setFromEuler(D.spelerEuler);
   // hold-fase: euler.y blijft op doelY (niets aanpassen), gewoon wachten
   if (c.t >= c.panDuur + c.holdDuur) A.camLampen = null;
 }
