@@ -74,6 +74,11 @@ export function audioNacht() {
   speelGeluid('nacht');
 }
 
+// Zachte nacht-variant (2e dag/nacht-overgang, terug naar dag): 30% zachter
+export function audioNachtZacht() {
+  speelGeluid('nacht', { volume: GELUIDEN.nacht.volume * 0.7 });
+}
+
 // Klik: per toetsaanslag (geen guard — snel typen moet werken)
 export function audioKlik() {
   speelGeluid('klik');

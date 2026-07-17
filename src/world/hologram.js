@@ -36,7 +36,8 @@ export const HOLO = {
   lichtKracht: 1.4,                              // intensiteit van het cyaan sfeerlicht aan de voet
   geluid: true,                                  // true = de stem van het hologram hoorbaar
   geluidNabij: 5.0,                              // volle stem binnen deze afstand (m)
-  geluidVer: 34.0,                               // stem onhoorbaar vanaf deze afstand (m)
+  geluidVer: 40.0,                               // stem onhoorbaar vanaf deze afstand (m)
+  geluidVersterking: 2.4,                        // WebAudio-gain (>1 = luider dan normaal, ook dichtbij)
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -45,7 +46,7 @@ export const HOLO = {
 export function bouwHologram(scene) {
   if (typeof document === 'undefined') return {
     groep: new THREE.Group(), update() {}, speelAf() {}, pauzeer() {}, hervat() {},
-    terugNaarPauze() {}, tijd: () => 0, duur: () => 0, speeltAf: () => false,
+    terugNaarPauze() {}, tijd: () => 0, duur: () => 0, speeltAf: () => false, isKlaar: () => false,
   };
 
   const groep = new THREE.Group();
@@ -67,6 +68,7 @@ export function bouwHologram(scene) {
   video.setAttribute('playsinline', '');
 
   let staat = 'laden';           // 'laden' | 'pauze' | 'speelt'
+  let klaar = false;             // true zodra de video één keer helemaal is afgespeeld
   // decodeer één frame en pauzeer meteen → een zichtbare gepauzeerde figuur
   let eersteFrame = false;
   function pauzeerOpEersteFrame() {
@@ -82,8 +84,23 @@ export function bouwHologram(scene) {
   // na afloop: NIET opnieuw spelen, terug naar de pauzestand vóór het begin
   video.addEventListener('ended', () => {
     video.pause(); try { video.currentTime = 0; } catch (_) {}
-    staat = 'pauze';
+    staat = 'pauze'; klaar = true;
   });
+
+  // WebAudio-versterking: routeer de videostem door een GainNode (>1 = luider)
+  let audioCtx = null, gainNode = null, mediaBron = null;
+  function _zetVersterking() {
+    if (mediaBron || !HOLO.geluid) return;
+    try {
+      const Ctx = window.AudioContext || window.webkitAudioContext;
+      if (!Ctx) return;
+      audioCtx = new Ctx();
+      mediaBron = audioCtx.createMediaElementSource(video);   // element-volume (afstand) blijft vóór de gain gelden
+      gainNode = audioCtx.createGain();
+      gainNode.gain.value = HOLO.geluidVersterking;
+      mediaBron.connect(gainNode).connect(audioCtx.destination);
+    } catch (_) { audioCtx = null; }
+  }
 
   const tex = new THREE.VideoTexture(video);
   tex.colorSpace = THREE.SRGBColorSpace;
@@ -187,10 +204,12 @@ export function bouwHologram(scene) {
   groep.add(licht);
 
   // ── Afspeel-API (aangestuurd door de sequentie in main.js) ───────────────
-  function speelAf() {                          // start van frame 0 met geluid
+  function speelAf() {                          // start van frame 0 met (versterkt) geluid
     try { video.currentTime = 0; } catch (_) {}
     video.muted = !HOLO.geluid;
-    staat = 'speelt';
+    klaar = false; staat = 'speelt';
+    _zetVersterking();
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
     video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
   }
   function pauzeer() { video.pause(); staat = 'pauze'; }   // vriezen (shader blijft shimmeren)
@@ -199,6 +218,7 @@ export function bouwHologram(scene) {
   const tijdVan = () => video.currentTime || 0;
   const duurVan = () => (isFinite(video.duration) ? video.duration : 0);
   const speeltAf = () => staat === 'speelt' && !video.paused;
+  const isKlaar = () => klaar;
 
   // ── Per-frame: billboard (alleen yaw) + shaderklok + ringpuls ────────────
   let tijd = 0;
@@ -225,5 +245,5 @@ export function bouwHologram(scene) {
   }
 
   return { groep, update, speelAf, pauzeer, hervat, terugNaarPauze,
-           tijd: tijdVan, duur: duurVan, speeltAf };
+           tijd: tijdVan, duur: duurVan, speeltAf, isKlaar };
 }

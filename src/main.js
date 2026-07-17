@@ -162,6 +162,7 @@ if (params.get('climax')) {
     deurUit: false, lampTimer: 0, lampenGedaan: false,
     videoGestart: false, tVideo: 0,
     zonGedaan: false, pauzeGedaan: false, hervatGedaan: false, deeltjesGedaan: false,
+    tweedeZonGedaan: false,
   };
   function buitenZaal(p) {
     return p.x < zaalBox.x0 - 0.3 || p.x > zaalBox.x1 + 0.3 ||
@@ -185,13 +186,17 @@ if (params.get('climax')) {
     seq.tVideo += dt;
     // (3) 11 s → dag-nacht
     if (!seq.zonGedaan && seq.tVideo >= 11) { faseZonsondergang(); seq.zonGedaan = true; }
-    // (4) 12 s → 7 s pauze, daarna hervatten
+    // (4) 12 s → 9 s pauze (2 s langer), daarna hervatten
     if (!seq.pauzeGedaan && seq.tVideo >= 12) { hologram.pauzeer(); seq.pauzeGedaan = true; }
-    if (seq.pauzeGedaan && !seq.hervatGedaan && seq.tVideo >= 19) { hologram.hervat(); seq.hervatGedaan = true; }
-    // (5) 2 s voor het einde van de video → deeltjes (robuust t.o.v. de pauze)
+    if (seq.pauzeGedaan && !seq.hervatGedaan && seq.tVideo >= 21) { hologram.hervat(); seq.hervatGedaan = true; }
+    // (5) 7 s voor het einde van de video → deeltjes (robuust t.o.v. de pauze)
     if (!seq.deeltjesGedaan && seq.hervatGedaan) {
       const duur = hologram.duur();
-      if (duur > 0 && hologram.tijd() >= duur - 2) { faseDeeltjes(); seq.deeltjesGedaan = true; }
+      if (duur > 0 && hologram.tijd() >= duur - 7) { faseDeeltjes(); seq.deeltjesGedaan = true; }
+    }
+    // (6) hologram gestopt → 2e dag/nacht, nu eindigend op DAG (30% zachtere audio)
+    if (seq.deeltjesGedaan && !seq.tweedeZonGedaan && hologram.isKlaar()) {
+      faseZonsondergang({ naarDag: true }); seq.tweedeZonGedaan = true;
     }
   }
 

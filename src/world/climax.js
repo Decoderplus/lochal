@@ -5,7 +5,7 @@
 // Elke fase is los aanroepbaar maar ketent standaard automatisch door.
 // startClimax() start de hele keten. updateClimax(dt) draait per frame.
 import * as THREE from 'three';
-import { audioChimes, audioNacht } from './audio.js';
+import { audioChimes, audioNacht, audioNachtZacht } from './audio.js';
 
 // ─────────────────────────────────────────────────────────────────────────
 // ALLE regelbare waarden — pas hier aan.
@@ -38,6 +38,7 @@ export const INSTELLINGEN = {
   nachtExposure: 0.45,           // renderer-exposure aan het eind (nacht)
   nachtFogKleur: 0x0e1422,       // fog-kleur 's nachts
   schaduwMeebewegen: true,       // true = schaduwkaart elk frame updaten tijdens de overgang; false = bevriezen
+  kroonGloedKracht: 2.6,         // 's nachts: warme gloed die de kroonluchter op de directe omgeving werpt
 
   // ── Deeltjes (dans naar het bord) ──────────────────────────────────────
   deeltjesAantal: 3000,          // aantal deeltjes (< 4000, één draw call)
@@ -67,6 +68,7 @@ let lampen = null;               // { volgorde:[{i, tijd}], origineel:[Color] }
 let deeltjes = null;             // THREE.Points
 let bord = null;                 // { mesh, mat }
 let sterren = null;              // THREE.Points sterrenhemel, zichtbaar tijdens nacht
+let kroonGloed = null;           // warme PointLight: gloed van de kroonluchter 's nachts
 let bloomBasis = 0;              // basis bloom-strength (om naar terug te keren)
 
 // ── TV-aanmeld staat ──────────────────────────────────────────────────────
@@ -113,6 +115,11 @@ export function initClimax(deps) {
   bouwBord();
   bouwDeeltjes();
   bouwSterren();
+  // warme gloed van de kroonluchter (uit overdag, fade-in 's nachts)
+  kroonGloed = new THREE.PointLight(0xffdca8, 0, 34, 2);
+  kroonGloed.position.copy(INSTELLINGEN.lampPositie);
+  kroonGloed.castShadow = false;
+  D.scene.add(kroonGloed);
   // kloon daklichten-materiaal zodat we het 's nachts apart kunnen aanpassen
   { const dl = D.scene.getObjectByName('daklichten'); if (dl) dl.material = dl.material.clone(); }
   bouwTestknoppen();
@@ -217,9 +224,11 @@ export function faseLampen() {
 // ─────────────────────────────────────────────────────────────────────────
 // FASE 2 — Zonsondergang: één bewegende zonhoogte stuurt boog + kleur + sfeer.
 // ─────────────────────────────────────────────────────────────────────────
-export function faseZonsondergang() {
-  audioNacht();                            // omslaggeluid bij dag→nacht (eenmalig)
-  A.zon = { t: 0 };
+export function faseZonsondergang(opties = {}) {
+  const naarDag = opties.naarDag === true;   // true = 2e overgang: eindigt op DAG, zachtere audio
+  if (naarDag) audioNachtZacht();            // 30% zachter
+  else audioNacht();                         // omslaggeluid bij dag→nacht (eenmalig)
+  A.zon = { t: 0, naarDag };
   if (D.zon) D.zon.shadow.mapSize.set(1024, 1024);   // één schaduwwerper, kaart 1024
 }
 
@@ -283,9 +292,13 @@ function updateZon(dt) {
   const I = INSTELLINGEN;
   const raw = THREE.MathUtils.clamp(A.zon.t / I.dagNachtDuur, 0, 1);
   const warp = Math.pow(raw, I.zonVersnelling);        // merkbare versnelling (eind sneller)
-  // h01: 1 = dag, 0 = nacht. Start op 1 (de HUIDIGE dag-stand → geen sprong) en
-  // eindigt op 0 (nacht), via dag→nacht→dag→nacht (zonZwaaien = oneven).
-  const h01 = 0.5 + 0.5 * Math.cos(Math.PI * warp * I.zonZwaaien);
+  // h01: 1 = dag, 0 = nacht.
+  //  • normaal: start op 1 (huidige dag-stand) → eindigt op 0 (nacht), via
+  //    dag→nacht→dag→nacht (zonZwaaien oneven).
+  //  • naarDag (2e overgang): start op 0 (nacht) → eindigt op 1 (DAG), zonsopkomst.
+  const h01 = A.zon.naarDag
+    ? 0.5 - 0.5 * Math.cos(Math.PI * warp)
+    : 0.5 + 0.5 * Math.cos(Math.PI * warp * I.zonZwaaien);
   const nacht = smooth(1 - h01);                       // 1 's nachts, 0 overdag
 
   // (a) directional light: vertrekt vanaf de huidige stand (dagZon) en draait/
@@ -313,6 +326,8 @@ function updateZon(dt) {
 
   // sterren: fade in zodra het donker wordt
   if (sterren) sterren.material.opacity = THREE.MathUtils.clamp((nacht - 0.25) / 0.5, 0, 1);
+  // kroonluchter-gloed: warme gloed op de directe omgeving, sterker naarmate het donkerder is
+  if (kroonGloed) kroonGloed.intensity = nacht * I.kroonGloedKracht;
   // daklichten: transparant bij nacht zodat sterren er doorheen zichtbaar zijn
   { const dl = D.scene.getObjectByName('daklichten');
     if (dl) {
