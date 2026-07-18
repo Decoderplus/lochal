@@ -46,7 +46,7 @@ export const HOLO = {
 export function bouwHologram(scene) {
   if (typeof document === 'undefined') return {
     groep: new THREE.Group(), update() {}, speelAf() {}, pauzeer() {}, hervat() {},
-    terugNaarPauze() {}, tijd: () => 0, duur: () => 0, speeltAf: () => false, isKlaar: () => false,
+    terugNaarPauze() {}, preload() {}, tijd: () => 0, duur: () => 0, speeltAf: () => false, isKlaar: () => false,
   };
 
   const groep = new THREE.Group();
@@ -55,17 +55,27 @@ export function bouwHologram(scene) {
   scene.add(groep);
 
   // ── Video-element + textuur ──────────────────────────────────────────────
-  // Start GEPAUZEERD (op frame 0). De sequentie in main.js bepaalt wanneer de
-  // video afspeelt/pauzeert. De shader blijft altijd shimmeren (scanlijnen,
-  // flikker, wobbel) zodat een gepauzeerd hologram tóch leeft.
+  // LUI LADEN: geen .src bij opbouw, dus geen netwerkverzoek totdat preload()
+  // wordt aangeroepen (main.js doet dit zodra de speler start — er is dan nog
+  // volop tijd tot het hologram in de sequentie nodig is). Start uiteindelijk
+  // GEPAUZEERD (op frame 0); de sequentie in main.js bepaalt afspelen/pauzeren.
+  // De shader blijft altijd shimmeren (scanlijnen, flikker, wobbel) zodat een
+  // gepauzeerd hologram tóch leeft.
   const video = document.createElement('video');
-  video.src = HOLO.bestand;
   video.loop = false;            // niet loopen; na afloop terug naar de pauzestand
   video.muted = true;            // muted = autoplay/decoderen toegestaan
   video.playsInline = true;
-  video.preload = 'auto';
+  video.preload = 'none';        // pas laden na expliciete preload()-aanroep
   video.crossOrigin = 'anonymous';
   video.setAttribute('playsinline', '');
+  let geladen = false;
+  function preload() {
+    if (geladen) return;
+    geladen = true;
+    video.preload = 'auto';
+    video.src = HOLO.bestand;
+    video.load();
+  }
 
   let staat = 'laden';           // 'laden' | 'pauze' | 'speelt'
   let klaar = false;             // true zodra de video één keer helemaal is afgespeeld
@@ -205,6 +215,7 @@ export function bouwHologram(scene) {
 
   // ── Afspeel-API (aangestuurd door de sequentie in main.js) ───────────────
   function speelAf() {                          // start van frame 0 met (versterkt) geluid
+    preload();                                  // vangnet: zorg dat er iets te spelen valt
     try { video.currentTime = 0; } catch (_) {}
     video.muted = !HOLO.geluid;
     klaar = false; staat = 'speelt';
@@ -244,6 +255,6 @@ export function bouwHologram(scene) {
     licht.intensity = HOLO.lichtKracht * (0.85 + 0.15 * Math.sin(tijd * 2.2));
   }
 
-  return { groep, update, speelAf, pauzeer, hervat, terugNaarPauze,
+  return { groep, update, speelAf, pauzeer, hervat, terugNaarPauze, preload,
            tijd: tijdVan, duur: duurVan, speeltAf, isKlaar };
 }

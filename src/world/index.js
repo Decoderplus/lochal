@@ -100,5 +100,6 @@ export function bouwWereld(scene) {
     stopTV: zaal.stopTV,
     tvSpeelt: zaal.tvSpeelt,
     updateTVGeluid: zaal.updateTVGeluid,
+    preloadTV: zaal.preloadTV,
   };
 }

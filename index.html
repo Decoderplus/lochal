@@ -21,9 +21,28 @@
       padding: 8px 18px; border-radius: 6px; font-size: 16px;
       pointer-events: none; user-select: none;
     }
+    /* Laadscherm: zichtbaar vanaf de eerste HTML-paint (géén flits), dekt de
+       korte opbouwtijd van de 3D-wereld af. Video's/geluid laden apart en lui
+       (pas als de speler start), dus dit scherm hangt daar niet op te wachten. */
+    #laadscherm {
+      position: fixed; inset: 0; z-index: 200;
+      background: #0c0a08; color: #f0e9dd;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      gap: 18px; font-family: Georgia, serif;
+      transition: opacity 0.6s ease;
+    }
+    #laadscherm.verborgen { opacity: 0; pointer-events: none; }
+    #laadscherm .titel { font-size: 22px; letter-spacing: 2px; opacity: 0.9; }
+    #laadscherm .ring {
+      width: 40px; height: 40px; border-radius: 50%;
+      border: 3px solid rgba(240, 233, 221, 0.18); border-top-color: #f0e9dd;
+      animation: laaddraai 0.9s linear infinite;
+    }
+    @keyframes laaddraai { to { transform: rotate(360deg); } }
   </style>
 </head>
 <body>
+  <div id="laadscherm"><div class="ring"></div><div class="titel">LocHal wordt geladen…</div></div>
   <div id="startuitleg">Klik om te starten &nbsp;|&nbsp; WASD = lopen &nbsp;|&nbsp; muis = kijken &nbsp;|&nbsp; E = gebruiken &nbsp;|&nbsp; ESC = stoppen</div>
   <div id="hint"></div>
 

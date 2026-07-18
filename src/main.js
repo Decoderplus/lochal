@@ -42,6 +42,15 @@ composer.addPass(bloomPass);
 composer.addPass(new OutputPass());
 const renderFrame = () => composer.render();
 
+// ── Laadscherm: verdwijnt zodra het eerste frame gerenderd is ────────────
+let laadschermWeg = false;
+function verbergLaadscherm() {
+  if (laadschermWeg) return;
+  laadschermWeg = true;
+  const el = document.getElementById('laadscherm');
+  if (el) { el.classList.add('verborgen'); setTimeout(() => el.remove(), 700); }
+}
+
 // ── Definitief lichtontwerp (fase 4) ─────────────────────────────────────
 // Eén echte schaduwwerper (CONFIG.renderer.maxShadowLights = 1): de warme zon
 // die laag door de zuidgevel de hal in raakt.
@@ -104,6 +113,7 @@ if (params.get('climax')) {
   camera.lookAt(...cKijk);
   document.getElementById('hint').style.display = 'none';
   document.getElementById('startuitleg').style.display = 'none';
+  verbergLaadscherm();
   initClimax({
     scene, camera, renderer, zon, bloomPass,
     kroon: scene.getObjectByName('kroonluchter'),
@@ -122,6 +132,7 @@ if (params.get('climax')) {
   camera.lookAt(...kijk);
   document.getElementById('hint').style.display = 'none';
   document.getElementById('startuitleg').style.display = 'none';
+  verbergLaadscherm();
   let frames = 0;
   renderer.setAnimationLoop(() => {
     const dt = klok.getDelta();
@@ -148,6 +159,18 @@ if (params.get('climax')) {
     const origInteract = deurIt.onInteract;
     deurIt.onInteract = () => { origInteract(); audioDeurKlik(); onDeurGeopend(); };
   }
+
+  // ── Lui laden: TV- en hologramvideo pas downloaden zodra de speler start ──
+  // (eerste klik = pointer lock) — ruim op tijd vóór ze in de sequentie nodig
+  // zijn (TV ~3 s later, hologram pas na deur+trap). Zo blijft de eerste
+  // paginalading klein en snel.
+  let luiGeladen = false;
+  document.addEventListener('pointerlockchange', () => {
+    if (luiGeladen || document.pointerLockElement !== renderer.domElement) return;
+    luiGeladen = true;
+    hologram.preload();
+    if (wereld.preloadTV) wereld.preloadTV();
+  });
 
   // ── Climax-sequentie ─────────────────────────────────────────────────────
   // 1) speler verlaat de zaal → na 1 s: lampenanimatie (camera richt erop);
@@ -296,6 +319,7 @@ if (params.get('climax')) {
     hint.textContent = h;
     hint.style.display = h ? 'block' : 'none';
     renderFrame();
+    verbergLaadscherm();
   });
 }
 

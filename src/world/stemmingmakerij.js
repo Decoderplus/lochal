@@ -343,27 +343,29 @@ export function bouwStemmingMakerij() {
   // ── Video op de tv (TV 1.mp4): start 3 s na binnenkomst of op spatie ─────
   // Speelt 1x af (geen loop) en stopt; met spatie opnieuw. Bij de start altijd
   // vanaf het begin (currentTime 0) én meteen met geluid. Het volume zakt met de
-  // afstand tot het scherm (updateTVGeluid). De canvas-prompt wordt bij de eerste
-  // start vervangen door de videotextuur.
+  // afstand tot het scherm (updateTVGeluid). De canvas-prompt wordt pas bij het
+  // afspelen vervangen door de videotextuur (LUI LADEN: preloadTV() start alleen
+  // het downloaden, zonder het scherm-materiaal te wijzigen).
   const TV_NABIJ = 2.5, TV_VER = 13;    // volume 1 binnen NABIJ m, 0 vanaf VER m
   const tvWereldPos = new THREE.Vector3();
-  let tvVideo = null;
-  function _maakTVVideo() {
+  let tvVideo = null, tvTex = null;
+  function preloadTV() {
+    if (tvVideo || HEADLESS) return;
     tvVideo = document.createElement('video');
+    tvVideo.preload = 'auto';
     tvVideo.src = 'tv1.mp4';
     tvVideo.loop = false;               // 1x afspelen, dan stoppen (spatie = opnieuw)
     tvVideo.playsInline = true;
     tvVideo.setAttribute('playsinline', '');
-    const vtex = new THREE.VideoTexture(tvVideo);
-    vtex.colorSpace = THREE.SRGBColorSpace;
-    vtex.minFilter = THREE.LinearFilter; vtex.magFilter = THREE.LinearFilter;
-    vtex.wrapS = THREE.RepeatWrapping; vtex.repeat.x = -1; vtex.offset.x = 1; // un-spiegelen (wereldspiegel)
-    matScherm.map = vtex; matScherm.needsUpdate = true;
-    schermLicht.intensity = 1.6;
+    tvTex = new THREE.VideoTexture(tvVideo);
+    tvTex.colorSpace = THREE.SRGBColorSpace;
+    tvTex.minFilter = THREE.LinearFilter; tvTex.magFilter = THREE.LinearFilter;
+    tvTex.wrapS = THREE.RepeatWrapping; tvTex.repeat.x = -1; tvTex.offset.x = 1; // un-spiegelen (wereldspiegel)
   }
   function startTV() {
     if (HEADLESS) return;
-    if (!tvVideo) _maakTVVideo();
+    preloadTV();
+    if (matScherm.map !== tvTex) { matScherm.map = tvTex; matScherm.needsUpdate = true; schermLicht.intensity = 1.6; }
     try { tvVideo.currentTime = 0; } catch (_) {}   // altijd vanaf het begin
     tvVideo.muted = false;                          // meteen geluid
     const afspelen = () => tvVideo.play().catch(() => {
@@ -649,7 +651,7 @@ export function bouwStemmingMakerij() {
 
   return {
     groep, colliders, surfaces, interactables: [interactable], update,
-    spawn, zetRotatie, rotatie: () => rotatie, startTV, stopTV, tvSpeelt, updateTVGeluid,
+    spawn, zetRotatie, rotatie: () => rotatie, startTV, stopTV, tvSpeelt, updateTVGeluid, preloadTV,
     zaalBox: () => mapBox(kamerLokaal, rotatie),
   };
 }
