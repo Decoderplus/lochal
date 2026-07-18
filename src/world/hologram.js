@@ -35,9 +35,9 @@ export const HOLO = {
   voetStraal: 0.55,                              // straal van de gloeiende projectorvoet (m)
   lichtKracht: 1.4,                              // intensiteit van het cyaan sfeerlicht aan de voet
   geluid: true,                                  // true = de stem van het hologram hoorbaar
-  geluidNabij: 5.0,                              // volle stem binnen deze afstand (m)
-  geluidVer: 40.0,                               // stem onhoorbaar vanaf deze afstand (m)
-  geluidVersterking: 2.4,                        // WebAudio-gain (>1 = luider dan normaal, ook dichtbij)
+  geluidNabij: 3.0,                              // volle stem binnen deze afstand (m)
+  geluidVer: 26.0,                               // stem onhoorbaar vanaf deze afstand (m)
+  geluidVersterking: 4.5,                        // WebAudio-gain (>1 = luider dan normaal, ook dichtbij)
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -267,7 +267,8 @@ export function bouwHologram(scene) {
       // gain-node zodra die bestaat (video.volume heeft dan geen effect meer)
       const dy = camera.position.y - groep.position.y;
       const dist = Math.hypot(dx, dy, dz);
-      const afstandsfactor = Math.max(0, Math.min(1, 1 - (dist - HOLO.geluidNabij) / (HOLO.geluidVer - HOLO.geluidNabij)));
+      const lineair = Math.max(0, Math.min(1, 1 - (dist - HOLO.geluidNabij) / (HOLO.geluidVer - HOLO.geluidNabij)));
+      const afstandsfactor = lineair * lineair;   // kwadratisch: duidelijk voelbaar harder bij het naderen
       if (gainNode) gainNode.gain.value = HOLO.geluidVersterking * afstandsfactor;
       else video.volume = afstandsfactor;   // vangnet: geen WebAudio beschikbaar
     }
