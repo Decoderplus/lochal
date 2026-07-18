@@ -10,11 +10,13 @@ const ZWAARTEKRACHT = 18; // m/s²
 const RADIUS = 0.32;      // botscirkel van de speler (m)
 
 export class Speler {
-  constructor(camera, dom, wereld) {
+  constructor(camera, dom, wereld, opties = {}) {
     this.camera = camera;
     this.wereld = wereld;           // { colliders, surfaces, interactables }
     this.hoogte = CONFIG.player.hoogte;
     this.snelheid = CONFIG.player.loopsnelheid;
+    this.mobiel = !!opties.mobiel;  // true = touch-besturing (geen pointer-lock/toetsenbord)
+    this.mobielBeweging = { x: 0, z: 0 };  // genormaliseerd (-1..1): x=zijwaarts, z=voorwaarts (van de virtuele joystick)
 
     // Spawn: uit de wereld (StemmingMakerij, roteert mee met zaalRotatie);
     // anders terugvallen op de CONFIG-camera.
@@ -40,6 +42,13 @@ export class Speler {
     this._richting = new THREE.Vector3();
     this._zijwaarts = new THREE.Vector3();
 
+    if (this.mobiel) {
+      // Geen pointer-lock/toetsenbord op een telefoon — main.js roept begin()
+      // aan zodra de speler op de starttik-overlay tikt, en voedt kijken/
+      // bewegen via kijkDelta()/zetBeweging() vanuit de touch-besturing.
+      return;
+    }
+
     dom.addEventListener('click', () => dom.requestPointerLock());
     document.addEventListener('pointerlockchange', () => {
       this.vergrendeld = document.pointerLockElement === dom;
@@ -59,6 +68,24 @@ export class Speler {
     });
     document.addEventListener('keyup', (e) => { this.toetsen[e.code] = false; });
   }
+
+  // ── Touch-besturing (aangeroepen vanuit main.js) ─────────────────────────
+  begin() {                          // start de besturing (na de starttik-overlay)
+    this.vergrendeld = true;
+    document.body.classList.add('spelend');
+  }
+  kijkDelta(dx, dy) {                // swipe-gebaseerd kijken (equivalent van mousemove)
+    const gevoeligheid = 0.0034;     // iets gevoeliger dan de muis: schermswipes zijn kleiner
+    this.euler.y -= dx * gevoeligheid;
+    this.euler.x -= dy * gevoeligheid;
+    this.euler.x = Math.max(-Math.PI / 2 + 0.01, Math.min(Math.PI / 2 - 0.01, this.euler.x));
+    this.camera.quaternion.setFromEuler(this.euler);
+  }
+  zetBeweging(x, z) {                // joystick-vector (-1..1), x=zijwaarts, z=voorwaarts
+    this.mobielBeweging.x = x;
+    this.mobielBeweging.z = z;
+  }
+  interactie() { this._interactie(); }   // publieke ingang voor de touch-interactieknop
 
   _interactie() {
     for (const it of this.wereld.interactables) {
@@ -132,11 +159,17 @@ export class Speler {
       this._zijwaarts.crossVectors(this._richting, this.camera.up).normalize();
 
       const beweging = new THREE.Vector3();
-      const t = this.toetsen;
-      if (t['KeyW'] || t['ArrowUp'])    beweging.addScaledVector(this._richting,  this.snelheid * dt);
-      if (t['KeyS'] || t['ArrowDown'])  beweging.addScaledVector(this._richting, -this.snelheid * dt);
-      if (t['KeyA'] || t['ArrowLeft'])  beweging.addScaledVector(this._zijwaarts, -this.snelheid * dt);
-      if (t['KeyD'] || t['ArrowRight']) beweging.addScaledVector(this._zijwaarts,  this.snelheid * dt);
+      if (this.mobiel) {
+        const m = this.mobielBeweging;
+        beweging.addScaledVector(this._richting, m.z * this.snelheid * dt);
+        beweging.addScaledVector(this._zijwaarts, m.x * this.snelheid * dt);
+      } else {
+        const t = this.toetsen;
+        if (t['KeyW'] || t['ArrowUp'])    beweging.addScaledVector(this._richting,  this.snelheid * dt);
+        if (t['KeyS'] || t['ArrowDown'])  beweging.addScaledVector(this._richting, -this.snelheid * dt);
+        if (t['KeyA'] || t['ArrowLeft'])  beweging.addScaledVector(this._zijwaarts, -this.snelheid * dt);
+        if (t['KeyD'] || t['ArrowRight']) beweging.addScaledVector(this._zijwaarts,  this.snelheid * dt);
+      }
 
       this.voeten.x += beweging.x;
       this.voeten.z += beweging.z;

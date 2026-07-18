@@ -97,6 +97,10 @@ if (typeof window !== 'undefined') window.__hologram = hologram;
 const params = new URLSearchParams(location.search);
 const shotNaam = params.get('shot');
 
+// ── Mobiel-detectie: primaire aanwijzer is grof + geen hover = telefoon/
+//    tablet-achtig touchscreen (sluit laptops met touchscreen + trackpad uit).
+const MOBIEL = window.matchMedia('(hover: none) and (pointer: coarse)').matches;
+
 const klok = new THREE.Clock();
 
 // 'vrij' = losse debug-camera: ?shot=vrij&pos=x,y,z&kijk=x,y,z
@@ -142,7 +146,8 @@ if (params.get('climax')) {
     if (++frames >= 8) { window.__shotReady = true; renderer.setAnimationLoop(null); }
   });
 } else {
-  const speler = new Speler(camera, renderer.domElement, wereld);
+  const speler = new Speler(camera, renderer.domElement, wereld, { mobiel: MOBIEL });
+  if (typeof window !== 'undefined') window.__speler = speler;
   // ── Climax-effectketen: aansluiten met de speler als trapZone-trigger ────
   initClimax({
     scene, camera, renderer, zon, bloomPass,
@@ -161,16 +166,141 @@ if (params.get('climax')) {
   }
 
   // ── Lui laden: TV- en hologramvideo pas downloaden zodra de speler start ──
-  // (eerste klik = pointer lock) — ruim op tijd vóór ze in de sequentie nodig
-  // zijn (TV ~3 s later, hologram pas na deur+trap). Zo blijft de eerste
-  // paginalading klein en snel.
+  // (eerste klik/tik) — ruim op tijd vóór ze in de sequentie nodig zijn (TV
+  // ~3 s later, hologram pas na deur+trap). Zo blijft de eerste paginalading
+  // klein en snel. Op desktop triggert pointer-lock dit; op mobiel de
+  // starttik-overlay (verderop, waar de touch-besturing wordt opgezet).
   let luiGeladen = false;
-  document.addEventListener('pointerlockchange', () => {
-    if (luiGeladen || document.pointerLockElement !== renderer.domElement) return;
+  function startLuiLaden() {
+    if (luiGeladen) return;
     luiGeladen = true;
     hologram.preload();
     if (wereld.preloadTV) wereld.preloadTV();
-  });
+  }
+  if (!MOBIEL) {
+    document.addEventListener('pointerlockchange', () => {
+      if (document.pointerLockElement === renderer.domElement) startLuiLaden();
+    });
+  }
+
+  // ── Touch-besturing (telefoon/tablet) ─────────────────────────────────────
+  // Vervangt pointer-lock + WASD volledig: een starttik-overlay, een virtuele
+  // joystick linksonder (lopen), een sleep-zone die de rest van het scherm
+  // beslaat (kijken) en een ronde knop rechtsonder (E = interactie).
+  if (MOBIEL) {
+    document.body.classList.add('mobiel-besturing');   // blokkeert scroll/zoom-gebaren tijdens het spelen
+    document.getElementById('startuitleg').textContent = 'Tik om te starten';
+
+    const startOverlay = document.createElement('div');
+    startOverlay.style.cssText = 'position:fixed;inset:0;z-index:150;display:flex;' +
+      'align-items:center;justify-content:center;background:rgba(6,6,10,0.35);';
+    startOverlay.innerHTML = '<div style="color:#f0e9dd;background:rgba(20,16,12,0.85);' +
+      'border:1px solid rgba(255,230,189,0.35);border-radius:10px;padding:16px 26px;' +
+      'font:18px Georgia,serif;">Tik om te beginnen</div>';
+    document.body.appendChild(startOverlay);
+
+    // joystick (linksonder): basis + knop, sleep om te lopen
+    const joyBasis = document.createElement('div');
+    joyBasis.id = 'joyBasis';
+    joyBasis.style.cssText = 'display:none;position:fixed;left:26px;bottom:26px;z-index:70;' +
+      'width:116px;height:116px;border-radius:50%;background:rgba(20,16,12,0.35);' +
+      'border:2px solid rgba(255,230,189,0.35);';
+    const joyKnop = document.createElement('div');
+    joyKnop.style.cssText = 'position:absolute;left:38px;top:38px;width:40px;height:40px;' +
+      'border-radius:50%;background:rgba(255,230,189,0.55);pointer-events:none;';
+    joyBasis.appendChild(joyKnop);
+    document.body.appendChild(joyBasis);
+
+    // interactieknop (rechtsonder)
+    const interactKnop = document.createElement('div');
+    interactKnop.id = 'interactKnop';
+    interactKnop.textContent = 'E';
+    interactKnop.style.cssText = 'display:none;position:fixed;right:30px;bottom:36px;z-index:70;' +
+      'width:74px;height:74px;border-radius:50%;background:rgba(20,16,12,0.55);' +
+      'border:2px solid rgba(255,230,189,0.45);color:#ffe6bd;font:bold 22px Georgia,serif;' +
+      'align-items:center;justify-content:center;user-select:none;';
+    document.body.appendChild(interactKnop);
+
+    function toonTouchBesturing() {
+      joyBasis.style.display = 'block';
+      interactKnop.style.display = 'flex';
+    }
+
+    startOverlay.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      startOverlay.remove();
+      speler.begin();
+      startLuiLaden();
+      toonTouchBesturing();
+    }, { passive: false });
+
+    // joystick-aansturing: eigen aanraking (touch-id) vanaf de basis
+    let joyId = null, joyCX = 0, joyCY = 0;
+    const JOY_STRAAL = 58;
+    joyBasis.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      const t = e.changedTouches[0];
+      joyId = t.identifier;
+      const r = joyBasis.getBoundingClientRect();
+      joyCX = r.left + r.width / 2; joyCY = r.top + r.height / 2;
+    }, { passive: false });
+
+    function joyUpdate(t) {
+      let dx = t.clientX - joyCX, dy = t.clientY - joyCY;
+      const len = Math.hypot(dx, dy);
+      if (len > JOY_STRAAL) { dx = dx / len * JOY_STRAAL; dy = dy / len * JOY_STRAAL; }
+      joyKnop.style.left = 38 + dx + 'px'; joyKnop.style.top = 38 + dy + 'px';
+      speler.zetBeweging(dx / JOY_STRAAL, -dy / JOY_STRAAL);
+    }
+    function joyLos() {
+      joyId = null;
+      joyKnop.style.left = '38px'; joyKnop.style.top = '38px';
+      speler.zetBeweging(0, 0);
+    }
+
+    // kijk-sleep: elke aanraking die niet de joystick of de interactieknop is
+    let kijkId = null, kijkX = 0, kijkY = 0;
+
+    // knoppen die op 'click' draaien (mute, TV-invoer) moeten hun eigen tik-naar-
+    // klik-vertaling behouden — daar NIET preventDefault op toepassen.
+    const opKnop = (e) => e.target.closest && e.target.closest('button, input, a');
+
+    window.addEventListener('touchstart', (e) => {
+      if (opKnop(e)) return;
+      e.preventDefault();   // geen scroll/zoom/pull-to-refresh tijdens het spelen
+      for (const t of e.changedTouches) {
+        if (joyBasis.style.display !== 'none' && joyBasis.contains(document.elementFromPoint(t.clientX, t.clientY))) continue;
+        if (interactKnop.contains(document.elementFromPoint(t.clientX, t.clientY))) continue;
+        if (kijkId === null && joyId !== t.identifier) { kijkId = t.identifier; kijkX = t.clientX; kijkY = t.clientY; }
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (const t of e.changedTouches) {
+        if (t.identifier === joyId) joyUpdate(t);
+        else if (t.identifier === kijkId) {
+          speler.kijkDelta(t.clientX - kijkX, t.clientY - kijkY);
+          kijkX = t.clientX; kijkY = t.clientY;
+        }
+      }
+    }, { passive: false });
+
+    window.addEventListener('touchend', (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === joyId) joyLos();
+        if (t.identifier === kijkId) kijkId = null;
+      }
+    }, { passive: true });
+    window.addEventListener('touchcancel', (e) => {
+      for (const t of e.changedTouches) {
+        if (t.identifier === joyId) joyLos();
+        if (t.identifier === kijkId) kijkId = null;
+      }
+    }, { passive: true });
+
+    interactKnop.addEventListener('touchstart', (e) => { e.preventDefault(); speler.interactie(); }, { passive: false });
+  }
 
   // ── Climax-sequentie ─────────────────────────────────────────────────────
   // 1) speler verlaat de zaal → na 1 s: lampenanimatie (camera richt erop);
@@ -235,19 +365,48 @@ if (params.get('climax')) {
   // Zichtbaar alleen op het TV-canvas zelf (via activeerTVAanmeld/updateTVTekst).
   const tvInputEl = document.createElement('input');
   tvInputEl.type = 'text'; tvInputEl.autocomplete = 'off';
+  tvInputEl.setAttribute('enterkeyhint', 'send');   // mobiel toetsenbord toont 'Verzenden' i.p.v. 'Enter'
   tvInputEl.style.cssText = 'position:fixed;opacity:0;pointer-events:none;width:1px;height:1px;top:0;left:0;';
   document.body.appendChild(tvInputEl);
+  function _tvVerzenden() {
+    if (!tvInputEl.value.trim()) return;
+    audioKlaar();
+    bevestigTV();
+    if (tvMobielUI) tvMobielUI.style.display = 'none';
+    setTimeout(() => window.open(INSTELLINGEN.bordLink, '_blank', 'noopener'), 700);
+  }
   tvInputEl.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      if (!tvInputEl.value.trim()) return;
-      audioKlaar();
-      bevestigTV();
-      setTimeout(() => window.open(INSTELLINGEN.bordLink, '_blank', 'noopener'), 700);
-    } else if (!e.ctrlKey && !e.metaKey && !e.altKey) {
-      audioKlik();
-    }
+    if (e.key === 'Enter') { _tvVerzenden(); }
+    else if (!e.ctrlKey && !e.metaKey && !e.altKey) { audioKlik(); }
   });
   tvInputEl.addEventListener('input', () => updateTVTekst(tvInputEl.value));
+
+  // ── Mobiel: 'tik om te typen' + zichtbare verzendknop ─────────────────────
+  // iOS/Android openen het schermtoetsenbord alleen als .focus() rechtstreeks
+  // vanuit een tik-handler komt (niet vanuit een setTimeout ná een animatie),
+  // dus op mobiel tonen we een knop die de speler zelf moet aantikken. Ook de
+  // 'Enter'-toets van sommige mobiele toetsenborden is onbetrouwbaar, vandaar
+  // een expliciete Verzenden-knop.
+  let tvMobielUI = null;
+  if (MOBIEL) {
+    tvMobielUI = document.createElement('div');
+    tvMobielUI.style.cssText = 'display:none;position:fixed;bottom:14%;left:50%;transform:translateX(-50%);' +
+      'z-index:85;flex-direction:column;gap:10px;align-items:center;';
+    const tikKnop = document.createElement('button');
+    tikKnop.textContent = 'Tik om te typen';
+    tikKnop.style.cssText = 'background:rgba(14,31,69,0.92);color:#dfeaff;border:1px solid rgba(58,160,255,0.5);' +
+      'border-radius:8px;padding:12px 22px;font:16px Georgia,serif;';
+    tikKnop.addEventListener('click', () => { tvInputEl.focus(); tikKnop.style.display = 'none'; });
+    const verzendKnop = document.createElement('button');
+    verzendKnop.textContent = 'Verzenden →';
+    verzendKnop.style.cssText = 'background:rgba(14,31,69,0.92);color:#dfeaff;border:1px solid rgba(58,160,255,0.5);' +
+      'border-radius:8px;padding:12px 22px;font:16px Georgia,serif;';
+    verzendKnop.addEventListener('click', _tvVerzenden);
+    tvMobielUI.appendChild(tikKnop);
+    tvMobielUI.appendChild(verzendKnop);
+    document.body.appendChild(tvMobielUI);
+    tvInputEl._tikKnop = tikKnop;   // om 'm opnieuw te tonen bij de volgende aanmelding
+  }
 
   let trekNaarTV = null;
   wereld.interactables.push({
@@ -312,7 +471,13 @@ if (params.get('climax')) {
         trekNaarTV = null;
         activeerTVAanmeld();
         tvInputEl.value = '';
-        setTimeout(() => tvInputEl.focus(), 100);
+        if (MOBIEL) {
+          // schermtoetsenbord vereist een echte tik — toon de knoppen i.p.v. auto-focus
+          tvInputEl._tikKnop.style.display = 'block';
+          tvMobielUI.style.display = 'flex';
+        } else {
+          setTimeout(() => tvInputEl.focus(), 100);
+        }
       }
     }
     wereld.update(dt);
