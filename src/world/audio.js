@@ -98,6 +98,15 @@ export function audioDeurKlik() {
   } catch (_) {}
 }
 
+// ── Debug (console/tests) ────────────────────────────────────────────────────
+export function _debug() {
+  return {
+    audioStaat: ctx ? ctx.state : 'geen ctx',
+    buffersGeladen: Object.keys(buffers),
+    achtergrondGestart, gemut,
+  };
+}
+
 // ── Mute-knop ─────────────────────────────────────────────────────────────────
 function _maakMuteKnop() {
   if (document.getElementById('audioMute')) return;

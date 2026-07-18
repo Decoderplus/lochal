@@ -10,7 +10,7 @@ import { Speler } from './player.js';
 import { initClimax, updateClimax, INSTELLINGEN, bordIsActief,
          activeerTVAanmeld, updateTVTekst, bevestigTV, exporteerAanmeldingen,
          faseLampen, faseZonsondergang, faseDeeltjes } from './world/climax.js';
-import { initAudio, onDeurGeopend, audioDeurKlik, audioKlik, audioKlaar } from './world/audio.js';
+import { initAudio, onDeurGeopend, audioDeurKlik, audioKlik, audioKlaar, _debug as audioDebug } from './world/audio.js';
 import { bouwHologram } from './world/hologram.js';
 
 // ── Renderer volgens CONFIG.renderer ─────────────────────────────────────
@@ -91,7 +91,7 @@ if (typeof window !== 'undefined') window.__wereld = wereld;
 // Hangt direct aan de scene (buiten de gespiegelde wereld-Group) in echte
 // wereld-coördinaten; in elke render-lus updaten met de camera.
 const hologram = bouwHologram(scene);
-if (typeof window !== 'undefined') window.__hologram = hologram;
+if (typeof window !== 'undefined') { window.__hologram = hologram; window.__audioDebug = audioDebug; }
 
 // ── Shot-modus: ?shot=<cameranaam> → vaste camera, geen besturing ────────
 const params = new URLSearchParams(location.search);
