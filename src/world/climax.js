@@ -130,7 +130,6 @@ export function initClimax(deps) {
   D.scene.add(kroonGloed);
   // kloon daklichten-materiaal zodat we het 's nachts apart kunnen aanpassen
   { const dl = D.scene.getObjectByName('daklichten'); if (dl) dl.material = dl.material.clone(); }
-  bouwTestknoppen();
 
   // klik op het bord → open de link (na de flits)
   if (typeof window !== 'undefined') {
@@ -700,25 +699,3 @@ function zonKleurOpHoogte(h01) {
   return c;
 }
 
-// ─────────────────────────────────────────────────────────────────────────
-// Testknoppen (hele keten + elke fase los)
-// ─────────────────────────────────────────────────────────────────────────
-function bouwTestknoppen() {
-  if (typeof document === 'undefined') return;
-  const wrap = document.createElement('div');
-  wrap.style.cssText = 'position:fixed;left:14px;bottom:14px;z-index:60;display:flex;gap:6px;' +
-    'font:12px system-ui,sans-serif;';
-  const knop = (label, fn) => {
-    const b = document.createElement('button');
-    b.textContent = label;
-    b.style.cssText = 'background:rgba(20,16,12,0.8);color:#ffe6bd;border:1px solid #6a5a3a;' +
-      'border-radius:5px;padding:5px 9px;cursor:pointer;';
-    b.onclick = (e) => { e.stopPropagation(); fn(); };
-    wrap.appendChild(b);
-  };
-  knop('▶ Climax', startClimax);
-  knop('Lampen', faseLampen);
-  knop('Zon', faseZonsondergang);
-  knop('Deeltjes', faseDeeltjes);
-  document.body.appendChild(wrap);
-}
