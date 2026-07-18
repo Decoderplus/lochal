@@ -8,7 +8,7 @@ import { CONFIG } from './config.js';
 import { bouwWereld } from './world/index.js';
 import { Speler } from './player.js';
 import { initClimax, updateClimax, INSTELLINGEN, bordIsActief,
-         activeerTVAanmeld, updateTVTekst, bevestigTV,
+         activeerTVAanmeld, updateTVTekst, bevestigTV, exporteerAanmeldingen,
          faseLampen, faseZonsondergang, faseDeeltjes } from './world/climax.js';
 import { initAudio, onDeurGeopend, audioDeurKlik, audioKlik, audioKlaar } from './world/audio.js';
 import { bouwHologram } from './world/hologram.js';
@@ -291,6 +291,12 @@ if (params.get('climax')) {
     if (e.code === 'KeyR') {
       const nieuw = wereld.zetZaalRotatie((wereld.zaalRotatie() + 90) % 360);
       toonHud(`Zaalrotatie: ${nieuw}°  (CONFIG.zaalRotatie)`);
+    }
+    // Beheerders-snelkoppeling (niet zichtbaar voor bezoekers): download alle
+    // aanmeldingen als CSV. Combinatie zodat spelers 'm niet per ongeluk raken.
+    if (e.ctrlKey && e.shiftKey && e.code === 'KeyE') {
+      const n = exporteerAanmeldingen();
+      toonHud(n ? `${n} aanmelding(en) geëxporteerd als CSV` : 'Geen aanmeldingen om te exporteren');
     }
   });
 

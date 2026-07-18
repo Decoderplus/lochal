@@ -583,6 +583,30 @@ export function bevestigTV() {
   if (aanmeldTex) aanmeldTex.needsUpdate = true;
 }
 
+// ── Export: alle lokaal opgeslagen aanmeldingen als CSV-bestand downloaden ──
+// (offline opslag = localStorage, hierboven; dit is de "online"-route: de
+// beheerder downloadt het bestand en zet het zelf ergens online — mail,
+// Drive, Sheets, enz. Geen extra account/server nodig.)
+export function exporteerAanmeldingen() {
+  if (typeof document === 'undefined') return;
+  let lijst = [];
+  try { lijst = JSON.parse(localStorage.getItem('lochal_aanmeldingen') || '[]'); } catch (_) {}
+  const escapeCsv = (v) => {
+    const s = String(v ?? '');
+    return /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+  };
+  const regels = ['tekst,tijd', ...lijst.map((a) => `${escapeCsv(a.tekst)},${escapeCsv(a.tijd)}`)];
+  const csv = '﻿' + regels.join('\r\n');   // BOM: accenten (é, ë) tonen correct in Excel
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `lochal-aanmeldingen-${new Date().toISOString().slice(0, 10)}.csv`;
+  document.body.appendChild(a); a.click(); a.remove();
+  URL.revokeObjectURL(url);
+  return lijst.length;
+}
+
 function _tekenAanmeld() {
   const ctx = aanmeldCanvas.getContext('2d');
   ctx.fillStyle = '#0a0a0a'; ctx.fillRect(0, 0, 1024, 600);
