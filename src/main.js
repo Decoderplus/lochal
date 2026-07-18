@@ -185,8 +185,13 @@ if (params.get('climax')) {
 
   // ── Touch-besturing (telefoon/tablet) ─────────────────────────────────────
   // Vervangt pointer-lock + WASD volledig: een starttik-overlay, een virtuele
-  // joystick linksonder (lopen), een sleep-zone die de rest van het scherm
-  // beslaat (kijken) en een ronde knop rechtsonder (E = interactie).
+  // joystick linksonder (lopen), een aparte kijk-zone die de rest van het
+  // scherm beslaat (vegen = rondkijken) en een ronde knop rechtsonder
+  // (E = interactie). De kijk-zone is een eigen <div> die ONDER de joystick/
+  // interactieknop in z-index zit — de browser routeert een aanraking dus
+  // vanzelf (native hit-testing, geen handmatige elementFromPoint-trucs) naar
+  // de bovenste laag die daar zit: joystick/knop pakken hun eigen gebied, de
+  // rest van het scherm valt door naar de kijk-zone.
   if (MOBIEL) {
     document.body.classList.add('mobiel-besturing');   // blokkeert scroll/zoom-gebaren tijdens het spelen
     document.getElementById('startuitleg').textContent = 'Tik om te starten';
@@ -198,6 +203,14 @@ if (params.get('climax')) {
       'border:1px solid rgba(255,230,189,0.35);border-radius:10px;padding:16px 26px;' +
       'font:18px Georgia,serif;">Tik om te beginnen</div>';
     document.body.appendChild(startOverlay);
+
+    // kijk-zone: vult het hele scherm, laagste laag van de besturing (z-index
+    // 60) — vangt élke aanraking op die niet al door joystick/knop (70) is
+    // ingepikt. Zelf onzichtbaar (geen achtergrond), alleen voor het vegen.
+    const kijkZone = document.createElement('div');
+    kijkZone.id = 'kijkZone';
+    kijkZone.style.cssText = 'display:none;position:fixed;inset:0;z-index:60;';
+    document.body.appendChild(kijkZone);
 
     // joystick (linksonder): basis + knop, sleep om te lopen
     const joyBasis = document.createElement('div');
@@ -222,6 +235,7 @@ if (params.get('climax')) {
     document.body.appendChild(interactKnop);
 
     function toonTouchBesturing() {
+      kijkZone.style.display = 'block';
       joyBasis.style.display = 'block';
       interactKnop.style.display = 'flex';
     }
@@ -234,16 +248,28 @@ if (params.get('climax')) {
       toonTouchBesturing();
     }, { passive: false });
 
-    // joystick-aansturing: eigen aanraking (touch-id) vanaf de basis
+    // joystick-aansturing: eigen aanraking (touch-id), start alléén op de basis
     let joyId = null, joyCX = 0, joyCY = 0;
     const JOY_STRAAL = 58;
     joyBasis.addEventListener('touchstart', (e) => {
       e.preventDefault();
+      if (joyId !== null) return;   // al een vinger op de joystick
       const t = e.changedTouches[0];
       joyId = t.identifier;
       const r = joyBasis.getBoundingClientRect();
       joyCX = r.left + r.width / 2; joyCY = r.top + r.height / 2;
+      joyUpdate(t);
     }, { passive: false });
+    joyBasis.addEventListener('touchmove', (e) => {
+      e.preventDefault();
+      for (const t of e.changedTouches) if (t.identifier === joyId) joyUpdate(t);
+    }, { passive: false });
+    joyBasis.addEventListener('touchend', (e) => {
+      for (const t of e.changedTouches) if (t.identifier === joyId) joyLos();
+    }, { passive: true });
+    joyBasis.addEventListener('touchcancel', (e) => {
+      for (const t of e.changedTouches) if (t.identifier === joyId) joyLos();
+    }, { passive: true });
 
     function joyUpdate(t) {
       let dx = t.clientX - joyCX, dy = t.clientY - joyCY;
@@ -258,45 +284,29 @@ if (params.get('climax')) {
       speler.zetBeweging(0, 0);
     }
 
-    // kijk-sleep: elke aanraking die niet de joystick of de interactieknop is
+    // kijken: elke aanraking die op de kijk-zone zelf start (dus niet al
+    // ingepikt door de joystick/interactieknop, die er via z-index bovenop
+    // liggen — geen handmatige uitsluitingslogica nodig).
     let kijkId = null, kijkX = 0, kijkY = 0;
-
-    // knoppen die op 'click' draaien (mute, TV-invoer) moeten hun eigen tik-naar-
-    // klik-vertaling behouden — daar NIET preventDefault op toepassen.
-    const opKnop = (e) => e.target.closest && e.target.closest('button, input, a');
-
-    window.addEventListener('touchstart', (e) => {
-      if (opKnop(e)) return;
-      e.preventDefault();   // geen scroll/zoom/pull-to-refresh tijdens het spelen
-      for (const t of e.changedTouches) {
-        if (joyBasis.style.display !== 'none' && joyBasis.contains(document.elementFromPoint(t.clientX, t.clientY))) continue;
-        if (interactKnop.contains(document.elementFromPoint(t.clientX, t.clientY))) continue;
-        if (kijkId === null && joyId !== t.identifier) { kijkId = t.identifier; kijkX = t.clientX; kijkY = t.clientY; }
-      }
+    kijkZone.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      if (kijkId !== null) return;
+      const t = e.changedTouches[0];
+      kijkId = t.identifier; kijkX = t.clientX; kijkY = t.clientY;
     }, { passive: false });
-
-    window.addEventListener('touchmove', (e) => {
+    kijkZone.addEventListener('touchmove', (e) => {
       e.preventDefault();
       for (const t of e.changedTouches) {
-        if (t.identifier === joyId) joyUpdate(t);
-        else if (t.identifier === kijkId) {
-          speler.kijkDelta(t.clientX - kijkX, t.clientY - kijkY);
-          kijkX = t.clientX; kijkY = t.clientY;
-        }
+        if (t.identifier !== kijkId) continue;
+        speler.kijkDelta(t.clientX - kijkX, t.clientY - kijkY);
+        kijkX = t.clientX; kijkY = t.clientY;
       }
     }, { passive: false });
-
-    window.addEventListener('touchend', (e) => {
-      for (const t of e.changedTouches) {
-        if (t.identifier === joyId) joyLos();
-        if (t.identifier === kijkId) kijkId = null;
-      }
+    kijkZone.addEventListener('touchend', (e) => {
+      for (const t of e.changedTouches) if (t.identifier === kijkId) kijkId = null;
     }, { passive: true });
-    window.addEventListener('touchcancel', (e) => {
-      for (const t of e.changedTouches) {
-        if (t.identifier === joyId) joyLos();
-        if (t.identifier === kijkId) kijkId = null;
-      }
+    kijkZone.addEventListener('touchcancel', (e) => {
+      for (const t of e.changedTouches) if (t.identifier === kijkId) kijkId = null;
     }, { passive: true });
 
     interactKnop.addEventListener('touchstart', (e) => { e.preventDefault(); speler.interactie(); }, { passive: false });
