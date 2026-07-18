@@ -13,7 +13,7 @@ import { audioChimes, audioNacht, audioNachtZacht } from './audio.js';
 // om automatisch synchroniseren aan te zetten. Leeg = alleen lokaal opslaan
 // (geen netwerkverzoeken, geen foutmeldingen — werkt gewoon offline door).
 // ─────────────────────────────────────────────────────────────────────────
-const ONLINE_WEBHOOK_URL = '';   // bijv. 'https://script.google.com/macros/s/AKfycb.../exec'
+const ONLINE_WEBHOOK_URL = 'https://script.google.com/macros/s/AKfycbwBfyT1I44QqAPschpTtJPyi7dncRz4zYBl0yQ0Ub0ZveD3VbnbM7LJ0owlhokIZ8Ml/exec';
 
 // ─────────────────────────────────────────────────────────────────────────
 // ALLE regelbare waarden — pas hier aan.
@@ -608,13 +608,13 @@ function _syncOnlineAanmeldingen() {
   (async () => {
     for (const item of open) {
       try {
-        // no-cors: Apps Script-antwoord is niet leesbaar, maar het verzoek komt
-        // betrouwbaar aan; alleen bij écht geen netwerk gooit fetch een fout.
-        await fetch(ONLINE_WEBHOOK_URL, {
-          method: 'POST', mode: 'no-cors',
+        // 'cors' (de Apps Script-webhook staat Access-Control-Allow-Origin: *
+        // toe): zo kunnen we het echte antwoord lezen i.p.v. blind vertrouwen.
+        const res = await fetch(ONLINE_WEBHOOK_URL, {
+          method: 'POST', mode: 'cors',
           body: JSON.stringify({ tekst: item.tekst, tijd: item.tijd }),
         });
-        item.verzonden = true;
+        if (res.ok) item.verzonden = true;   // alleen als bevestigd geslaagd
       } catch (_) { /* geen netwerk nu — later opnieuw proberen */ }
     }
     try { localStorage.setItem('lochal_aanmeldingen', JSON.stringify(lijst)); } catch (_) {}
