@@ -8,6 +8,14 @@ import * as THREE from 'three';
 import { audioChimes, audioNacht, audioNachtZacht } from './audio.js';
 
 // ─────────────────────────────────────────────────────────────────────────
+// ONLINE SYNC — aanmeldingen van alle apparaten samen op één Google Sheet.
+// Vul hier de Apps Script Web App-URL in (zie DECISIONS.md / instructies)
+// om automatisch synchroniseren aan te zetten. Leeg = alleen lokaal opslaan
+// (geen netwerkverzoeken, geen foutmeldingen — werkt gewoon offline door).
+// ─────────────────────────────────────────────────────────────────────────
+const ONLINE_WEBHOOK_URL = '';   // bijv. 'https://script.google.com/macros/s/AKfycb.../exec'
+
+// ─────────────────────────────────────────────────────────────────────────
 // ALLE regelbare waarden — pas hier aan.
 // ─────────────────────────────────────────────────────────────────────────
 export const INSTELLINGEN = {
@@ -564,12 +572,13 @@ export function updateTVTekst(tekst) {
 }
 
 export function bevestigTV() {
-  // sla aanmelding op in localStorage
+  // sla aanmelding altijd lokaal op (offline werkt dit gegarandeerd)
   try {
     const lijst = JSON.parse(localStorage.getItem('lochal_aanmeldingen') || '[]');
-    lijst.push({ tekst: tvTekst, tijd: new Date().toISOString() });
+    lijst.push({ tekst: tvTekst, tijd: new Date().toISOString(), verzonden: false });
     localStorage.setItem('lochal_aanmeldingen', JSON.stringify(lijst));
   } catch (_) {}
+  _syncOnlineAanmeldingen();   // probeer meteen te versturen (retryt later vanzelf indien nodig)
 
   tvModus = false;
   if (!aanmeldCanvas) return;
@@ -583,10 +592,43 @@ export function bevestigTV() {
   if (aanmeldTex) aanmeldTex.needsUpdate = true;
 }
 
+// ── Online sync: stuurt nog niet-verzonden aanmeldingen naar ONLINE_WEBHOOK_URL
+// (bijv. een Google Apps Script-webhook op een Sheet) zodat aanmeldingen van
+// VERSCHILLENDE apparaten automatisch op één plek samenkomen. Faalt stil als
+// er geen URL is ingesteld of geen netwerk is — de lokale kopie blijft altijd
+// de bron van waarheid; niet-verzonden items worden later opnieuw geprobeerd. ─
+let syncBezig = false;
+function _syncOnlineAanmeldingen() {
+  if (!ONLINE_WEBHOOK_URL || typeof window === 'undefined' || syncBezig) return;
+  let lijst;
+  try { lijst = JSON.parse(localStorage.getItem('lochal_aanmeldingen') || '[]'); } catch (_) { return; }
+  const open = lijst.filter((a) => !a.verzonden);
+  if (!open.length) return;
+  syncBezig = true;
+  (async () => {
+    for (const item of open) {
+      try {
+        // no-cors: Apps Script-antwoord is niet leesbaar, maar het verzoek komt
+        // betrouwbaar aan; alleen bij écht geen netwerk gooit fetch een fout.
+        await fetch(ONLINE_WEBHOOK_URL, {
+          method: 'POST', mode: 'no-cors',
+          body: JSON.stringify({ tekst: item.tekst, tijd: item.tijd }),
+        });
+        item.verzonden = true;
+      } catch (_) { /* geen netwerk nu — later opnieuw proberen */ }
+    }
+    try { localStorage.setItem('lochal_aanmeldingen', JSON.stringify(lijst)); } catch (_) {}
+    syncBezig = false;
+  })();
+}
+if (typeof window !== 'undefined') {
+  window.addEventListener('online', _syncOnlineAanmeldingen);   // meteen retryen zodra internet terugkomt
+  setInterval(_syncOnlineAanmeldingen, 30000);                   // vangnet: elke 30 s controleren
+  _syncOnlineAanmeldingen();                                     // ook meteen bij het opstarten (nog openstaande items van eerdere sessies)
+}
+
 // ── Export: alle lokaal opgeslagen aanmeldingen als CSV-bestand downloaden ──
-// (offline opslag = localStorage, hierboven; dit is de "online"-route: de
-// beheerder downloadt het bestand en zet het zelf ergens online — mail,
-// Drive, Sheets, enz. Geen extra account/server nodig.)
+// (handmatige back-up/reserveroute; werkt altijd, ook zonder ONLINE_WEBHOOK_URL.)
 export function exporteerAanmeldingen() {
   if (typeof document === 'undefined') return;
   let lijst = [];
