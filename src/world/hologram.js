@@ -47,6 +47,7 @@ export function bouwHologram(scene) {
   if (typeof document === 'undefined') return {
     groep: new THREE.Group(), update() {}, speelAf() {}, pauzeer() {}, hervat() {},
     terugNaarPauze() {}, preload() {}, tijd: () => 0, duur: () => 0, speeltAf: () => false, isKlaar: () => false,
+    _debug: () => ({}),
   };
 
   const groep = new THREE.Group();
@@ -66,7 +67,6 @@ export function bouwHologram(scene) {
   video.muted = true;            // muted = autoplay/decoderen toegestaan
   video.playsInline = true;
   video.preload = 'none';        // pas laden na expliciete preload()-aanroep
-  video.crossOrigin = 'anonymous';
   video.setAttribute('playsinline', '');
   let geladen = false;
   function preload() {
@@ -75,6 +75,11 @@ export function bouwHologram(scene) {
     video.preload = 'auto';
     video.src = HOLO.bestand;
     video.load();
+    // audiograaf hier opzetten (i.p.v. pas bij speelAf(), veel later, zonder
+    // directe gebruikersactie) — preload() wordt vlak bij een echte klik/tik
+    // aangeroepen, wat de AudioContext betrouwbaar laat starten.
+    _zetVersterking();
+    _hervatAudioCtx();
   }
 
   let staat = 'laden';           // 'laden' | 'pauze' | 'speelt'
@@ -97,7 +102,10 @@ export function bouwHologram(scene) {
     staat = 'pauze'; klaar = true;
   });
 
-  // WebAudio-versterking: routeer de videostem door een GainNode (>1 = luider)
+  // WebAudio-versterking: routeer de videostem door een GainNode (>1 = luider).
+  // LET OP: zodra createMediaElementSource() draait, heeft video.volume géén
+  // effect meer op wat je hoort — het afstandsvolume moet daarna via
+  // gainNode.gain lopen (zie update() hieronder), niet via video.volume.
   let audioCtx = null, gainNode = null, mediaBron = null;
   function _zetVersterking() {
     if (mediaBron || !HOLO.geluid) return;
@@ -105,11 +113,23 @@ export function bouwHologram(scene) {
       const Ctx = window.AudioContext || window.webkitAudioContext;
       if (!Ctx) return;
       audioCtx = new Ctx();
-      mediaBron = audioCtx.createMediaElementSource(video);   // element-volume (afstand) blijft vóór de gain gelden
+      mediaBron = audioCtx.createMediaElementSource(video);
       gainNode = audioCtx.createGain();
-      gainNode.gain.value = HOLO.geluidVersterking;
+      gainNode.gain.value = 0;   // update() zet de echte waarde (versterking × afstand)
       mediaBron.connect(gainNode).connect(audioCtx.destination);
     } catch (_) { audioCtx = null; }
+  }
+  function _hervatAudioCtx() {
+    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+  }
+  // vangnet: als de AudioContext bij het opzetten toch 'suspended' bleef
+  // (afhankelijk van browser/host), probeer het bij de eerstvolgende
+  // gebruikersactie opnieuw.
+  if (typeof window !== 'undefined') {
+    const retryHervat = () => _hervatAudioCtx();
+    window.addEventListener('click', retryHervat);
+    window.addEventListener('touchstart', retryHervat, { passive: true });
+    window.addEventListener('keydown', retryHervat);
   }
 
   const tex = new THREE.VideoTexture(video);
@@ -215,12 +235,11 @@ export function bouwHologram(scene) {
 
   // ── Afspeel-API (aangestuurd door de sequentie in main.js) ───────────────
   function speelAf() {                          // start van frame 0 met (versterkt) geluid
-    preload();                                  // vangnet: zorg dat er iets te spelen valt
+    preload();                                  // vangnet: zorg dat er iets te spelen valt (zet ook de audiograaf op)
     try { video.currentTime = 0; } catch (_) {}
     video.muted = !HOLO.geluid;
     klaar = false; staat = 'speelt';
-    _zetVersterking();
-    if (audioCtx && audioCtx.state === 'suspended') audioCtx.resume().catch(() => {});
+    _hervatAudioCtx();                          // extra vangnet, mocht 'suspended' nog niet opgelost zijn
     video.play().catch(() => { video.muted = true; video.play().catch(() => {}); });
   }
   function pauzeer() { video.pause(); staat = 'pauze'; }   // vriezen (shader blijft shimmeren)
@@ -244,10 +263,13 @@ export function bouwHologram(scene) {
       const dx = camera.position.x - groep.position.x;
       const dz = camera.position.z - groep.position.z;
       vlak.rotation.y = Math.atan2(dx, dz);     // vlak (+z) wijst naar de speler
-      // stem-volume zakt met de afstand tot het hologram
+      // stem-volume zakt met de afstand tot het hologram; loopt via de
+      // gain-node zodra die bestaat (video.volume heeft dan geen effect meer)
       const dy = camera.position.y - groep.position.y;
       const dist = Math.hypot(dx, dy, dz);
-      video.volume = Math.max(0, Math.min(1, 1 - (dist - HOLO.geluidNabij) / (HOLO.geluidVer - HOLO.geluidNabij)));
+      const afstandsfactor = Math.max(0, Math.min(1, 1 - (dist - HOLO.geluidNabij) / (HOLO.geluidVer - HOLO.geluidNabij)));
+      if (gainNode) gainNode.gain.value = HOLO.geluidVersterking * afstandsfactor;
+      else video.volume = afstandsfactor;   // vangnet: geen WebAudio beschikbaar
     }
     // lichte pulsatie in de voetgloed
     const puls = 0.5 + 0.18 * Math.sin(tijd * 2.2);
@@ -256,5 +278,8 @@ export function bouwHologram(scene) {
   }
 
   return { groep, update, speelAf, pauzeer, hervat, terugNaarPauze, preload,
-           tijd: tijdVan, duur: duurVan, speeltAf, isKlaar };
+           tijd: tijdVan, duur: duurVan, speeltAf, isKlaar,
+           _debug: () => ({ audioStaat: audioCtx ? audioCtx.state : 'geen audioCtx',
+                             gainWaarde: gainNode ? +gainNode.gain.value.toFixed(2) : null,
+                             videoMuted: video.muted, videoVolume: +video.volume.toFixed(2) }) };
 }
